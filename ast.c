@@ -212,7 +212,7 @@ void Type_Delete(Type* t)
 
 /* STATEMENTS */
 
-static Stmt SNothing = { STMT_NOTHING, { .expr = NULL } };
+static Stmt SNothing = { STMT_NOTHING, { .expr = NULL }, {0, 0, 0, 0} };
 
 Stmt* Stmt_Nothing(void)
 {

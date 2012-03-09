@@ -23,14 +23,18 @@
 #include "lexer.h"
 #include "global.h"
 #include "printer.h"
+#include "latex.h"
 
 extern int yyparse(void);
 Program* current_prog = NULL;
 
-int main(void)
+int main(int argc, char** argv)
 {
   yyparse();
-  Program_Print(current_prog);
+  if (argc > 1 && !strcmp(argv[1], "--latex"))
+    Program_Latex(current_prog);
+  else
+    Program_Print(current_prog);
   Program_Delete(current_prog);
   return 0;
 }
