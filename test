@@ -1,0 +1,10 @@
+#!/bin/sh
+for i in $(find examples -type f | sort)
+do
+	echo "Test de '$i':"
+	cat $i
+	echo "================="
+	./compilo < "$i"
+	echo "================="
+	echo ""
+done

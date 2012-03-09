@@ -1,0 +1,213 @@
+/*
+ *   A Tiny C to SPIM Compiler
+ *   Copyright (C) 2012 Thomas GREGOIRE, Quentin SANTOS
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef AST_H
+#define AST_H
+
+#include "types.h"
+
+typedef struct
+{
+  u32 first_line;
+  u32 first_column;
+  u32 last_line;
+  u32 last_column;
+} position;
+
+/* Expressions */
+typedef struct Expr Expr;
+typedef struct ExprList
+{
+  Expr*            head;
+  struct ExprList* tail;
+} ExprList;
+struct Expr
+{
+  enum
+  {
+    EXPR_INTEGER,
+    EXPR_FUN_CALL,
+    EXPR_AFF,
+    EXPR_VAR,
+    EXPR_NEG,
+    EXPR_EQ,
+    EXPR_NEQ,
+    EXPR_LE,
+    EXPR_LT,
+    EXPR_GE,
+    EXPR_GT,
+    EXPR_ADD,
+    EXPR_SUB,
+    EXPR_MUL,
+    EXPR_DIV,
+    EXPR_MINUS,
+    EXPR_MODULO,
+    EXPR_IFTE,
+  } type;
+  union
+  {
+    s32 i;
+    struct { string name; ExprList* params; } call;
+    struct { string name; Expr* expr; } aff;
+    string var;
+    struct { struct Expr* left, * right; } bin_op;
+    struct { struct Expr* op1, * op2, * op3; } tern_op;
+    struct Expr* uni_op;
+  } v;
+  position pos;
+};
+/* Constructors */
+Expr* Expr_Integer(s32);
+Expr* Expr_Fun_Call(string, ExprList*);
+Expr* Expr_Aff(string, Expr*);
+Expr* Expr_Var(string);
+Expr* Expr_Neg(Expr*);
+Expr* Expr_Eq(Expr*, Expr*);
+Expr* Expr_Neq(Expr*, Expr*);
+Expr* Expr_Le(Expr*, Expr*);
+Expr* Expr_Lt(Expr*, Expr*);
+Expr* Expr_Ge(Expr*, Expr*);
+Expr* Expr_Gt(Expr*, Expr*);
+Expr* Expr_Add(Expr*, Expr*);
+Expr* Expr_Sub(Expr*, Expr*);
+Expr* Expr_Mul(Expr*, Expr*);
+Expr* Expr_Div(Expr*, Expr*);
+Expr* Expr_Modulo(Expr*, Expr*);
+Expr* Expr_Minus(Expr*);
+Expr* Expr_Ifte(Expr*, Expr*, Expr*);
+ExprList* ExprList_New(Expr*, ExprList*);
+/* Destructors */
+void Expr_Delete(Expr*);
+void ExprList_Delete(ExprList*);
+
+
+
+/* Types  */
+typedef struct Type
+{
+  enum
+  {
+    TYPE_VOID,
+    TYPE_CHAR,
+    TYPE_INT,
+    TYPE_PTR,
+  } type;
+  union
+  {
+    struct Type* ptr;
+  } v;
+} Type;
+/* Contructors */
+Type* Type_Void(void);
+Type* Type_Char(void);
+Type* Type_Int(void);
+Type* Type_Ptr(Type*);
+/* Destructors */
+void Type_Delete(Type*);
+
+
+
+/* Statements */
+typedef struct Stmt Stmt;
+typedef struct StmtList
+{
+  Stmt*            head;
+  struct StmtList* tail;
+} StmtList;
+struct Stmt
+{
+  enum
+  {
+    STMT_NOTHING,
+    STMT_DECL,
+    STMT_AFF,
+    STMT_EXPR,
+    STMT_WHILE,
+    STMT_DO,
+    STMT_FOR,
+    STMT_IF,
+    STMT_RETURN,
+    STMT_BLOCK,
+  } type;
+  union
+  {
+    struct { Type* t; string name; Expr* val; } decl;
+    struct { string name; Expr* val; } aff;
+    Expr* expr;
+    struct { Expr* cond; Stmt* stmt; } whilez;
+    struct { Stmt* stmt; Expr* cond; } doz;
+    struct { Stmt* a; Stmt* b; Stmt* c; Stmt* stmt; } forz;
+    struct { Expr* cond; Stmt* iftrue, * iffalse; } ifz;
+    StmtList* block;
+  } v;
+  position pos;
+};
+/* Constructors */
+Stmt* Stmt_Nothing(void);
+Stmt* Stmt_Decl(Type*, string, Expr*);
+Stmt* Stmt_Aff(string, Expr*);
+Stmt* Stmt_Expr(Expr*);
+Stmt* Stmt_While(Expr*, Stmt*);
+Stmt* Stmt_Do(Stmt*, Expr*);
+Stmt* Stmt_For(Stmt*, Stmt*, Stmt*, Stmt*);
+Stmt* Stmt_If(Expr*, Stmt*, Stmt*);
+Stmt* Stmt_Return(Expr*);
+Stmt* Stmt_Block(StmtList*);
+StmtList* StmtList_New(Stmt*, StmtList*);
+/* Destructors */
+void Stmt_Delete(Stmt*);
+void StmtList_Delete(StmtList*);
+
+
+
+/* Function declarations */
+typedef struct
+{
+  Type*  type;
+  string name;
+} Param;
+typedef struct ParamList
+{
+  Param*            head;
+  struct ParamList* tail;
+} ParamList;
+typedef struct
+{
+  Type*      type;
+  string     name;
+  ParamList* params;
+  Stmt*      stmt;
+} FunDecl;
+typedef struct Program
+{
+  FunDecl*        head;
+  struct Program* tail;
+} Program;
+/* Constructors */
+Param* Param_New(Type*, string);
+ParamList* ParamList_New(Param*, ParamList*);
+ParamList* ParamList_Void(void);
+FunDecl* FunDecl_New(Type*, string, ParamList*, Stmt*);
+Program* Program_New(FunDecl*, Program*);
+/* Destructors */
+void Param_Delete(Param*);
+void ParamList_Delete(ParamList*);
+void FunDecl_Delete(FunDecl*);
+void Program_Delete(Program*);
+
+#endif
