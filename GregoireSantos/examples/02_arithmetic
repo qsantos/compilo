@@ -1,8 +1,0 @@
-int main(void)
-{
-	int x = 3;
-	int y = 2;
-	y = x + y;
-	x = (x - 3) + 2 * ((y - 7) % 2);
-	return 0;
-}
