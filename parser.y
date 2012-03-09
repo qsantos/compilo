@@ -76,84 +76,84 @@ extern int yyerror(const char*);
 
 %%
 
-start: program                                             { current_prog = $1;                     }
+start: program                                             { current_prog = $1;                                 }
 ;
 
 program:
-       fun_declaration program                             { $$ = Program_New($1, $2);              }
-     |                                                     { $$ = NULL;                             }
+       fun_declaration program                             { $$ = Program_New($1, $2);                          }
+     |                                                     { $$ = NULL;                                         }
 ;
 
-fun_declaration: type SYMBOL '(' params ')' statement      { $$ = FunDecl_New($1, $2, $4, $6);      }
+fun_declaration: type SYMBOL '(' params ')' statement      { $$ = FunDecl_New($1, $2, $4, $6, (position*) &@$); }
 ;
 
 type:
-       VOID                                                { $$ = Type_Void();                      }
-     | CHAR                                                { $$ = Type_Char();                      }
-     | INT                                                 { $$ = Type_Int();                       }
-     | type '*'                                            { $$ = Type_Ptr($1);                     }
+       VOID                                                { $$ = Type_Void();                                  }
+     | CHAR                                                { $$ = Type_Char();                                  }
+     | INT                                                 { $$ = Type_Int();                                   }
+     | type '*'                                            { $$ = Type_Ptr($1);                                 }
 ;
 
 instr:
-                                                           { $$ = Stmt_Nothing();                   }
-     | type SYMBOL '=' expression                          { $$ = Stmt_Decl($1, $2, $4);            }
-     | type SYMBOL                                         { $$ = Stmt_Decl($1, $2, NULL);          }
-     | expression                                          { $$ = Stmt_Expr($1);                    }
+                                                           { $$ = Stmt_Nothing();                               }
+     | type SYMBOL '=' expression                          { $$ = Stmt_Decl($1, $2, $4, (position*) &@$);       }
+     | type SYMBOL                                         { $$ = Stmt_Decl($1, $2, NULL, (position*) &@$);     }
+     | expression                                          { $$ = Stmt_Expr($1);                                }
 
 statement:
-       instr ';'                                           { $$ = $1;                               }
-     | WHILE '(' expression ')' statement                  { $$ = Stmt_While($3, $5);               }
-     | DO statement WHILE '(' expression ')'               { $$ = Stmt_Do($2, $5);                  }
-     | FOR '(' instr ';' instr ';' instr ')' statement     { $$ = Stmt_For($3, $5, $7, $9);         }
-     | IF '(' expression ')' statement %prec IF_ALONE      { $$ = Stmt_If($3, $5, NULL);            }
-     | IF '(' expression ')' statement ELSE statement      { $$ = Stmt_If($3, $5, $7);              }
-     | '{' statement_list '}'                              { $$ = Stmt_Block($2);                   }
-     | RETURN expression ';'                               { $$ = Stmt_Return($2);                  }
+       instr ';'                                           { $$ = $1;                                           }
+     | WHILE '(' expression ')' statement                  { $$ = Stmt_While($3, $5);                           }
+     | DO statement WHILE '(' expression ')'               { $$ = Stmt_Do($2, $5);                              }
+     | FOR '(' instr ';' instr ';' instr ')' statement     { $$ = Stmt_For($3, $5, $7, $9);                     }
+     | IF '(' expression ')' statement %prec IF_ALONE      { $$ = Stmt_If($3, $5, NULL);                        }
+     | IF '(' expression ')' statement ELSE statement      { $$ = Stmt_If($3, $5, $7);                          }
+     | '{' statement_list '}'                              { $$ = Stmt_Block($2);                               }
+     | RETURN expression ';'                               { $$ = Stmt_Return($2);                              }
 ;
 
 statement_list:
-       statement statement_list                            { $$ = StmtList_New($1, $2);             }
-     |                                                     { $$ = NULL;                             }
+       statement statement_list                            { $$ = StmtList_New($1, $2);                         }
+     |                                                     { $$ = NULL;                                         }
 ;
 
-parameter: type SYMBOL                                     { $$ = Param_New($1, $2);                }
+parameter: type SYMBOL                                     { $$ = Param_New($1, $2, (position*) &@$);           }
 ;
 
 param_list:
-       parameter                                           { $$ = ParamList_New($1, NULL);          }
-     | parameter ',' param_list                            { $$ = ParamList_New($1, $3);            }
+       parameter                                           { $$ = ParamList_New($1, NULL);                      }
+     | parameter ',' param_list                            { $$ = ParamList_New($1, $3);                        }
 ;
 
 params:
-       VOID                                                { $$ = ParamList_Void();                 }
-     | param_list                                          { $$ = $1;                               }
+       VOID                                                { $$ = ParamList_Void();                             }
+     | param_list                                          { $$ = $1;                                           }
 
 expression:
-       INTEGER                                             { $$ = Expr_Integer($1);                 }
-     | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3);            }
-     | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL);          }
-     | SYMBOL '=' expression                               { $$ = Expr_Aff($1, $3);                 }
-     | SYMBOL                                              { $$ = Expr_Var($1);                     }
-     | '!' expression                                      { $$ = Expr_Neg($2);                     }
-     | expression EQ  expression                           { $$ = Expr_Eq($1, $3);                  }
-     | expression NEQ expression                           { $$ = Expr_Neq($1, $3);                 }
-     | expression LE  expression                           { $$ = Expr_Le($1, $3);                  }
-     | expression '<' expression                           { $$ = Expr_Lt($1, $3);                  }
-     | expression GE  expression                           { $$ = Expr_Ge($1, $3);                  }
-     | expression '>' expression                           { $$ = Expr_Gt($1, $3);                  }
-     | expression '+' expression                           { $$ = Expr_Add($1, $3);                 }
-     | expression '-' expression                           { $$ = Expr_Sub($1, $3);                 }
-     | expression '*' expression                           { $$ = Expr_Mul($1, $3);                 }
-     | expression '/' expression                           { $$ = Expr_Div($1, $3);                 }
-     | expression '%' expression                           { $$ = Expr_Modulo($1, $3);              }
-     | '-' expression %prec MINUS_ALONE                    { $$ = Expr_Minus($2);                   }
-     | expression '?' expression ':' expression            { $$ = Expr_Ifte($1,$3,$5);              }
-     | '(' expression ')'                                  { $$ = $2;                               }
+       INTEGER                                             { $$ = Expr_Integer($1);                             }
+     | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3, (position*) &@1);       }
+     | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL, (position*) &@1);     }
+     | SYMBOL '=' expression                               { $$ = Expr_Aff($1, $3, (position*) &@1);            }
+     | SYMBOL                                              { $$ = Expr_Var($1, (position*) &@1);                }
+     | '!' expression                                      { $$ = Expr_Neg($2);                                 }
+     | expression EQ  expression                           { $$ = Expr_Eq($1, $3);                              }
+     | expression NEQ expression                           { $$ = Expr_Neq($1, $3);                             }
+     | expression LE  expression                           { $$ = Expr_Le($1, $3);                              }
+     | expression '<' expression                           { $$ = Expr_Lt($1, $3);                              }
+     | expression GE  expression                           { $$ = Expr_Ge($1, $3);                              }
+     | expression '>' expression                           { $$ = Expr_Gt($1, $3);                              }
+     | expression '+' expression                           { $$ = Expr_Add($1, $3);                             }
+     | expression '-' expression                           { $$ = Expr_Sub($1, $3);                             }
+     | expression '*' expression                           { $$ = Expr_Mul($1, $3);                             }
+     | expression '/' expression                           { $$ = Expr_Div($1, $3);                             }
+     | expression '%' expression                           { $$ = Expr_Mod($1, $3);                             }
+     | '-' expression %prec MINUS_ALONE                    { $$ = Expr_Minus($2);                               }
+     | expression '?' expression ':' expression            { $$ = Expr_Ifte($1,$3,$5);                          }
+     | '(' expression ')'                                  { $$ = $2;                                           }
 ;
 
 expr_list:
-       expression ',' expr_list                            { $$ = ExprList_New($1, $3);             }
-     | expression                                          { $$ = ExprList_New($1, NULL);           }
+       expression ',' expr_list                            { $$ = ExprList_New($1, $3);                         }
+     | expression                                          { $$ = ExprList_New($1, NULL);                       }
 ;
 
 %%

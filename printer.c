@@ -64,7 +64,7 @@ void Expr_Print(Expr* e)
       printf(")");
       break;
     case EXPR_VAR:
-      printf("Var(%s)", e->v.var);
+      printf("Var(%s)", e->v.var.name);
       break;
     PRINT_BINOP(EQ,  Eq );
     PRINT_BINOP(NEQ, Neq);
@@ -76,7 +76,7 @@ void Expr_Print(Expr* e)
     PRINT_BINOP(SUB, Sub);
     PRINT_BINOP(MUL, Mul);
     PRINT_BINOP(DIV, Div);
-    PRINT_BINOP(MODULO, Modulo);
+    PRINT_BINOP(MOD, Mod);
     case EXPR_MINUS:
       printf("Minus(");
       Expr_Print(e->v.uni_op);
@@ -160,11 +160,6 @@ void Stmt_Print(Stmt* s)
       Type_Print(s->v.decl.t);
       printf(", %s, ", s->v.decl.name);
       Expr_Print(s->v.decl.val);
-      printf(")");
-      break;
-    case STMT_AFF:
-      printf("Aff(%s, ", s->v.aff.name);
-      Expr_Print(s->v.aff.val);
       printf(")");
       break;
     case STMT_EXPR:

@@ -23,10 +23,10 @@
 
 typedef struct
 {
-  u32 first_line;
-  u32 first_column;
-  u32 last_line;
-  u32 last_column;
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
 } position;
 
 /* Expressions */
@@ -56,26 +56,25 @@ struct Expr
     EXPR_MUL,
     EXPR_DIV,
     EXPR_MINUS,
-    EXPR_MODULO,
+    EXPR_MOD,
     EXPR_IFTE,
   } type;
   union
   {
     s32 i;
-    struct { string name; ExprList* params; } call;
-    struct { string name; Expr* expr; } aff;
-    string var;
+    struct { string name; ExprList* params; position pos; } call;
+    struct { string name; Expr* expr;       position pos; } aff;
+    struct { string name; position pos; } var;
     struct { struct Expr* left, * right; } bin_op;
     struct { struct Expr* op1, * op2, * op3; } tern_op;
     struct Expr* uni_op;
   } v;
-  position pos;
 };
 /* Constructors */
 Expr* Expr_Integer(s32);
-Expr* Expr_Fun_Call(string, ExprList*);
-Expr* Expr_Aff(string, Expr*);
-Expr* Expr_Var(string);
+Expr* Expr_Fun_Call(string, ExprList*, position*);
+Expr* Expr_Aff(string, Expr*, position*);
+Expr* Expr_Var(string, position*);
 Expr* Expr_Neg(Expr*);
 Expr* Expr_Eq(Expr*, Expr*);
 Expr* Expr_Neq(Expr*, Expr*);
@@ -87,7 +86,7 @@ Expr* Expr_Add(Expr*, Expr*);
 Expr* Expr_Sub(Expr*, Expr*);
 Expr* Expr_Mul(Expr*, Expr*);
 Expr* Expr_Div(Expr*, Expr*);
-Expr* Expr_Modulo(Expr*, Expr*);
+Expr* Expr_Mod(Expr*, Expr*);
 Expr* Expr_Minus(Expr*);
 Expr* Expr_Ifte(Expr*, Expr*, Expr*);
 ExprList* ExprList_New(Expr*, ExprList*);
@@ -135,7 +134,6 @@ struct Stmt
   {
     STMT_NOTHING,
     STMT_DECL,
-    STMT_AFF,
     STMT_EXPR,
     STMT_WHILE,
     STMT_DO,
@@ -146,8 +144,7 @@ struct Stmt
   } type;
   union
   {
-    struct { Type* t; string name; Expr* val; } decl;
-    struct { string name; Expr* val; } aff;
+    struct { Type* t; string name; Expr* val; position pos; } decl;
     Expr* expr;
     struct { Expr* cond; Stmt* stmt; } whilez;
     struct { Stmt* stmt; Expr* cond; } doz;
@@ -159,8 +156,7 @@ struct Stmt
 };
 /* Constructors */
 Stmt* Stmt_Nothing(void);
-Stmt* Stmt_Decl(Type*, string, Expr*);
-Stmt* Stmt_Aff(string, Expr*);
+Stmt* Stmt_Decl(Type*, string, Expr*, position* pos);
 Stmt* Stmt_Expr(Expr*);
 Stmt* Stmt_While(Expr*, Stmt*);
 Stmt* Stmt_Do(Stmt*, Expr*);
@@ -178,8 +174,9 @@ void StmtList_Delete(StmtList*);
 /* Function declarations */
 typedef struct
 {
-  Type*  type;
-  string name;
+  Type*    type;
+  string   name;
+  position pos;
 } Param;
 typedef struct ParamList
 {
@@ -192,6 +189,7 @@ typedef struct
   string     name;
   ParamList* params;
   Stmt*      stmt;
+  position   pos;
 } FunDecl;
 typedef struct Program
 {
@@ -199,10 +197,10 @@ typedef struct Program
   struct Program* tail;
 } Program;
 /* Constructors */
-Param* Param_New(Type*, string);
+Param* Param_New(Type*, string, position*);
 ParamList* ParamList_New(Param*, ParamList*);
 ParamList* ParamList_Void(void);
-FunDecl* FunDecl_New(Type*, string, ParamList*, Stmt*);
+FunDecl* FunDecl_New(Type*, string, ParamList*, Stmt*, position*);
 Program* Program_New(FunDecl*, Program*);
 /* Destructors */
 void Param_Delete(Param*);

@@ -27,12 +27,13 @@ typedef signed char    s8;
 typedef signed short   s16;
 typedef signed long    s32;
 
+typedef char*          string;
+typedef const char*    cstring;
+
 typedef enum
 {
   false = 0,
   true  = 1
 } bool;
-
-typedef char* string;
 
 #endif

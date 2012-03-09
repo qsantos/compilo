@@ -23,6 +23,14 @@
 #include <string.h>
 #include <assert.h>
 
+static inline void Pos_Copy(position* p1, position* p2)
+{
+  p1->first_line   = p2->first_line;
+  p1->first_column = p2->first_column;
+  p1->last_line    = p2->last_line;
+  p1->last_column  = p2->last_column;
+}
+
 /* EXPRESSIONS */
 
 Expr* Expr_Integer(s32 i)
@@ -34,32 +42,35 @@ Expr* Expr_Integer(s32 i)
   return expr;
 }
 
-Expr* Expr_Fun_Call(string name, ExprList* params)
+Expr* Expr_Fun_Call(string name, ExprList* params, position* pos)
 {
   Expr* expr = (Expr*) malloc(sizeof(Expr));
   assert(expr);
   expr->type = EXPR_FUN_CALL;
   expr->v.call.name   = name;
   expr->v.call.params = params;
+  Pos_Copy(&expr->v.call.pos, pos);
   return expr;
 }
 
-Expr* Expr_Aff(string name, Expr* e)
+Expr* Expr_Aff(string name, Expr* e, position* pos)
 {
   Expr* expr = (Expr*) malloc(sizeof(Expr));
   assert(expr);
   expr->type = EXPR_AFF;
   expr->v.aff.name = name;
   expr->v.aff.expr = e;
+  Pos_Copy(&expr->v.aff.pos, pos);
   return expr;
 }
 
-Expr* Expr_Var(string name)
+Expr* Expr_Var(string name, position* pos)
 {
   Expr* expr = (Expr*) malloc(sizeof(Expr));
   assert(expr);
   expr->type = EXPR_VAR;
-  expr->v.var = name;
+  expr->v.var.name = name;
+  Pos_Copy(&expr->v.var.pos, pos);
   return expr;
 }
 
@@ -92,7 +103,7 @@ Expr* Expr_Add(Expr* l, Expr* r) { return Expr_binop(EXPR_ADD, l, r); }
 Expr* Expr_Sub(Expr* l, Expr* r) { return Expr_binop(EXPR_SUB, l, r); }
 Expr* Expr_Mul(Expr* l, Expr* r) { return Expr_binop(EXPR_MUL, l, r); }
 Expr* Expr_Div(Expr* l, Expr* r) { return Expr_binop(EXPR_DIV, l, r); }
-Expr* Expr_Modulo(Expr* l, Expr* r) { return Expr_binop(EXPR_MODULO,  l, r); }
+Expr* Expr_Mod(Expr* l, Expr* r) { return Expr_binop(EXPR_MOD, l, r); }
 
 Expr* Expr_Minus(Expr* op)
 {
@@ -135,7 +146,7 @@ void Expr_Delete(Expr* e)
 	  ExprList_Delete(e->v.call.params);
 	  break;
 	case EXPR_VAR:
-	  free(e->v.var);
+	  free(e->v.var.name);
 	  break;
 	case EXPR_ADD:
 	case EXPR_SUB:
@@ -208,7 +219,7 @@ Stmt* Stmt_Nothing(void)
   return &SNothing;
 }
 
-Stmt* Stmt_Decl(Type* t, string name, Expr* init)
+Stmt* Stmt_Decl(Type* t, string name, Expr* init, position* pos)
 {
   Stmt* s = (Stmt*) malloc(sizeof(Stmt));
   assert(s);
@@ -216,16 +227,7 @@ Stmt* Stmt_Decl(Type* t, string name, Expr* init)
   s->v.decl.t    = t;
   s->v.decl.name = name;
   s->v.decl.val  = init;
-  return s;
-}
-
-Stmt* Stmt_Aff(string name, Expr* val)
-{
-  Stmt* s = (Stmt*) malloc(sizeof(Stmt));
-  assert(s);
-  s->type = STMT_AFF;
-  s->v.aff.name = name;
-  s->v.aff.val  = val;
+  Pos_Copy(&s->v.decl.pos, pos);
   return s;
 }
 
@@ -318,10 +320,6 @@ void Stmt_Delete(Stmt* s)
 	  free(s->v.decl.name);
 	  Expr_Delete(s->v.decl.val);
 	  break;
-	case STMT_AFF:
-	  free(s->v.aff.name);
-	  Expr_Delete(s->v.aff.val);
-	  break;
 	case STMT_EXPR:
 	case STMT_RETURN:
 	  Expr_Delete(s->v.expr);
@@ -358,12 +356,13 @@ void StmtList_Delete(StmtList* l)
 
 /* FUNCTION DECLARATIONS */
 
-Param* Param_New(Type* t, string name)
+Param* Param_New(Type* t, string name, position* pos)
 {
   Param* p = (Param*) malloc(sizeof(Param));
   assert(p);
   p->type = t;
   p->name = name;
+  Pos_Copy(&p->pos, pos);
   return p;
 }
 
@@ -376,12 +375,14 @@ ParamList* ParamList_New(Param* head, ParamList* tail)
   return list;  
 }
 
+position pos_void = { 0, 0, 0, 0 };
+
 ParamList* ParamList_Void(void)
 {
-  return ParamList_New(Param_New(Type_Void(), ""), NULL);
+  return ParamList_New(Param_New(Type_Void(), "", &pos_void), NULL);
 }
 
-FunDecl* FunDecl_New(Type* ret, string name, ParamList* params, Stmt* body)
+FunDecl* FunDecl_New(Type* ret, string name, ParamList* params, Stmt* body, position* pos)
 {
   FunDecl* f = (FunDecl*) malloc(sizeof(FunDecl));
   assert(f);
@@ -389,6 +390,7 @@ FunDecl* FunDecl_New(Type* ret, string name, ParamList* params, Stmt* body)
   f->name   = name;
   f->params = params;
   f->stmt   = body;
+  Pos_Copy(&f->pos, pos);
   return f;
 }
 
