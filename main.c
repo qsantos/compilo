@@ -21,13 +21,12 @@
 
 #include "ast.h"
 #include "lexer.h"
-#include "global.h"
 #include "printer.h"
 #include "latex.h"
 
 extern int yyparse(void);
-Program* current_prog = NULL;
 
+Program* current_prog = NULL;
 int main(int argc, char** argv)
 {
   yyparse();

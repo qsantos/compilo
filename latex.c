@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-static u8 depth = 2;
+static u8 depth = 3;
 static void indent()
 {
   for (u8 i = 0; i < depth; i++)
@@ -246,16 +246,17 @@ void Program_Latex(Program* p)
   
   printf
   (
-    "\\documentclass{article}\n"
+    "\\documentclass[landscape]{article}\n"
     "\\usepackage{tikz}\n"
     "\\usetikzlibrary{trees}\n"
     "\\begin{document}\n"
-    "\t\\tikzstyle{level 1}=[level distance=3.5cm, sibling distance=2cm]\n"
-    "\t\\tikzstyle{level 2}=[level distance=3.5cm, sibling distance=2cm]\n"
-    "\t\\begin{tikzpicture}\n"
+    "\t\\begin{center}\n"
+    "\t\t\\tikzstyle{level 1}=[level distance=3.5cm, sibling distance=2cm]\n"
+    "\t\t\\tikzstyle{level 2}=[level distance=3.5cm, sibling distance=2cm]\n"
+    "\t\t\\begin{tikzpicture}\n"
   );
   
-  printf("\t\t\\node{Program}\n");
+  printf("\t\t\t\\node{Program}\n");
   
   do
   {
@@ -263,7 +264,8 @@ void Program_Latex(Program* p)
   }
   while ((p = p->tail));
   
-  printf("\t\t;\n");
-  printf("\t\\end{tikzpicture}\n");
+  printf("\t\t\t;\n");
+  printf("\t\t\\end{tikzpicture}\n");
+  printf("\t\\end{center}\n");
   printf("\\end{document}\n");
 }

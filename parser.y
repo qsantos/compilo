@@ -20,8 +20,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ast.h"
-#include "global.h"
+#include "error.h"
 
+extern Program* current_prog;
 extern int yylex(void);
 extern int yyerror(const char*);
 %}
