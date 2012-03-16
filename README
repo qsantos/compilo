@@ -1,7 +1,7 @@
 Le projet est constitué des sources:
 
 * ast.[hc]     pour la description de l'Arbre de Syntax Abstraite
-* global.h     on s'autorise quelques globales pour la gestion des erreurs et pour alléger l'appel au parser
+* error.h      contient les fontions de traitement des erreurs et les informations de position
 * lexer.lex    description lexicale
 * main.c       maintient maintenant la main sur main
 * parser.y     description syntaxique

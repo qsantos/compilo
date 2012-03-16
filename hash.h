@@ -24,6 +24,7 @@
 typedef struct
 {
 	string k;
+	u32 u;
 	u32 v;
 } KValue;
 
@@ -36,6 +37,6 @@ typedef struct
 
 HashTable* HashTable_new(u32 size);
 void HashTable_delete(HashTable* ht);
-u32 HashTable_find(HashTable* ht, cstring key);
+u32 HashTable_find(HashTable* ht, cstring key, u32 unifier);
 
 #endif

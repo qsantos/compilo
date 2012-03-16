@@ -22,7 +22,7 @@
 #include "types.h"
 #include "ast.h"
 #include "u32stack.h"
-#include "HashTable.h"
+#include "hash.h"
 
 typedef struct
 {
