@@ -23,6 +23,7 @@
 #include "lexer.h"
 #include "printer.h"
 #include "latex.h"
+#include "static.h"
 
 extern int yyparse(void);
 
@@ -30,10 +31,19 @@ Program* current_prog = NULL;
 int main(int argc, char** argv)
 {
   yyparse();
+
   if (argc > 1 && !strcmp(argv[1], "--latex"))
     Program_Latex(current_prog);
   else
     Program_Print(current_prog);
+
+  context* c = Context_New(32000);
+
+  Check_Program(current_prog, c);
+
+  //Context_Delete(c);
+
   Program_Delete(current_prog);
+
   return 0;
 }

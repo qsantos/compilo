@@ -1,9 +1,7 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
-#include "../types.h"
-
-typedef const char* cstring;
+#include "types.h"
 
 typedef struct
 {
