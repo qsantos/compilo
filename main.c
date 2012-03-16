@@ -30,20 +30,20 @@ extern int yyparse(void);
 Program* current_prog = NULL;
 int main(int argc, char** argv)
 {
-  yyparse();
+	yyparse();
 
-  if (argc > 1 && !strcmp(argv[1], "--latex"))
-    Program_Latex(current_prog);
-  else
-    Program_Print(current_prog);
+	if (argc > 1 && !strcmp(argv[1], "--latex"))
+		Program_Latex(current_prog);
+	else
+		Program_Print(current_prog);
 
-  context* c = Context_New(32000);
+	context* c = Context_New(32000);
 
-  Check_Program(current_prog, c);
+	Check_Program(current_prog, c);
 
-  //Context_Delete(c);
+	//Context_Delete(c);
 
-  Program_Delete(current_prog);
+	Program_Delete(current_prog);
 
-  return 0;
+	return 0;
 }

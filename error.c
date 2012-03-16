@@ -25,13 +25,13 @@ s32 col_incr = 0;
 
 void Char_Move(s32 n)
 {
-  col += col_incr;
-  col_incr = n;
+	col += col_incr;
+	col_incr = n;
 }
 
 void Char_Newline(void)
 {
-  row++;
-  col = 0;
-  col_incr = 0;
+	row++;
+	col = 0;
+	col_incr = 0;
 }
