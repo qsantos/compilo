@@ -80,6 +80,7 @@ void Check_Expr(Expr* e, context* c)
 			Static_Error(c, &e->v.call.pos, "function %s is undeclared", name);
 		}
 		Check_ExprList(e->v.call.params, c);
+		Check_TypeParams(st[k].v.f, e, c);
 		break;
 	case EXPR_AFF:
 		name = e->v.aff.name;
@@ -89,6 +90,7 @@ void Check_Expr(Expr* e, context* c)
 			Static_Error(c, &e->v.aff.pos, "variable %s is undeclared", name);
 		}
 		Check_Expr(e->v.aff.expr, c);
+		Check_TypeExpr(st[k].v.t, e->v.aff.expr, c);
 		break;
 	case EXPR_VAR:
 		name = e->v.var.name;
@@ -163,6 +165,7 @@ void Check_Stmt(Stmt* s, context* c)
 			{
 				Check_Expr(s->v.decl.val, c);
 				st[k].isDefined = true;
+				Check_TypeExpr(s->v.decl.t, s->v.decl.val, c);
 			}
 			else
 				st[k].isDefined = false;
@@ -170,6 +173,7 @@ void Check_Stmt(Stmt* s, context* c)
 		break;
 	case STMT_EXPR:
 	case STMT_RETURN:
+		/* XXX */
 		Check_Expr(s->v.expr, c);
 		break;
 	case STMT_WHILE:
@@ -313,4 +317,61 @@ void Static_Error(context* c, position* pos, cstring format, ...)
 	fprintf(stderr, "\n");
 	va_end(va);
 	c->err = true;
+}
+
+/* Typage */
+
+void Check_TypeExpr(Type* t, Expr* e, context* c)
+{
+	(void) t;
+	(void) e;
+	(void) c;
+	return;
+	switch (e->type)
+	{
+	case EXPR_INTEGER:
+		break;
+	case EXPR_FUN_CALL:
+		break;
+	case EXPR_AFF:
+		break;
+	case EXPR_VAR:
+		break;
+	case EXPR_NEG:
+		break;
+	case EXPR_EQ:
+	case EXPR_NEQ:
+	case EXPR_LE:
+	case EXPR_LT:
+	case EXPR_GE:
+	case EXPR_GT:
+	case EXPR_ADD:
+	case EXPR_SUB:
+	case EXPR_MUL:
+	case EXPR_DIV:
+	case EXPR_MOD:
+		break;
+	case EXPR_MINUS:
+		break;
+	case EXPR_IFTE:
+		break;
+	default:
+		break;
+	}
+}
+
+void Check_TypeParams(FunDecl* fd, Expr* e, context* c)
+{
+	ParamList* p = fd->params;
+	ExprList*  l = e->v.call.params;
+	while (l && p)
+	{
+		Check_TypeExpr(p->head->type, l->head, c);
+		p = p->tail;
+		l = l->tail;
+	}
+	if (l)
+		Static_Error(c, e->pos, "too many arguments to function %s", fd->name);
+	else if (p)
+		Static_Error(c, e->pos, "too few arguments to function %s", fd->name);
 }

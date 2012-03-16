@@ -41,8 +41,7 @@ int main(int argc, char** argv)
 
 	Check_Program(current_prog, c);
 
-	//Context_Delete(c);
-
+	Context_Delete(c);
 	Program_Delete(current_prog);
 
 	return 0;

@@ -59,4 +59,7 @@ void Check_ParamList(ParamList*, context*);
 void Check_FunDecl(FunDecl*, context*);
 void Check_Program(Program*, context*);
 
+void Check_TypeExpr(Type*, Expr*, context*);
+void Check_TypeParams(FunDecl*, Expr*, context*);
+
 #endif
