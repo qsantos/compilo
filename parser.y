@@ -22,7 +22,11 @@
 #include "ast.h"
 #include "error.h"
 
-#define YYLTYPE position
+#define YY_USER_ACTION {yylloc.first_line = yylineno; \
+yylloc.first_column = colnum; \
+colnum=colnum+yyleng; \
+yylloc.last_column=colnum; \
+yylloc.last_line = yylineno;}
 
 extern Program* current_prog;
 extern int yylex(void);
@@ -76,7 +80,6 @@ extern int yyerror(const char*);
 %start start
 
 %locations
-%pure_parser
 %error-verbose
 
 %%

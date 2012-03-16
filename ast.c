@@ -35,9 +35,6 @@ static inline void Pos_Copy(position* p1, position* p2)
 
 Expr* Expr_Integer(s32 i, position* pos)
 {
-	puts("Integer got");
-	printf("%p\n", (void*)pos);
-	printf("%d %d %d %d\n", pos->first_line, pos->first_column, pos->last_line, pos->last_column);
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
 	expr->type = EXPR_INTEGER;

@@ -22,8 +22,16 @@
 #include "types.h"
 #include "ast.h"
 #include "parser.h"
+#include "error.h"
 
-#define YYLTYPE position
+#define YY_USER_ACTION \
+{\
+	yylloc.first_line = row; \
+	yylloc.first_column = col; \
+	col += yyleng; \
+	yylloc.last_column = col; \
+	yylloc.last_line = row; \
+}
 
 int yyerror(const char*);
 
@@ -35,8 +43,6 @@ static inline string String_Copy(string s)
   return c;
 }
 %}
-
-%option bison-bridge bison-locations
 
 SYMBOL          [_a-zA-Z][_a-zA-Z0-9]*
 INTEGER         [0-9]+
@@ -61,8 +67,8 @@ INTEGER         [0-9]+
 
 [-(){},;+*=/%<>!?:] { Char_Move(1); return *yytext; }
 
-{INTEGER}           { Char_Move(strlen(yytext)); yylval->integer = atol(yytext);       return INTEGER; }
-{SYMBOL}            { Char_Move(strlen(yytext)); yylval->symbol = String_Copy(yytext); return SYMBOL;  }
+{INTEGER}           { Char_Move(strlen(yytext)); yylval.integer = atol(yytext);       return INTEGER; }
+{SYMBOL}            { Char_Move(strlen(yytext)); yylval.symbol = String_Copy(yytext); return SYMBOL;  }
 
 [ \r\t]+            { Char_Move(strlen(yytext));    }
 
