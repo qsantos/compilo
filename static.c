@@ -22,35 +22,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-typedef struct u32stack u32stack;
-
-struct u32stack
-{
-	u32       head;
-	u32stack* tail;
-};
-
-void u32stack_push(u32, u32stack**);
-u32  u32stack_pop(u32stack**);
-
-void u32stack_push(u32 e, u32stack** s)
-{
-	u32stack* t = (u32stack*) malloc(sizeof(u32stack));
-	assert(t);
-	t->head = e;
-	t->tail = *s;
-	*s = t;
-}
-
-u32 u32stack_pop(u32stack** s)
-{
-	u32 tos     = (*s)->head;
-	u32stack* t = (*s)->tail;
-	free(*s);
-	*s = t;
-	return tos;
-}
-
 /*
  * /!\ DENREE RARE: commentaire /!\
  *
@@ -62,36 +33,35 @@ u32 u32stack_pop(u32stack** s)
  * où k est le TOS de "forget", puis on pop "forget"
  */
 
-u32stack* defined;
-u32stack* forget;
-
-void Block_Begin(void);
-void Block_Add(u32);
+void Block_Begin(context*);
+void Block_Add(context*, u32);
 void Block_End(context*);
 
 void Static_Error(context*, position*, cstring, ...);
 
-void Block_Begin(void)
+void Block_Begin(context* c)
 {
-	u32stack_push(0, &forget);
+	u32stack_push(0, &c->forget);
+	c->depth ++;
 }
 
-void Block_Add(u32 id)
+void Block_Add(context* c, u32 id)
 {
-	u32stack_push(id, &defined);
-	forget->head++;
+	u32stack_push(id, &c->defined);
+	c->forget->head++;
 }
 
 void Block_End(context* c)
 {
-	u32 k = u32stack_pop(&forget);
+	u32 k = u32stack_pop(&c->forget);
 	while (k)
 	{
-		u32 id = u32stack_pop(&defined);
+		u32 id = u32stack_pop(&c->defined);
 		c->st[id].isDeclared = false; // on oublie
 		c->st[id].isDefined  = false;
 		k --;
 	}
+	c->depth --;
 }
 
 void Check_Expr(Expr* e, context* c)
@@ -184,7 +154,7 @@ void Check_Stmt(Stmt* s, context* c)
 		}
 		else
 		{
-			Block_Add(k);
+			Block_Add(c, k);
 			st[k].isDeclared = true;
 			st[k].isFun      = false;
 			st[k].pos        = &s->v.decl.pos;
@@ -222,7 +192,7 @@ void Check_Stmt(Stmt* s, context* c)
 		Check_Stmt(s->v.ifz.iffalse, c);
 		break;
 	case STMT_BLOCK:
-		Block_Begin();
+		Block_Begin(c);
 		Check_StmtList(s->v.block, c);
 		Block_End(c);
 		break;
@@ -253,7 +223,7 @@ void Check_Param(Param* p, context* c)
 	}
 	else
 	{
-		Block_Add(k);
+		Block_Add(c, k);
 		st[k].isDeclared = true;
 		st[k].isDefined  = false;
 		st[k].isFun      = false;
@@ -284,12 +254,12 @@ void Check_FunDecl(FunDecl* fd, context* c)
 	}
 	else
 	{
-		Block_Add(k);
+		Block_Add(c, k);
 		st[k].isDeclared = true;
 		st[k].isFun      = true;
 		st[k].pos        = &fd->pos;
 		st[k].v.f        = fd;
-		Block_Begin();
+		Block_Begin(c);
 		Check_ParamList(fd->params, c);
 		Check_Stmt(fd->stmt, c);
 		Block_End(c);
@@ -298,7 +268,7 @@ void Check_FunDecl(FunDecl* fd, context* c)
 
 void Check_Program(Program* l, context* c)
 {
-	Block_Begin();
+	Block_Begin(c);
 	while (l)
 	{
 		Check_FunDecl(l->head, c);
@@ -320,11 +290,15 @@ context* Context_New(u32 size)
 		size --;
 	}
 	c->err = false;
+	c->depth = 0;
+	c->defined = NULL;
+	c->forget  = NULL;
 	return c;
 }
 
 void Context_Delete(context* c)
 {
+	/* XXX: virer les stacks */
 	HashTable_delete(c->ht);
 	free(c->st);
 	free(c);

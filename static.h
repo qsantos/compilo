@@ -21,11 +21,12 @@
 
 #include "types.h"
 #include "ast.h"
+#include "u32stack.h"
 #include "HashTable.h"
 
 typedef struct
 {
-	bool isDeclared; // existe t'il ?
+	bool isDeclared; // déjà déclaré ?
 	bool isDefined;  // a-t'il déjà été initialisé ?
 	bool isFun;      // variable "normale" ou fonction ?
 	union
@@ -41,6 +42,9 @@ typedef struct
 	bool       err; // une erreur a déjà eu lieu ?
 	HashTable* ht;
 	symbol*    st;
+	u32stack*  defined; // cf commentaires dans le .c
+	u32stack*  forget;
+	u32        depth;
 } context;
 
 context* Context_New(u32);
