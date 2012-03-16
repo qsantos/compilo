@@ -23,52 +23,52 @@
 
 typedef struct
 {
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
+	int first_line;
+	int first_column;
+	int last_line;
+	int last_column;
 } position;
 
 /* Expressions */
 typedef struct Expr Expr;
 typedef struct ExprList
 {
-  Expr*            head;
-  struct ExprList* tail;
+	Expr*            head;
+	struct ExprList* tail;
 } ExprList;
 struct Expr
 {
-  enum
-  {
-    EXPR_INTEGER,
-    EXPR_FUN_CALL,
-    EXPR_AFF,
-    EXPR_VAR,
-    EXPR_NEG,
-    EXPR_EQ,
-    EXPR_NEQ,
-    EXPR_LE,
-    EXPR_LT,
-    EXPR_GE,
-    EXPR_GT,
-    EXPR_ADD,
-    EXPR_SUB,
-    EXPR_MUL,
-    EXPR_DIV,
-    EXPR_MINUS,
-    EXPR_MOD,
-    EXPR_IFTE,
-  } type;
-  union
-  {
-    s32 i;
-    struct { string name; ExprList* params; position pos; } call;
-    struct { string name; Expr* expr;       position pos; } aff;
-    struct { string name; position pos; } var;
-    struct { struct Expr* left, * right; } bin_op;
-    struct { struct Expr* op1, * op2, * op3; } tern_op;
-    struct Expr* uni_op;
-  } v;
+	enum
+	{
+		EXPR_INTEGER,
+		EXPR_FUN_CALL,
+		EXPR_AFF,
+		EXPR_VAR,
+		EXPR_NEG,
+		EXPR_EQ,
+		EXPR_NEQ,
+		EXPR_LE,
+		EXPR_LT,
+		EXPR_GE,
+		EXPR_GT,
+		EXPR_ADD,
+		EXPR_SUB,
+		EXPR_MUL,
+		EXPR_DIV,
+		EXPR_MINUS,
+		EXPR_MOD,
+		EXPR_IFTE,
+	} type;
+	union
+	{
+		s32 i;
+		struct { string name; ExprList* params; position pos; } call;
+		struct { string name; Expr* expr;       position pos; } aff;
+		struct { string name; position pos; } var;
+		struct { struct Expr* left, * right; } bin_op;
+		struct { struct Expr* op1, * op2, * op3; } tern_op;
+		struct Expr* uni_op;
+	} v;
 };
 /* Constructors */
 Expr* Expr_Integer(s32);
@@ -99,17 +99,17 @@ void ExprList_Delete(ExprList*);
 /* Types  */
 typedef struct Type
 {
-  enum
-  {
-    TYPE_VOID,
-    TYPE_CHAR,
-    TYPE_INT,
-    TYPE_PTR,
-  } type;
-  union
-  {
-    struct Type* ptr;
-  } v;
+	enum
+	{
+		TYPE_VOID,
+		TYPE_CHAR,
+		TYPE_INT,
+		TYPE_PTR,
+	} type;
+	union
+	{
+		struct Type* ptr;
+	} v;
 } Type;
 /* Contructors */
 Type* Type_Void(void);
@@ -125,34 +125,34 @@ void Type_Delete(Type*);
 typedef struct Stmt Stmt;
 typedef struct StmtList
 {
-  Stmt*            head;
-  struct StmtList* tail;
+	Stmt*            head;
+	struct StmtList* tail;
 } StmtList;
 struct Stmt
 {
-  enum
-  {
-    STMT_NOTHING,
-    STMT_DECL,
-    STMT_EXPR,
-    STMT_WHILE,
-    STMT_DO,
-    STMT_FOR,
-    STMT_IF,
-    STMT_RETURN,
-    STMT_BLOCK,
-  } type;
-  union
-  {
-    struct { Type* t; string name; Expr* val; position pos; } decl;
-    Expr* expr;
-    struct { Expr* cond; Stmt* stmt; } whilez;
-    struct { Stmt* stmt; Expr* cond; } doz;
-    struct { Stmt* a; Stmt* b; Stmt* c; Stmt* stmt; } forz;
-    struct { Expr* cond; Stmt* iftrue, * iffalse; } ifz;
-    StmtList* block;
-  } v;
-  position pos;
+	enum
+	{
+		STMT_NOTHING,
+		STMT_DECL,
+		STMT_EXPR,
+		STMT_WHILE,
+		STMT_DO,
+		STMT_FOR,
+		STMT_IF,
+		STMT_RETURN,
+		STMT_BLOCK,
+	} type;
+	union
+	{
+		struct { Type* t; string name; Expr* val; position pos; } decl;
+		Expr* expr;
+		struct { Expr* cond; Stmt* stmt; } whilez;
+		struct { Stmt* stmt; Expr* cond; } doz;
+		struct { Stmt* a; Stmt* b; Stmt* c; Stmt* stmt; } forz;
+		struct { Expr* cond; Stmt* iftrue, * iffalse; } ifz;
+		StmtList* block;
+	} v;
+	position pos;
 };
 /* Constructors */
 Stmt* Stmt_Nothing(void);
@@ -174,27 +174,27 @@ void StmtList_Delete(StmtList*);
 /* Function declarations */
 typedef struct
 {
-  Type*    type;
-  string   name;
-  position pos;
+	Type*    type;
+	string   name;
+	position pos;
 } Param;
 typedef struct ParamList
 {
-  Param*            head;
-  struct ParamList* tail;
+	Param*            head;
+	struct ParamList* tail;
 } ParamList;
 typedef struct
 {
-  Type*      type;
-  string     name;
-  ParamList* params;
-  Stmt*      stmt;
-  position   pos;
+	Type*      type;
+	string     name;
+	ParamList* params;
+	Stmt*      stmt;
+	position   pos;
 } FunDecl;
 typedef struct Program
 {
-  FunDecl*        head;
-  struct Program* tail;
+	FunDecl*        head;
+	struct Program* tail;
 } Program;
 /* Constructors */
 Param* Param_New(Type*, string, position*);

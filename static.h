@@ -25,22 +25,22 @@
 
 typedef struct
 {
-  bool isDeclared; // existe t'il ?
-  bool isDefined;  // a-t'il déjà été initialisé ?
-  bool isFun;      // variable "normale" ou fonction ?
-  union
-  {
-    Type*    t;
-    FunDecl* f;
-  } v;
-  position* pos;
+	bool isDeclared; // existe t'il ?
+	bool isDefined;  // a-t'il déjà été initialisé ?
+	bool isFun;      // variable "normale" ou fonction ?
+	union
+	{
+		Type*    t;
+		FunDecl* f;
+	} v;
+	position* pos;
 } symbol;
 
 typedef struct
 {
-  bool       err; // une erreur a déjà eu lieu ?
-  HashTable* ht;
-  symbol*    st;
+	bool       err; // une erreur a déjà eu lieu ?
+	HashTable* ht;
+	symbol*    st;
 } context;
 
 context* Context_New(u32);
