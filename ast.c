@@ -33,12 +33,16 @@ static inline void Pos_Copy(position* p1, position* p2)
 
 /* EXPRESSIONS */
 
-Expr* Expr_Integer(s32 i)
+Expr* Expr_Integer(s32 i, position* pos)
 {
+	puts("Integer got");
+	printf("%p\n", (void*)pos);
+	printf("%d %d %d %d\n", pos->first_line, pos->first_column, pos->last_line, pos->last_column);
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
 	expr->type = EXPR_INTEGER;
 	expr->v.i = i;
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 
@@ -49,7 +53,7 @@ Expr* Expr_Fun_Call(string name, ExprList* params, position* pos)
 	expr->type = EXPR_FUN_CALL;
 	expr->v.call.name   = name;
 	expr->v.call.params = params;
-	Pos_Copy(&expr->v.call.pos, pos);
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 
@@ -60,7 +64,7 @@ Expr* Expr_Aff(string name, Expr* e, position* pos)
 	expr->type = EXPR_AFF;
 	expr->v.aff.name = name;
 	expr->v.aff.expr = e;
-	Pos_Copy(&expr->v.aff.pos, pos);
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 
@@ -70,51 +74,56 @@ Expr* Expr_Var(string name, position* pos)
 	assert(expr);
 	expr->type = EXPR_VAR;
 	expr->v.var.name = name;
-	Pos_Copy(&expr->v.var.pos, pos);
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 
-Expr* Expr_Neg(Expr* e)
+Expr* Expr_Neg(Expr* e, position* pos)
 {
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
 	expr->type = EXPR_NEG;
 	expr->v.uni_op = e;
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 
-static Expr* Expr_binop(int type, Expr* l, Expr* r)
+static Expr* Expr_binop(int type, Expr* l, Expr* r, position* pos)
 {
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
 	expr->type = type;
 	expr->v.bin_op.left = l;
 	expr->v.bin_op.right = r;
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 
-Expr* Expr_Eq (Expr* l, Expr* r) { return Expr_binop(EXPR_EQ,  l, r); }
-Expr* Expr_Neq(Expr* l, Expr* r) { return Expr_binop(EXPR_NEQ, l, r); }
-Expr* Expr_Le (Expr* l, Expr* r) { return Expr_binop(EXPR_LE,  l, r); }
-Expr* Expr_Lt (Expr* l, Expr* r) { return Expr_binop(EXPR_LT,  l, r); }
-Expr* Expr_Ge (Expr* l, Expr* r) { return Expr_binop(EXPR_GE,  l, r); }
-Expr* Expr_Gt (Expr* l, Expr* r) { return Expr_binop(EXPR_GT,  l, r); }
-Expr* Expr_Add(Expr* l, Expr* r) { return Expr_binop(EXPR_ADD, l, r); }
-Expr* Expr_Sub(Expr* l, Expr* r) { return Expr_binop(EXPR_SUB, l, r); }
-Expr* Expr_Mul(Expr* l, Expr* r) { return Expr_binop(EXPR_MUL, l, r); }
-Expr* Expr_Div(Expr* l, Expr* r) { return Expr_binop(EXPR_DIV, l, r); }
-Expr* Expr_Mod(Expr* l, Expr* r) { return Expr_binop(EXPR_MOD, l, r); }
+#define BINOP(CODE, NAME) Expr* Expr_##NAME (Expr* l, Expr* r, position* pos) { return Expr_binop(EXPR_##CODE,  l, r, pos); }
 
-Expr* Expr_Minus(Expr* op)
+BINOP(EQ,  Eq )
+BINOP(NEQ, Neq)
+BINOP(LE,  Le )
+BINOP(LT,  Lt )
+BINOP(GE,  Ge )
+BINOP(GT,  Gt )
+BINOP(ADD, Add)
+BINOP(SUB, Sub)
+BINOP(MUL, Mul)
+BINOP(DIV, Div)
+BINOP(MOD, Mod)
+
+Expr* Expr_Minus(Expr* op, position* pos)
 {
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
 	expr->type = EXPR_MINUS;
 	expr->v.uni_op = op;
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 
-Expr* Expr_Ifte(Expr* c, Expr* a, Expr* b)
+Expr* Expr_Ifte(Expr* c, Expr* a, Expr* b, position* pos)
 {
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
@@ -122,6 +131,7 @@ Expr* Expr_Ifte(Expr* c, Expr* a, Expr* b)
 	expr->v.tern_op.op1 = c;
 	expr->v.tern_op.op2 = a;
 	expr->v.tern_op.op3 = b;
+	Pos_Copy(&expr->pos, pos);
 	return expr;
 }
 

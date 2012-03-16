@@ -62,33 +62,34 @@ struct Expr
 	union
 	{
 		s32 i;
-		struct { string name; ExprList* params; position pos; } call;
-		struct { string name; Expr* expr;       position pos; } aff;
-		struct { string name; position pos; } var;
+		struct { string name; ExprList* params; } call;
+		struct { string name; Expr* expr; } aff;
+		struct { string name; } var;
 		struct { struct Expr* left, * right; } bin_op;
 		struct { struct Expr* op1, * op2, * op3; } tern_op;
 		struct Expr* uni_op;
 	} v;
+	position pos;
 };
 /* Constructors */
-Expr* Expr_Integer(s32);
+Expr* Expr_Integer(s32, position*);
 Expr* Expr_Fun_Call(string, ExprList*, position*);
 Expr* Expr_Aff(string, Expr*, position*);
 Expr* Expr_Var(string, position*);
-Expr* Expr_Neg(Expr*);
-Expr* Expr_Eq(Expr*, Expr*);
-Expr* Expr_Neq(Expr*, Expr*);
-Expr* Expr_Le(Expr*, Expr*);
-Expr* Expr_Lt(Expr*, Expr*);
-Expr* Expr_Ge(Expr*, Expr*);
-Expr* Expr_Gt(Expr*, Expr*);
-Expr* Expr_Add(Expr*, Expr*);
-Expr* Expr_Sub(Expr*, Expr*);
-Expr* Expr_Mul(Expr*, Expr*);
-Expr* Expr_Div(Expr*, Expr*);
-Expr* Expr_Mod(Expr*, Expr*);
-Expr* Expr_Minus(Expr*);
-Expr* Expr_Ifte(Expr*, Expr*, Expr*);
+Expr* Expr_Neg(Expr*, position*);
+Expr* Expr_Eq (Expr*, Expr*, position*);
+Expr* Expr_Neq(Expr*, Expr*, position*);
+Expr* Expr_Le (Expr*, Expr*, position*);
+Expr* Expr_Lt (Expr*, Expr*, position*);
+Expr* Expr_Ge (Expr*, Expr*, position*);
+Expr* Expr_Gt (Expr*, Expr*, position*);
+Expr* Expr_Add(Expr*, Expr*, position*);
+Expr* Expr_Sub(Expr*, Expr*, position*);
+Expr* Expr_Mul(Expr*, Expr*, position*);
+Expr* Expr_Div(Expr*, Expr*, position*);
+Expr* Expr_Mod(Expr*, Expr*, position*);
+Expr* Expr_Minus(Expr*, position*);
+Expr* Expr_Ifte(Expr*, Expr*, Expr*, position*);
 ExprList* ExprList_New(Expr*, ExprList*);
 /* Destructors */
 void Expr_Delete(Expr*);

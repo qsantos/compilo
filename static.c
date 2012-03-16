@@ -77,7 +77,7 @@ void Check_Expr(Expr* e, context* c)
 		k = HashTable_find(ht, name, c->depth);
 		if (!st[k].isDeclared)
 		{
-			Static_Error(c, &e->v.call.pos, "function %s is undeclared", name);
+			Static_Error(c, &e->pos, "function %s is undeclared", name);
 		}
 		Check_ExprList(e->v.call.params, c);
 		Check_TypeParams(st[k].v.f, e, c);
@@ -87,7 +87,7 @@ void Check_Expr(Expr* e, context* c)
 		k = HashTable_find(ht, name, c->depth);
 		if (!st[k].isDeclared)
 		{
-			Static_Error(c, &e->v.aff.pos, "variable %s is undeclared", name);
+			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
 		Check_Expr(e->v.aff.expr, c);
 		Check_TypeExpr(st[k].v.t, e->v.aff.expr, c);
@@ -97,7 +97,7 @@ void Check_Expr(Expr* e, context* c)
 		k = HashTable_find(ht, name, c->depth);
 		if (!st[k].isDeclared)
 		{
-			Static_Error(c, &e->v.var.pos, "variable %s is undeclared", name);
+			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
 		break;
 	case EXPR_NEG:
@@ -371,7 +371,7 @@ void Check_TypeParams(FunDecl* fd, Expr* e, context* c)
 		l = l->tail;
 	}
 	if (l)
-		Static_Error(c, e->pos, "too many arguments to function %s", fd->name);
+		Static_Error(c, &e->pos, "too many arguments to function %s", fd->name);
 	else if (p)
-		Static_Error(c, e->pos, "too few arguments to function %s", fd->name);
+		Static_Error(c, &e->pos, "too few arguments to function %s", fd->name);
 }

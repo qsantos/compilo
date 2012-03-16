@@ -22,6 +22,8 @@
 #include "ast.h"
 #include "error.h"
 
+#define YYLTYPE position
+
 extern Program* current_prog;
 extern int yylex(void);
 extern int yyerror(const char*);
@@ -73,6 +75,8 @@ extern int yyerror(const char*);
 
 %start start
 
+%locations
+%pure_parser
 %error-verbose
 
 %%
@@ -130,25 +134,25 @@ params:
      | param_list                                          { $$ = $1;                                           }
 
 expression:
-       INTEGER                                             { $$ = Expr_Integer($1);                             }
-     | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3, (position*) &@1);       }
-     | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL, (position*) &@1);     }
-     | SYMBOL '=' expression                               { $$ = Expr_Aff($1, $3, (position*) &@1);            }
-     | SYMBOL                                              { $$ = Expr_Var($1, (position*) &@1);                }
-     | '!' expression                                      { $$ = Expr_Neg($2);                                 }
-     | expression EQ  expression                           { $$ = Expr_Eq($1, $3);                              }
-     | expression NEQ expression                           { $$ = Expr_Neq($1, $3);                             }
-     | expression LE  expression                           { $$ = Expr_Le($1, $3);                              }
-     | expression '<' expression                           { $$ = Expr_Lt($1, $3);                              }
-     | expression GE  expression                           { $$ = Expr_Ge($1, $3);                              }
-     | expression '>' expression                           { $$ = Expr_Gt($1, $3);                              }
-     | expression '+' expression                           { $$ = Expr_Add($1, $3);                             }
-     | expression '-' expression                           { $$ = Expr_Sub($1, $3);                             }
-     | expression '*' expression                           { $$ = Expr_Mul($1, $3);                             }
-     | expression '/' expression                           { $$ = Expr_Div($1, $3);                             }
-     | expression '%' expression                           { $$ = Expr_Mod($1, $3);                             }
-     | '-' expression %prec MINUS_ALONE                    { $$ = Expr_Minus($2);                               }
-     | expression '?' expression ':' expression            { $$ = Expr_Ifte($1,$3,$5);                          }
+       INTEGER                                             { $$ = Expr_Integer($1, (position*) &@$);            }
+     | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3, (position*) &@$);       }
+     | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL, (position*) &@$);     }
+     | SYMBOL '=' expression                               { $$ = Expr_Aff($1, $3, (position*) &@$);            }
+     | SYMBOL                                              { $$ = Expr_Var($1, (position*) &@$);                }
+     | '!' expression                                      { $$ = Expr_Neg($2, (position*) &@$);                }
+     | expression EQ  expression                           { $$ = Expr_Eq ($1, $3, (position*) &@$);            }
+     | expression NEQ expression                           { $$ = Expr_Neq($1, $3, (position*) &@$);            }
+     | expression LE  expression                           { $$ = Expr_Le ($1, $3, (position*) &@$);            }
+     | expression '<' expression                           { $$ = Expr_Lt ($1, $3, (position*) &@$);            }
+     | expression GE  expression                           { $$ = Expr_Ge ($1, $3, (position*) &@$);            }
+     | expression '>' expression                           { $$ = Expr_Gt ($1, $3, (position*) &@$);            }
+     | expression '+' expression                           { $$ = Expr_Add($1, $3, (position*) &@$);            }
+     | expression '-' expression                           { $$ = Expr_Sub($1, $3, (position*) &@$);            }
+     | expression '*' expression                           { $$ = Expr_Mul($1, $3, (position*) &@$);            }
+     | expression '/' expression                           { $$ = Expr_Div($1, $3, (position*) &@$);            }
+     | expression '%' expression                           { $$ = Expr_Mod($1, $3, (position*) &@$);            }
+     | '-' expression %prec MINUS_ALONE                    { $$ = Expr_Minus($2, (position*) &@$);              }
+     | expression '?' expression ':' expression            { $$ = Expr_Ifte($1,$3,$5, (position*) &@$);         }
      | '(' expression ')'                                  { $$ = $2;                                           }
 ;
 
