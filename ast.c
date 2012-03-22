@@ -120,6 +120,26 @@ Expr* Expr_Minus(Expr* op, position* pos)
 	return expr;
 }
 
+Expr* Expr_Cast(Expr* op, position* pos)
+{
+	Expr* expr = (Expr*) malloc(sizeof(Expr));
+	assert(expr);
+	expr->type = EXPR_CAST;
+	expr->v.uni_op = op;
+	Pos_Copy(&expr->pos, pos);
+	return expr;
+}
+
+Expr* Expr_Addr(Expr* op, position* pos)
+{
+	Expr* expr = (Expr*) malloc(sizeof(Expr));
+	assert(expr);
+	expr->type = EXPR_ADDR;
+	expr->v.uni_op = op;
+	Pos_Copy(&expr->pos, pos);
+	return expr;
+}
+
 Expr* Expr_Ifte(Expr* c, Expr* a, Expr* b, position* pos)
 {
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
@@ -163,6 +183,8 @@ void Expr_Delete(Expr* e)
 			Expr_Delete(e->v.bin_op.right);
 			break;
 		case EXPR_MINUS:
+		case EXPR_CAST:
+		case EXPR_ADDR:
 			Expr_Delete(e->v.uni_op);
 			break;
 		default:

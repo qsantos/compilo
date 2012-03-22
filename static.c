@@ -23,8 +23,6 @@
 #include <stdarg.h>
 
 /*
- * /!\ DENREE RARE: commentaire /!\
- *
  * A chaque fois qu'on ajoute un symbole:
  *  1) on push son numéro sur la pile "defined"
  *  2) on incrémente le TOS de "forget"
@@ -81,7 +79,8 @@ void Check_Expr(Expr* e, context* c)
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
 		}
 		Check_ExprList(e->v.call.params, c);
-		Check_TypeParams(st[k].v.f, e, c);
+		if (st[k].isDeclared)
+			Check_TypeParams(st[k].v.f, e, c);
 		break;
 	case EXPR_AFF:
 		name = e->v.aff.name;
@@ -103,6 +102,14 @@ void Check_Expr(Expr* e, context* c)
 		break;
 	case EXPR_NEG:
 	case EXPR_MINUS:
+		Check_Expr(e->v.uni_op, c);
+		break;
+	case EXPR_CAST:
+		/* XXX: typage  */
+		Check_Expr(e->v.uni_op, c);
+		break;
+	case EXPR_ADDR:
+		/* XXX: typage */
 		Check_Expr(e->v.uni_op, c);
 		break;
 	case EXPR_EQ:
@@ -353,6 +360,8 @@ void Check_TypeExpr(Type* t, Expr* e, context* c)
 	case EXPR_MOD:
 		break;
 	case EXPR_MINUS:
+	case EXPR_CAST:
+	case EXPR_ADDR:
 		break;
 	case EXPR_IFTE:
 		break;

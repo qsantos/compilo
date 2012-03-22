@@ -58,6 +58,7 @@ extern int yyerror(const char*);
 %left '+' '-'
 %left '*' '/'
 %nonassoc MINUS_ALONE
+%nonassoc STAR '&'
 
 %type <stmt> instr
 %type <stmt> statement
@@ -149,6 +150,8 @@ expression:
      | expression '/' expression                           { $$ = Expr_Div($1, $3, (position*) &@$);            }
      | expression '%' expression                           { $$ = Expr_Mod($1, $3, (position*) &@$);            }
      | '-' expression %prec MINUS_ALONE                    { $$ = Expr_Minus($2, (position*) &@$);              }
+     | '*' expression %prec STAR                           { $$ = Expr_Cast($2, (position*) &@$);               }
+     | '&' expression                                      { $$ = Expr_Addr($2, (position*) &@$);               }
      | expression '?' expression ':' expression            { $$ = Expr_Ifte($1,$3,$5, (position*) &@$);         }
      | '(' expression ')'                                  { $$ = $2;                                           }
 ;

@@ -108,6 +108,16 @@ static void printExpr(Expr* e)
 		printExpr(e->v.uni_op);
 		endNode();
 		break;
+	case EXPR_CAST:
+		beginNode("Cast");
+		printExpr(e->v.uni_op);
+		endNode();
+		break;
+	case EXPR_ADDR:
+		beginNode("Addr");
+		printExpr(e->v.uni_op);
+		endNode();
+		break;
 	case EXPR_IFTE:
 		beginNode("Ifte");
 		printExpr(e->v.tern_op.op1);

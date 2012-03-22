@@ -47,34 +47,40 @@ static inline string String_Copy(string s)
 SYMBOL          [_a-zA-Z][_a-zA-Z0-9]*
 INTEGER         [0-9]+
 
+%x COMMENT
+
 %%
 
-"while"             { Char_Move(5); return WHILE;   }
-"do"                { Char_Move(2); return DO;      }
-"for"               { Char_Move(3); return FOR;     }
-"if"                { Char_Move(2); return IF;      }
-"else"              { Char_Move(4); return ELSE;    }
-"return"            { Char_Move(6); return RETURN;  }
+"/*"                 { BEGIN(COMMENT);               }
+<COMMENT>"*/"        { BEGIN(INITIAL);               }
+<COMMENT>.           {                               }
 
-"void"              { Char_Move(4); return VOID;    }
-"char"              { Char_Move(4); return CHAR;    }
-"int"               { Char_Move(3); return INT;     }
+"while"              { Char_Move(5); return WHILE;   }
+"do"                 { Char_Move(2); return DO;      }
+"for"                { Char_Move(3); return FOR;     }
+"if"                 { Char_Move(2); return IF;      }
+"else"               { Char_Move(4); return ELSE;    }
+"return"             { Char_Move(6); return RETURN;  }
 
-"=="                { Char_Move(2); return EQ ;     }
-"!="                { Char_Move(2); return NEQ;     }
-"<="                { Char_Move(2); return LE ;     }
-">="                { Char_Move(2); return GE ;     }
+"void"               { Char_Move(4); return VOID;    }
+"char"               { Char_Move(4); return CHAR;    }
+"int"                { Char_Move(3); return INT;     }
 
-[-(){},;+*=/%<>!?:] { Char_Move(1); return *yytext; }
+"=="                 { Char_Move(2); return EQ ;     }
+"!="                 { Char_Move(2); return NEQ;     }
+"<="                 { Char_Move(2); return LE ;     }
+">="                 { Char_Move(2); return GE ;     }
 
-{INTEGER}           { Char_Move(strlen(yytext)); yylval.integer = atol(yytext);       return INTEGER; }
-{SYMBOL}            { Char_Move(strlen(yytext)); yylval.symbol = String_Copy(yytext); return SYMBOL;  }
+[-(){},;+*=/%<>!?:&] { Char_Move(1); return *yytext; }
 
-[ \r\t]+            { Char_Move(strlen(yytext));    }
+{INTEGER}            { Char_Move(strlen(yytext)); yylval.integer = atol(yytext);       return INTEGER; }
+{SYMBOL}             { Char_Move(strlen(yytext)); yylval.symbol = String_Copy(yytext); return SYMBOL;  }
 
-\n                  { Char_Newline();               }
+[ \r\t]+             { Char_Move(strlen(yytext));    }
 
-.                   { yyerror("Unknown character"); }
+\n                   { Char_Newline();               }
+
+.                    { yyerror("Unknown character"); }
 
 %%
 

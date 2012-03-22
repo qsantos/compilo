@@ -58,6 +58,8 @@ struct Expr
 		EXPR_MINUS,
 		EXPR_MOD,
 		EXPR_IFTE,
+		EXPR_CAST,
+		EXPR_ADDR
 	} type;
 	union
 	{
@@ -89,6 +91,8 @@ Expr* Expr_Mul(Expr*, Expr*, position*);
 Expr* Expr_Div(Expr*, Expr*, position*);
 Expr* Expr_Mod(Expr*, Expr*, position*);
 Expr* Expr_Minus(Expr*, position*);
+Expr* Expr_Cast(Expr*, position*);
+Expr* Expr_Addr(Expr*, position*);
 Expr* Expr_Ifte(Expr*, Expr*, Expr*, position*);
 ExprList* ExprList_New(Expr*, ExprList*);
 /* Destructors */

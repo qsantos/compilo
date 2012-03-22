@@ -82,6 +82,16 @@ void Expr_Print(Expr* e)
 		Expr_Print(e->v.uni_op);
 		printf(")");
 		break;
+	case EXPR_CAST:
+		printf("Cast(");
+		Expr_Print(e->v.uni_op);
+		printf(")");
+		break;
+	case EXPR_ADDR:
+		printf("Addr(");
+		Expr_Print(e->v.uni_op);
+		printf(")");
+		break;
 	case EXPR_IFTE:
 		printf("Ifte(");
 		Expr_Print(e->v.tern_op.op1);
