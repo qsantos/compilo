@@ -1,11 +1,16 @@
 Le projet est constitué des sources:
 
-* ast.[hc]     pour la description de l'Arbre de Syntax Abstraite
-* error.h      contient les fontions de traitement des erreurs et les informations de position
-* lexer.lex    description lexicale
-* main.c       maintient maintenant la main sur main
-* parser.y     description syntaxique
-* printer.[hc] fonctions d'affichages (rudimentaires)
+* ast.[hc]      pour la description de l'Arbre de Syntaxe Abstraite
+* error.[hc]    contient les fontions de traitement des erreurs et les informations de position
+* hash.[hc]     table de hash (plus exactement: associe à une chaîne un entier non encore affecté)
+* latex.[hc]    sortie LaTeX de l'Arbre de Syntaxe Abstraite (en alpha)
+* lexer.lex     description lexicale
+* main.c        maintient maintenant la main sur main
+* parser.y      description syntaxique
+* printer.[hc]  fonctions d'affichages (rudimentaires)
+* symbols.[hc]  analyse statique pour la construction de la table des symboles et vérifications
+* types.h       redéfinition des types C avec des noms plus intuitifs
+* u32stack.[hc] implémentation d'une pile d'entiers
 
 
 Le Makefile permet bien sûr d'appeler «make» et «make clean». Des exemples de programmes (acceptés et non acceptés) sont présents dans le répertoires 'examples'. Il est possible de tous les tester en lançant le script './test'.
@@ -21,6 +26,3 @@ Le Makefile permet bien sûr d'appeler «make» et «make clean». Des exemples 
 * opérateur ternare (a ? b : c)
 * boucles while, while..do et for
 * structures conditionnelles (if, if..else)
-
-
-Bison produit encore deux avertissements: 12 conflits de décalage/réductions qui n'ont pas encore été résolus, et un 'statement with no effect' (sur la règle "instr ','" dans les statements).

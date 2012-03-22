@@ -24,18 +24,17 @@ void HashTable_delete(HashTable* ht)
 	free(ht);
 }
 
-u32 HashTable_find(HashTable* ht, cstring name, u32 unifier)
+u32 HashTable_find(HashTable* ht, cstring name)
 {
 	u32 l = strlen(name);
 	u32 cur = HashFun(name, l) % ht->size;
-	while (ht->t[cur].k && (strcmp(ht->t[cur].k, name) || ht->t[cur].u != unifier))
+	while (ht->t[cur].k && strcmp(ht->t[cur].k, name))
 		if (++cur >= ht->size)
 			cur = 0;
 	if (!ht->t[cur].k)
 	{
 		ht->t[cur].k = (string)malloc(l + 1);
 		strcpy(ht->t[cur].k, name);
-		ht->t[cur].u = unifier;
 		ht->t[cur].v = ht->n_elements++;
 	}
 	return ht->t[cur].v;

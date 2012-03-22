@@ -75,7 +75,7 @@ void Check_Expr(Expr* e, context* c)
 	{
 	case EXPR_FUN_CALL:
 		name = e->v.call.name;
-		k = HashTable_find(ht, name, 0);
+		k = HashTable_find(ht, name);
 		if (!st[k].isDeclared)
 		{
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
@@ -85,7 +85,7 @@ void Check_Expr(Expr* e, context* c)
 		break;
 	case EXPR_AFF:
 		name = e->v.aff.name;
-		k = HashTable_find(ht, name, 0);
+		k = HashTable_find(ht, name);
 		if (!st[k].isDeclared)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
@@ -95,7 +95,7 @@ void Check_Expr(Expr* e, context* c)
 		break;
 	case EXPR_VAR:
 		name = e->v.var.name;
-		k = HashTable_find(ht, name, 0);
+		k = HashTable_find(ht, name);
 		if (!st[k].isDeclared)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
@@ -149,7 +149,7 @@ void Check_Stmt(Stmt* s, context* c)
 	{
 	case STMT_DECL:
 		name = s->v.decl.name;
-		k = HashTable_find(ht, name, 0);
+		k = HashTable_find(ht, name);
 		if (st[k].isDeclared)
 		{
 			Static_Error(c, &s->v.decl.pos, "redeclaration of %s", name);
@@ -220,7 +220,7 @@ void Check_Param(Param* p, context* c)
 	HashTable* ht   = c->ht;
 	symbol*    st   = c->st;
 	string     name = p->name;
-	u32 k = HashTable_find(ht, name, 0);
+	u32 k = HashTable_find(ht, name);
 	if (st[k].isDeclared)
 	{
 		Static_Error(c, &p->pos, "redeclaration of %s", name);
@@ -251,7 +251,7 @@ void Check_FunDecl(FunDecl* fd, context* c)
 	HashTable* ht   = c->ht;
 	symbol*    st   = c->st;
 	string     name = fd->name;
-	u32 k = HashTable_find(ht, name, 0);
+	u32 k = HashTable_find(ht, name);
 	if (st[k].isDefined)
 	{
 		Static_Error(c, &fd->pos, "redeclaration of %s", name);
