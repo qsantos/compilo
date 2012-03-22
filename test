@@ -1,5 +1,5 @@
 #!/bin/sh
-for i in $(find examples -type f | sort)
+for i in $(find examples -type f | grep -v "\.svn" | sort)
 do
 	echo "Test de '$i':"
 	cat $i
