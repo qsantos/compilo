@@ -328,7 +328,33 @@ void Static_Error(context* c, position* pos, cstring format, ...)
 }
 
 /* Typage */
+/* WIP
+bool Type_Same(Type* t1, Type* t2)
+{
+	switch (t1->type)
+	{
+	case TYPE_VOID:
+	case TYPE_CHAR:
+	case TYPE_INT:
+		return t2->type == t1->type;
+	case TYPE_PTR:
+		return Type_Same(t1->v.ptr, t2->v.ptr);
+	default:
+		return false;
+	}
+}
 
+Type* Type_Expr(Expr* e, context* c)
+{
+	switch (e->type)
+	{
+	case EXPR_INTEGER:
+		return TYPE_INT;
+	case EXPR_FUN_CALL:
+		return c->st[HashTable_find(c->ht, e->v.call.name)].v.f->type;
+	}
+}
+*/
 void Check_TypeExpr(Type* t, Expr* e, context* c)
 {
 	(void) t;
