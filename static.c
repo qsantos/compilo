@@ -22,47 +22,79 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-/*
- * A chaque fois qu'on ajoute un symbole:
- *  1) on push son numéro sur la pile "defined"
- *  2) on incrémente le TOS de "forget"
- * A chaque début de bloc on push 0 sur la pile "forget"
- * A chaque fin de bloc, on oublie les k premiers symboles de "defined"
- * où k est le TOS de "forget", puis on pop "forget"
- */
-
-void Block_Begin(context*);
-void Block_Add(context*, u32);
-void Block_End(context*);
-
-void Static_Error(context*, position*, cstring, ...);
-
-void Block_Begin(context* c)
+/* CONTEXT ALTERATION */
+context* Context_New(u32 size)
+{
+	context* c = (context*) malloc(sizeof(context));
+	assert(c);
+	c->ht = HashTable_new(size);
+	c->st = (symbol*) malloc(sizeof(symbol) * size);
+	while (size)
+	{
+		c->st[size - 1].isDeclared = false;
+		c->st[size - 1].isDefined  = false;
+		size --;
+	}
+	c->err = false;
+	c->defined = NULL;
+	c->forget  = NULL;
+	return c;
+}
+void Context_Delete(context* c)
+{
+	/* XXX: virer les stacks */
+	HashTable_delete(c->ht);
+	free(c->st);
+	free(c);
+}
+void Context_beginBlock(context* c)
 {
 	u32stack_push(0, &c->forget);
-	c->depth++;
 }
-
-// add a symbol to the current symbol stack, counting it in the block's symbols
-void Block_Add(context* c, u32 id)
+void Context_Define(context* c, u32 id)
 {
 	u32stack_push(id, &c->defined);
 	c->forget->head++;
 }
-
-void Block_End(context* c)
+void Context_endBlock(context* c)
 {
 	u32 k = u32stack_pop(&c->forget);
 	while (k)
 	{
 		u32 id = u32stack_pop(&c->defined);
-		c->st[id].isDeclared = false; // on oublie
+		c->st[id].isDeclared = false;
 		c->st[id].isDefined  = false;
 		k--;
 	}
-	c->depth--;
+}
+void Static_Error(context* c, position* pos, cstring format, ...)
+{
+	va_list va;
+	va_start(va, format);
+	fprintf(stderr, "Line %d, character %d: ", pos->first_line, pos->first_column);
+	vfprintf(stderr, format, va);
+	fprintf(stderr, "\n");
+	va_end(va);
+	c->err = true;
 }
 
+/* TYPE COMPARISON */
+void Type_Check(Type* t1, Type* t2, position* pos, context* c)
+{
+	if (!Type_Comp(t1, t2))
+	{
+		Static_Error(c, pos, "Types mismatch");
+		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
+		Type_Print(stderr, t1);
+		fprintf(stderr, "' and '");
+		Type_Print(stderr, t2);
+		fprintf(stderr, "' mismatch.\n");
+		c->err = true;
+	}
+}
+
+
+/* SYMBOLS DECLARATION, DEFINITION AND TYPE CHECK */
 void Check_Expr(Expr* e, context* c)
 {
 	HashTable* ht = c->ht;
@@ -164,7 +196,7 @@ void Check_Stmt(Stmt* s, context* c)
 		}
 		else
 		{
-			Block_Add(c, k);
+			Context_Define(c, k);
 			st[k].isDeclared = true;
 			st[k].isFun      = false;
 			st[k].pos        = &s->v.decl.pos;
@@ -204,9 +236,9 @@ void Check_Stmt(Stmt* s, context* c)
 		Check_Stmt(s->v.ifz.iffalse, c);
 		break;
 	case STMT_BLOCK:
-		Block_Begin(c);
+		Context_beginBlock(c);
 		Check_StmtList(s->v.block, c);
-		Block_End(c);
+		Context_endBlock(c);
 		break;
 	default:
 		break;
@@ -235,7 +267,7 @@ void Check_Param(Param* p, context* c)
 	}
 	else
 	{
-		Block_Add(c, k);
+		Context_Define(c, k);
 		st[k].isDeclared = true;
 		st[k].isDefined  = false;
 		st[k].isFun      = false;
@@ -266,90 +298,30 @@ void Check_FunDecl(FunDecl* fd, context* c)
 	}
 	else
 	{
-		Block_Add(c, k);
+		Context_Define(c, k);
 		st[k].isDeclared = true;
 		st[k].isFun      = true;
 		st[k].pos        = &fd->pos;
 		st[k].v.f        = fd;
-		Block_Begin(c);
+		Context_beginBlock(c);
 		Check_ParamList(fd->params, c);
 		Check_Stmt(fd->stmt, c);
-		Block_End(c);
+		Context_endBlock(c);
 	}
 }
 
 void Check_Program(Program* l, context* c)
 {
-	Block_Begin(c);
+	Context_beginBlock(c);
 	while (l)
 	{
 		Check_FunDecl(l->head, c);
 		l = l->tail;
 	}
-	Block_End(c);
-}
-
-context* Context_New(u32 size)
-{
-	context* c = (context*) malloc(sizeof(context));
-	assert(c);
-	c->ht = HashTable_new(size);
-	c->st = (symbol*) malloc(sizeof(symbol) * size);
-	while (size)
-	{
-		c->st[size - 1].isDeclared = false;
-		c->st[size - 1].isDefined  = false;
-		size --;
-	}
-	c->err = false;
-	c->depth = 0;
-	c->defined = NULL;
-	c->forget  = NULL;
-	return c;
-}
-
-void Context_Delete(context* c)
-{
-	/* XXX: virer les stacks */
-	HashTable_delete(c->ht);
-	free(c->st);
-	free(c);
-}
-
-void Static_Error(context* c, position* pos, cstring format, ...)
-{
-	va_list va;
-	va_start(va, format);
-	fprintf(stderr, "Line %d, character %d: ", pos->first_line, pos->first_column);
-	vfprintf(stderr, format, va);
-	fprintf(stderr, "\n");
-	va_end(va);
-	c->err = true;
+	Context_endBlock(c);
 }
 
 /* Typage */
-
-bool Type_Same(Type* t1, Type* t2)
-{
-	switch (t1->type)
-	{
-	case TYPE_VOID:
-	case TYPE_CHAR:
-	case TYPE_INT:
-		return t2->type == t1->type;
-	case TYPE_PTR:
-		return Type_Same(t1->v.ptr, t2->v.ptr);
-	default:
-		return false;
-	}
-}
-
-void Type_AssertEq(Type* t1, Type* t2, position* p)
-{
-	
-}
-
-extern Type TInt;
 
 Type* Type_Expr(Expr* e, context* c)
 {
@@ -367,7 +339,7 @@ Type* Type_Expr(Expr* e, context* c)
 	case EXPR_AFF:
 		k = HashTable_find(ht, e->v.aff.name);
 		t = st[k].v.t;
-		Type_AssertEq(t, Type_Expr(e->v.aff.expr, c), &e->pos);
+		Type_Check(t, Type_Expr(e->v.aff.expr, c), &e->pos, c);
 		return t;
 	case EXPR_VAR:
 		k = HashTable_find(ht, e->v.var.name);
@@ -385,14 +357,14 @@ Type* Type_Expr(Expr* e, context* c)
 	case EXPR_MOD:
 	case EXPR_NEG:
 		t = Type_Expr(e->v.bin_op.left, c);
-		Type_AssertEq(t, Type_Expr(e->v.bin_op.right, c), &e->pos);
+		Type_Check(t, Type_Expr(e->v.bin_op.right, c), &e->pos, c);
 		return t;
 	case EXPR_MINUS:
 		return Type_Expr(e->v.uni_op, c);
 	case EXPR_IFTE:
 		t = Type_Expr(e->v.tern_op.op1, c);
 		t = Type_Expr(e->v.tern_op.op2, c);
-		Type_AssertEq(t, Type_Expr(e->v.tern_op.op3, c), &e->pos);
+		Type_Check(t, Type_Expr(e->v.tern_op.op3, c), &e->pos, c);
 		return t;
 	case EXPR_DEREF:
 		t = Type_Expr(e->v.uni_op, c);
@@ -412,7 +384,7 @@ Type* Type_Expr(Expr* e, context* c)
 
 void Check_TypeExpr(Type* t, Expr* e, context* c)
 {
-	Type_AssertEq(t, Type_Expr(e, c), &e->pos);
+	Type_Check(t, Type_Expr(e, c), &e->pos, c);
 }
 
 void Check_TypeParams(FunDecl* fd, Expr* e, context* c)

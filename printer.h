@@ -23,7 +23,6 @@
 
 void ExprList_Print(ExprList*);
 void Expr_Print(Expr*);
-void Type_Print(Type*);
 void StmtList_Print(StmtList*);
 void Stmt_Print(Stmt*);
 void Param_Print(Param*);

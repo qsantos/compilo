@@ -18,7 +18,6 @@
 
 #include "ast.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -206,9 +205,9 @@ void ExprList_Delete(ExprList* l)
 
 /* TYPES */
 
-static Type TVoid  = { TYPE_VOID, { .ptr = NULL } };
-static Type TChar  = { TYPE_CHAR, { .ptr = NULL } };
-static Type TInt   = { TYPE_INT,  { .ptr = NULL } };
+Type TVoid  = { TYPE_VOID, { .ptr = NULL } };
+Type TChar  = { TYPE_CHAR, { .ptr = NULL } };
+Type TInt   = { TYPE_INT,  { .ptr = NULL } };
 
 Type* Type_Void(void)
 {
@@ -237,6 +236,43 @@ Type* Type_Ptr(Type* ptr)
 void Type_Delete(Type* t)
 {
 	(void) t;
+}
+
+bool Type_Comp(Type* t1, Type* t2)
+{
+	switch (t1->type)
+	{
+	case TYPE_VOID:
+	case TYPE_CHAR:
+	case TYPE_INT:
+		return t2->type == t1->type;
+	case TYPE_PTR:
+		return Type_Comp(t1->v.ptr, t2->v.ptr);
+	default:
+		return false;
+	}
+}
+
+void Type_Print(FILE* f, Type* t)
+{
+	switch (t->type)
+	{
+	case TYPE_VOID:
+		fprintf(f, "void");
+		break;
+	case TYPE_CHAR:
+		fprintf(f, "char");
+		break;
+	case TYPE_INT:
+		fprintf(f, "int");
+		break;
+	case TYPE_PTR:
+		Type_Print(f, t->v.ptr);
+		fprintf(f, "*");
+		break;
+	default:
+		break;
+	}
 }
 
 /* STATEMENTS */

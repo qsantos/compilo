@@ -19,6 +19,8 @@
 #ifndef AST_H
 #define AST_H
 
+#include <stdio.h>
+
 #include "types.h"
 
 typedef struct
@@ -116,6 +118,9 @@ typedef struct Type
 		struct Type* ptr;
 	} v;
 } Type;
+extern Type TVoid;
+extern Type TChar;
+extern Type TInt;
 /* Contructors */
 Type* Type_Void(void);
 Type* Type_Char(void);
@@ -123,6 +128,9 @@ Type* Type_Int(void);
 Type* Type_Ptr(Type*);
 /* Destructors */
 void Type_Delete(Type*);
+/* Utils */
+bool Type_Comp(Type*, Type*);
+void Type_Print(FILE*, Type*);
 
 
 

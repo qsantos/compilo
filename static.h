@@ -24,11 +24,17 @@
 #include "u32stack.h"
 #include "hash.h"
 
+/* ABOUT THE TABLE OF SYMBOLS
+ * When a symbol is defined: pushed on defined, top of forget incremented
+ * When a block is opened: 0 is pushed on forget
+ * When a block is closed: 'forget' symbols are undeclared and forget is poped
+ */
+
 typedef struct
 {
-	bool isDeclared; // déjà déclaré ?
-	bool isDefined;  // a-t'il déjà été initialisé ?
-	bool isFun;      // variable "normale" ou fonction ?
+	bool isDeclared; // actually exists
+	bool isFun;      // variable or function
+	bool isDefined;  // if function, has it been defined ? if variable, has it been initialized ?
 	union
 	{
 		Type*    t;
@@ -39,27 +45,35 @@ typedef struct
 
 typedef struct
 {
-	bool       err; // une erreur a déjà eu lieu ?
-	HashTable* ht;
-	symbol*    st;
-	u32stack*  defined; // cf commentaires dans le .c
-	u32stack*  forget;
-	u32        depth;
+	bool       err;     // true when an error occured
+	HashTable* ht;      // transition from string to u32
+	symbol*    st;      // information about symbols
+	u32stack*  defined; // list of the symbols of the current scope
+	u32stack*  forget;  // number of symbols in the current scope
 } context;
 
-context* Context_New(u32);
-void Context_Delete(context*);
+/* CONTEXT ALTERATION */
+context* Context_New(u32);                // construtcor
+void Context_Delete    (context*);        // destructor
+void Context_beginBlock(context*);        // enters a new scope
+void Context_define    (context*, u32);   // define a symbol for the current scope
+void Context_endBlock  (context*);        // exists the last scope
+void Static_Error(context*, position*, cstring, ...);
 
-void Check_Expr(Expr*, context*);
-void Check_ExprList(ExprList*, context*);
-void Check_Stmt(Stmt*, context*);
-void Check_StmtList(StmtList*, context*);
-void Check_Param(Param*, context*);
+/* TYPE COMPARISON */
+void Type_Check(Type*, Type*, position*, context*);
+
+/* SYMBOLS DECLARATION, DEFINITION AND TYPE CHECK */
+void Check_Expr     (Expr*,      context*);
+void Check_ExprList (ExprList*,  context*);
+void Check_Stmt     (Stmt*,      context*);
+void Check_StmtList (StmtList*,  context*);
+void Check_Param    (Param*,     context*);
 void Check_ParamList(ParamList*, context*);
-void Check_FunDecl(FunDecl*, context*);
-void Check_Program(Program*, context*);
+void Check_FunDecl  (FunDecl*,   context*);
+void Check_Program  (Program*,   context*);
 
-void Check_TypeExpr(Type*, Expr*, context*);
+void Check_TypeExpr  (Type*,    Expr*, context*);
 void Check_TypeParams(FunDecl*, Expr*, context*);
 
 #endif

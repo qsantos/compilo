@@ -106,33 +106,6 @@ void Expr_Print(Expr* e)
 	}
 }
 
-void Type_Print(Type* t)
-{
-	if (!t)
-	{
-		printf("NULL");
-		return;
-	}
-	switch (t->type)
-	{
-	case TYPE_VOID:
-		printf("void");
-		break;
-	case TYPE_CHAR:
-		printf("char");
-		break;
-	case TYPE_INT:
-		printf("int");
-		break;
-	case TYPE_PTR:
-		Type_Print(t->v.ptr);
-		printf("*");
-		break;
-	default:
-		break;
-	}
-}
-
 void StmtList_Print(StmtList* l)
 {
 	if (!l)
@@ -167,7 +140,7 @@ void Stmt_Print(Stmt* s)
 		break;
 	case STMT_DECL:
 		printf("Decl(");
-		Type_Print(s->v.decl.t);
+		Type_Print(stdout, s->v.decl.t);
 		printf(", %s, ", s->v.decl.name);
 		Expr_Print(s->v.decl.val);
 		printf(")");
@@ -234,7 +207,7 @@ void Param_Print(Param* p)
 		return;
 	}
 	printf("Param(");
-	Type_Print(p->type);
+	Type_Print(stdout, p->type);
 	printf(", %s)", p->name);
 }
 
@@ -265,7 +238,7 @@ void FunDecl_Print(FunDecl* f)
 		return;
 	}
 	printf("FunDecl(");
-	Type_Print(f->type);
+	Type_Print(stdout, f->type);
 	printf(", %s, ", f->name);
 	ParamList_Print(f->params);
 	printf(", ");
