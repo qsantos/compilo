@@ -48,7 +48,7 @@ void Context_Delete(context* c)
 	free(c->st);
 	free(c);
 }
-void Context_beginBlock(context* c)
+void Context_BeginBlock(context* c)
 {
 	u32stack_push(0, &c->forget);
 }
@@ -57,7 +57,7 @@ void Context_Define(context* c, u32 id)
 	u32stack_push(id, &c->defined);
 	c->forget->head++;
 }
-void Context_endBlock(context* c)
+void Context_EndBlock(context* c)
 {
 	u32 k = u32stack_pop(&c->forget);
 	while (k)
@@ -237,9 +237,9 @@ void Check_Stmt(Stmt* s, context* c)
 		Check_Stmt(s->v.ifz.iffalse, c);
 		break;
 	case STMT_BLOCK:
-		Context_beginBlock(c);
+		Context_BeginBlock(c);
 		Check_StmtList(s->v.block, c);
-		Context_endBlock(c);
+		Context_EndBlock(c);
 		break;
 	default:
 		break;
@@ -304,22 +304,22 @@ void Check_FunDecl(FunDecl* fd, context* c)
 		st[k].isFun      = true;
 		st[k].pos        = &fd->pos;
 		st[k].v.f        = fd;
-		Context_beginBlock(c);
+		Context_BeginBlock(c);
 		Check_ParamList(fd->params, c);
 		Check_Stmt(fd->stmt, c);
-		Context_endBlock(c);
+		Context_EndBlock(c);
 	}
 }
 
 void Check_Program(Program* l, context* c)
 {
-	Context_beginBlock(c);
+	Context_BeginBlock(c);
 	while (l)
 	{
 		Check_FunDecl(l->head, c);
 		l = l->tail;
 	}
-	Context_endBlock(c);
+	Context_EndBlock(c);
 }
 
 /* Typage */

@@ -55,9 +55,9 @@ typedef struct
 /* CONTEXT ALTERATION */
 context* Context_New(u32);                // construtcor
 void Context_Delete    (context*);        // destructor
-void Context_beginBlock(context*);        // enters a new scope
-void Context_define    (context*, u32);   // define a symbol for the current scope
-void Context_endBlock  (context*);        // exists the last scope
+void Context_BeginBlock(context*);        // enters a new scope
+void Context_Define    (context*, u32);   // define a symbol for the current scope
+void Context_EndBlock  (context*);        // exists the last scope
 void Static_Error(context*, position*, cstring, ...);
 
 /* TYPE COMPARISON */
