@@ -47,6 +47,7 @@ typedef struct
 {
 	bool       err;     // true when an error occured
 	HashTable* ht;      // transition from string to u32
+	u32stack** ht2st;   // stack of global identifiers pointed by hash identifiers
 	symbol*    st;      // information about symbols
 	u32stack*  defined; // list of the symbols of the current scope
 	u32stack*  forget;  // number of symbols in the current scope

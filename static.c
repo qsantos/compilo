@@ -27,7 +27,12 @@ context* Context_New(u32 size)
 {
 	context* c = (context*) malloc(sizeof(context));
 	assert(c);
+	
 	c->ht = HashTable_new(size);
+	
+	c->ht2st = (u32stack*)malloc(sizeof(u32stack*) * size);
+	memset(c->ht2st, 0, sizeof(u32stack*) * size);
+	
 	c->st = (symbol*) malloc(sizeof(symbol) * size);
 	while (size)
 	{
@@ -35,6 +40,7 @@ context* Context_New(u32 size)
 		c->st[size - 1].isDefined  = false;
 		size --;
 	}
+	
 	c->err = false;
 	c->defined = NULL;
 	c->forget  = NULL;
@@ -44,6 +50,9 @@ void Context_Delete(context* c)
 {
 	u32stack_delete(&c->forget);
 	u32stack_delete(&c->defined);
+	for (u32 i = 0; i < c->ht->size; i++)
+		u32stack_delete(c->ht2st[i]);
+	free(c->ht2st);
 	HashTable_delete(c->ht);
 	free(c->st);
 	free(c);
@@ -252,14 +261,16 @@ void Check_Stmt(Stmt* s, bool needRet, context* c)
 	}
 
 	if (needRet && s->type != STMT_BLOCK && s->type != STMT_RETURN && s->type != STMT_IF)
-		exit(EXIT_FAILURE);
+		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->name);
 }
 
 void Check_StmtList(StmtList* l, bool needRet, context* c)
 {
+	if (!l && needRet)
+		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->name);
 	while (l)
 	{
-		Check_Stmt(l->head, l->tail && needRet, c);
+		Check_Stmt(l->head, !l->tail && needRet, c);
 		l = l->tail;
 	}
 }
@@ -410,6 +421,6 @@ void Check_TypeParams(FunDecl* fd, Expr* e, context* c)
 	}
 	if (l)
 		Static_Error(c, &e->pos, "too many arguments to function %s", fd->name);
-	else if (p)
+	else if (p && !Type_Comp(p->head->type, &TVoid))
 		Static_Error(c, &e->pos, "too few arguments to function %s", fd->name);
 }

@@ -21,13 +21,16 @@
 
 void ExprList_Print(ExprList* l)
 {
-	Expr_Print(l->head);
-	l = l->tail;
-	while (l)
+	if (l)
 	{
-		printf(", ");
 		Expr_Print(l->head);
 		l = l->tail;
+		while (l)
+		{
+			printf(", ");
+			Expr_Print(l->head);
+			l = l->tail;
+		}
 	}
 }
 

@@ -8,7 +8,7 @@ Le projet est constitué des sources:
 * main.c        maintient maintenant la main sur main
 * parser.y      description syntaxique
 * printer.[hc]  fonctions d'affichages (rudimentaires)
-* symbols.[hc]  analyse statique pour la construction de la table des symboles et vérifications
+* static.[hc]  analyse statique pour la construction de la table des symboles et vérifications
 * types.h       redéfinition des types C avec des noms plus intuitifs
 * u32stack.[hc] implémentation d'une pile d'entiers
 
