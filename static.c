@@ -112,7 +112,7 @@ void Check_Expr(Expr* e, context* c)
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
 		}
 		Check_ExprList(e->v.call.params, c);
-		if (c->err)
+		if (!c->err)
 			Check_TypeParams(st[k].v.f, e, c);
 		break;
 	case EXPR_AFF:
@@ -392,6 +392,8 @@ void Check_TypeParams(FunDecl* fd, Expr* e, context* c)
 	ExprList*  l = e->v.call.params;
 	while (l && p)
 	{
+		Type_Print(stdout, p->head->type);
+		Type_Print(stdout, Type_Expr(l->head,c));
 		Check_TypeExpr(p->head->type, l->head, c);
 		p = p->tail;
 		l = l->tail;
