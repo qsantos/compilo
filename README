@@ -1,28 +1,26 @@
-Le projet est constitué des sources:
+Source files:
+* ast.[hc]      Abstract Syntax Tree
+* context.[hc]  context definition and using (includes the table of symbols)
+* error.[hc]    error handling
+* hash.[hc]     hash table
+* latex.[hc]    LaTeX output of the AST (alpha version)
+* lexer.lex
+* main.c
+* parser.y
+* printer.[hc]  basic printing of the AST
+* static.[hc]   static analysis
+* types.h       intuitive renaming of the C types
+* u32stack.[hc] basic integer stack
 
-* ast.[hc]      pour la description de l'Arbre de Syntaxe Abstraite
-* error.[hc]    contient les fontions de traitement des erreurs et les informations de position
-* hash.[hc]     table de hash (plus exactement: associe à une chaîne un entier non encore affecté)
-* latex.[hc]    sortie LaTeX de l'Arbre de Syntaxe Abstraite (en alpha)
-* lexer.lex     description lexicale
-* main.c        maintient maintenant la main sur main
-* parser.y      description syntaxique
-* printer.[hc]  fonctions d'affichages (rudimentaires)
-* static.[hc]  analyse statique pour la construction de la table des symboles et vérifications
-* types.h       redéfinition des types C avec des noms plus intuitifs
-* u32stack.[hc] implémentation d'une pile d'entiers
+The Makefile allows the use of:
+* make
+* make clean
+* make test
+* make ltest
 
-
-Le Makefile permet bien sûr d'appeler «make» et «make clean». Des exemples de programmes (acceptés et non acceptés) sont présents dans le répertoires 'examples'. Il est possible de tous les tester en lançant le script './test'.
-
-
-À moins d'un oubli de notre part, la syntaxe acceptée contient les fonctionnalités suivantes de C:
-
-* types de base (void, char, int) et pointeurs (récursivement)
-* déclaration de fonctions (type void pour l'absence d'aguments), et appels
-* négation logique (!a), opposé (-a)
-* tests de comparaison (==, !=, <=, <, >=, >)
-* expressions arithmétiques (+, -, *, +, %)
-* opérateur ternare (a ? b : c)
-* boucles while, while..do et for
-* structures conditionnelles (if, if..else)
+Currently implemented:
+* types (void, char, int) and pointers;
+* function declarations and calls;
+* unary (!,-), binary (+,-,*,/,%,==,!=,<=,<,>=,>) and trinary (_ ? _ : _) operators;
+* conditional structures (if, if..else);
+* loop structures (while, do..while, for).
