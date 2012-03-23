@@ -108,8 +108,8 @@ static void printExpr(Expr* e)
 		printExpr(e->v.uni_op);
 		endNode();
 		break;
-	case EXPR_CAST:
-		beginNode("Cast");
+	case EXPR_DEREF:
+		beginNode("Deref");
 		printExpr(e->v.uni_op);
 		endNode();
 		break;

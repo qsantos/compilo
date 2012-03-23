@@ -120,11 +120,11 @@ Expr* Expr_Minus(Expr* op, position* pos)
 	return expr;
 }
 
-Expr* Expr_Cast(Expr* op, position* pos)
+Expr* Expr_Deref(Expr* op, position* pos)
 {
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
-	expr->type = EXPR_CAST;
+	expr->type = EXPR_DEREF;
 	expr->v.uni_op = op;
 	Pos_Copy(&expr->pos, pos);
 	return expr;
@@ -183,7 +183,7 @@ void Expr_Delete(Expr* e)
 			Expr_Delete(e->v.bin_op.right);
 			break;
 		case EXPR_MINUS:
-		case EXPR_CAST:
+		case EXPR_DEREF:
 		case EXPR_ADDR:
 			Expr_Delete(e->v.uni_op);
 			break;

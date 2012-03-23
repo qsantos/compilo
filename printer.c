@@ -82,8 +82,8 @@ void Expr_Print(Expr* e)
 		Expr_Print(e->v.uni_op);
 		printf(")");
 		break;
-	case EXPR_CAST:
-		printf("Cast(");
+	case EXPR_DEREF:
+		printf("Deref(");
 		Expr_Print(e->v.uni_op);
 		printf(")");
 		break;

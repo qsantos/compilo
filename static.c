@@ -104,7 +104,7 @@ void Check_Expr(Expr* e, context* c)
 	case EXPR_MINUS:
 		Check_Expr(e->v.uni_op, c);
 		break;
-	case EXPR_CAST:
+	case EXPR_DEREF:
 		/* XXX: typage  */
 		Check_Expr(e->v.uni_op, c);
 		break;
@@ -328,7 +328,7 @@ void Static_Error(context* c, position* pos, cstring format, ...)
 }
 
 /* Typage */
-/* WIP
+
 bool Type_Same(Type* t1, Type* t2)
 {
 	switch (t1->type)
@@ -344,35 +344,34 @@ bool Type_Same(Type* t1, Type* t2)
 	}
 }
 
+void Type_AssertEq(Type* t1, Type* t2, position* p)
+{
+	
+}
+
+extern Type TInt;
+
 Type* Type_Expr(Expr* e, context* c)
 {
+	HashTable* ht   = c->ht;
+	symbol*    st   = c->st;
+	u32 k;
+	Type* t;
 	switch (e->type)
 	{
 	case EXPR_INTEGER:
-		return TYPE_INT;
+		return &TInt;
 	case EXPR_FUN_CALL:
-		return c->st[HashTable_find(c->ht, e->v.call.name)].v.f->type;
-	}
-}
-*/
-void Check_TypeExpr(Type* t, Expr* e, context* c)
-{
-	(void) t;
-	(void) e;
-	(void) c;
-	return;
-	switch (e->type)
-	{
-	case EXPR_INTEGER:
-		break;
-	case EXPR_FUN_CALL:
-		break;
+		k = HashTable_find(ht, e->v.call.name);
+		return st[k].v.f->type;
 	case EXPR_AFF:
-		break;
+		k = HashTable_find(ht, e->v.aff.name);
+		t = st[k].v.t;
+		Type_AssertEq(t, Type_Expr(e->v.aff.expr, c), &e->pos);
+		return t;
 	case EXPR_VAR:
-		break;
-	case EXPR_NEG:
-		break;
+		k = HashTable_find(ht, e->v.var.name);
+		return st[k].v.t;
 	case EXPR_EQ:
 	case EXPR_NEQ:
 	case EXPR_LE:
@@ -384,16 +383,36 @@ void Check_TypeExpr(Type* t, Expr* e, context* c)
 	case EXPR_MUL:
 	case EXPR_DIV:
 	case EXPR_MOD:
-		break;
+	case EXPR_NEG:
+		t = Type_Expr(e->v.bin_op.left, c);
+		Type_AssertEq(t, Type_Expr(e->v.bin_op.right, c), &e->pos);
+		return t;
 	case EXPR_MINUS:
-	case EXPR_CAST:
-	case EXPR_ADDR:
-		break;
+		return Type_Expr(e->v.uni_op, c);
 	case EXPR_IFTE:
-		break;
+		t = Type_Expr(e->v.tern_op.op1, c);
+		t = Type_Expr(e->v.tern_op.op2, c);
+		Type_AssertEq(t, Type_Expr(e->v.tern_op.op3, c), &e->pos);
+		return t;
+	case EXPR_DEREF:
+		t = Type_Expr(e->v.uni_op, c);
+		if (t->type != TYPE_PTR)
+		{
+			Static_Error(c, &e->pos, "dereferencing a non-pointer variable");
+			return t->v.ptr;
+		}
+		else
+			return &TInt;
+	case EXPR_ADDR:
+		return Type_Ptr(Type_Expr(e->v.uni_op, c));
 	default:
-		break;
+		return &TInt;
 	}
+}
+
+void Check_TypeExpr(Type* t, Expr* e, context* c)
+{
+	Type_AssertEq(t, Type_Expr(e, c), &e->pos);
 }
 
 void Check_TypeParams(FunDecl* fd, Expr* e, context* c)
