@@ -84,7 +84,6 @@ void Type_Check(Type* t1, Type* t2, position* pos, context* c)
 {
 	if (!Type_Comp(t1, t2))
 	{
-		Static_Error(c, pos, "Types mismatch");
 		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
 		Type_Print(stderr, t1);
 		fprintf(stderr, "' and '");
@@ -112,7 +111,7 @@ void Check_Expr(Expr* e, context* c)
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
 		}
 		Check_ExprList(e->v.call.params, c);
-		if (st[k].isDeclared)
+		if (c->err)
 			Check_TypeParams(st[k].v.f, e, c);
 		break;
 	case EXPR_AFF:
@@ -123,7 +122,8 @@ void Check_Expr(Expr* e, context* c)
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
 		Check_Expr(e->v.aff.expr, c);
-		Check_TypeExpr(st[k].v.t, e->v.aff.expr, c);
+		if (!c->err)
+			Check_TypeExpr(st[k].v.t, e->v.aff.expr, c);
 		break;
 	case EXPR_VAR:
 		name = e->v.var.name;
