@@ -177,7 +177,7 @@ void Check_ExprList(ExprList* l, context* c)
 	}
 }
 
-void Check_Stmt(Stmt* s, context* c)
+void Check_Stmt(Stmt* s, bool needRet, context* c)
 {
 	HashTable* ht = c->ht;
 	symbol*    st = c->st;
@@ -211,44 +211,55 @@ void Check_Stmt(Stmt* s, context* c)
 		}
 		break;
 	case STMT_EXPR:
-	case STMT_RETURN:
-		/* XXX */
 		Check_Expr(s->v.expr, c);
+		break;
+	case STMT_RETURN:
+		Check_Expr(s->v.expr, c);
+		if (!c->err)
+			Check_TypeExpr(c->cur_fun->type, s->v.expr, c);
 		break;
 	case STMT_WHILE:
 		Check_Expr(s->v.whilez.cond, c);
-		Check_Stmt(s->v.whilez.stmt, c);
+		Check_Stmt(s->v.whilez.stmt, false, c);
 		break;
 	case STMT_DO:
-		Check_Stmt(s->v.doz.stmt, c);
+		Check_Stmt(s->v.doz.stmt, false, c);
 		Check_Expr(s->v.doz.cond, c);
 		break;
 	case STMT_FOR:
-		Check_Stmt(s->v.forz.a,    c);
-		Check_Stmt(s->v.forz.b,    c);
-		Check_Stmt(s->v.forz.c,    c);
-		Check_Stmt(s->v.forz.stmt, c);
+		Check_Stmt(s->v.forz.a,    false, c);
+		Check_Stmt(s->v.forz.b,    false, c);
+		Check_Stmt(s->v.forz.c,    false, c);
+		Check_Stmt(s->v.forz.stmt, false, c);
 		break;
 	case STMT_IF:
 		Check_Expr(s->v.ifz.cond, c);
-		Check_Stmt(s->v.ifz.iftrue, c);
-		Check_Stmt(s->v.ifz.iffalse, c);
+		if (s->v.ifz.iffalse)
+		{
+			Check_Stmt(s->v.ifz.iftrue,  needRet, c);
+			Check_Stmt(s->v.ifz.iffalse, needRet, c);
+		}
+		else
+			Check_Stmt(s->v.ifz.iftrue, false, c);		
 		break;
 	case STMT_BLOCK:
 		Context_BeginBlock(c);
-		Check_StmtList(s->v.block, c);
+		Check_StmtList(s->v.block, needRet, c);
 		Context_EndBlock(c);
 		break;
 	default:
 		break;
 	}
+
+	if (needRet && s->type != STMT_BLOCK && s->type != STMT_RETURN && s->type != STMT_IF)
+		exit(EXIT_FAILURE);
 }
 
-void Check_StmtList(StmtList* l, context* c)
+void Check_StmtList(StmtList* l, bool needRet, context* c)
 {
 	while (l)
 	{
-		Check_Stmt(l->head, c);
+		Check_Stmt(l->head, l->tail && needRet, c);
 		l = l->tail;
 	}
 }
@@ -298,13 +309,14 @@ void Check_FunDecl(FunDecl* fd, context* c)
 	else
 	{
 		Context_Define(c, k);
+		c->cur_fun = fd;
 		st[k].isDeclared = true;
 		st[k].isFun      = true;
 		st[k].pos        = &fd->pos;
 		st[k].v.f        = fd;
 		Context_BeginBlock(c);
 		Check_ParamList(fd->params, c);
-		Check_Stmt(fd->stmt, c);
+		Check_Stmt(fd->stmt, !Type_Comp(fd->type, &TVoid), c);
 		Context_EndBlock(c);
 	}
 }
@@ -392,8 +404,6 @@ void Check_TypeParams(FunDecl* fd, Expr* e, context* c)
 	ExprList*  l = e->v.call.params;
 	while (l && p)
 	{
-		Type_Print(stdout, p->head->type);
-		Type_Print(stdout, Type_Expr(l->head,c));
 		Check_TypeExpr(p->head->type, l->head, c);
 		p = p->tail;
 		l = l->tail;

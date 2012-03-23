@@ -232,7 +232,7 @@ bool Type_Comp(Type* t1, Type* t2)
 	case TYPE_INT:
 		return t2->type == t1->type;
 	case TYPE_PTR:
-		return Type_Comp(t1->v.ptr, t2->v.ptr);
+		return t2->type == TYPE_PTR && Type_Comp(t1->v.ptr, t2->v.ptr);
 	default:
 		return false;
 	}

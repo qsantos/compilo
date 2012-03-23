@@ -50,6 +50,7 @@ typedef struct
 	symbol*    st;      // information about symbols
 	u32stack*  defined; // list of the symbols of the current scope
 	u32stack*  forget;  // number of symbols in the current scope
+	FunDecl*   cur_fun; // current function (if needed)
 } context;
 
 /* CONTEXT ALTERATION */
@@ -65,14 +66,14 @@ void Type_Check(Type*, Type*, position*, context*);
 Type* Type_Expr(Expr*, context*);
 
 /* SYMBOLS DECLARATION, DEFINITION AND TYPE CHECK */
-void Check_Expr     (Expr*,      context*);
-void Check_ExprList (ExprList*,  context*);
-void Check_Stmt     (Stmt*,      context*);
-void Check_StmtList (StmtList*,  context*);
-void Check_Param    (Param*,     context*);
-void Check_ParamList(ParamList*, context*);
-void Check_FunDecl  (FunDecl*,   context*);
-void Check_Program  (Program*,   context*);
+void Check_Expr     (Expr*,            context*);
+void Check_ExprList (ExprList*,        context*);
+void Check_Stmt     (Stmt*,      bool, context*);
+void Check_StmtList (StmtList*,  bool, context*);
+void Check_Param    (Param*,           context*);
+void Check_ParamList(ParamList*,       context*);
+void Check_FunDecl  (FunDecl*,         context*);
+void Check_Program  (Program*,         context*);
 
 void Check_TypeExpr  (Type*,    Expr*, context*);
 void Check_TypeParams(FunDecl*, Expr*, context*);
