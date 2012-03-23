@@ -42,7 +42,8 @@ context* Context_New(u32 size)
 }
 void Context_Delete(context* c)
 {
-	/* XXX: virer les stacks */
+	u32stack_delete(&c->forget);
+	u32stack_delete(&c->defined);
 	HashTable_delete(c->ht);
 	free(c->st);
 	free(c);

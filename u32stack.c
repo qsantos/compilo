@@ -17,8 +17,15 @@
  */
 
 #include "u32stack.h"
+
 #include <stdlib.h>
 #include <assert.h> 
+
+void u32stack_delete(u32stack** s)
+{
+	while (*s)
+		u32stack_pop(s);
+}
 
 void u32stack_push(u32 e, u32stack** s)
 {
