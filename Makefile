@@ -1,4 +1,4 @@
-CFLAGS := -O3 -Wall -Wextra -ansi -pedantic -std=c99
+CFLAGS := -O3 -Wall -Wextra -ansi -pedantic -std=c99 -g
 CFILES := ast.c context.c error.c hash.c latex.c main.c printer.c static.c u32stack.c
 OFILES := $(CFILES:.c=.o)
 
@@ -10,7 +10,7 @@ test: compilo
 	./test
 
 ltest: compilo
-	./test
+	./ltest
 
 compilo: parser.tab.o lex.yy.o $(OFILES)
 	gcc $^ -o $@

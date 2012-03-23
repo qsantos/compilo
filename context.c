@@ -96,6 +96,9 @@ symbol* Context_Get(context* c, cstring name)
 		return NULL;
 	
 	u32 localId  = HashTable_Find(c->ht, name);
+	if (!c->l2g[localId])
+		return NULL;
+	
 	u32 globalId = c->l2g[localId]->head;
 	return &c->st[globalId];
 }
