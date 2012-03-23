@@ -1,0 +1,12 @@
+int main(void)
+{
+	int x;
+	{
+		char x;
+	}
+	x = 2;
+	
+	int x;
+	
+	return 0;
+}

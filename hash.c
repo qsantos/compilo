@@ -6,7 +6,7 @@
 
 static unsigned int HashFun(const char* str, unsigned int len);
 
-HashTable* HashTable_new(u32 size)
+HashTable* HashTable_New(u32 size)
 {
 	HashTable* ret = (HashTable*)malloc(sizeof(HashTable));
 	u32 mem = sizeof(KValue) * size;
@@ -16,7 +16,7 @@ HashTable* HashTable_new(u32 size)
 	return ret;
 }
 
-void HashTable_delete(HashTable* ht)
+void HashTable_Delete(HashTable* ht)
 {
 	for (u32 i = 0; i < ht->size; i++)
 		free(ht->t[i].k);
@@ -24,17 +24,26 @@ void HashTable_delete(HashTable* ht)
 	free(ht);
 }
 
-u32 HashTable_find(HashTable* ht, cstring name)
+bool HashTable_Exists(HashTable* ht, cstring key)
 {
-	u32 l = strlen(name);
-	u32 cur = HashFun(name, l) % ht->size;
-	while (ht->t[cur].k && strcmp(ht->t[cur].k, name))
+	u32 cur = HashFun(key, strlen(key)) % ht->size;
+	while (ht->t[cur].k && strcmp(ht->t[cur].k, key))
+		if (++cur >= ht->size)
+			cur = 0;
+	return ht->t[cur].k != NULL;
+}
+
+u32 HashTable_Find(HashTable* ht, cstring key)
+{
+	u32 l = strlen(key);
+	u32 cur = HashFun(key, l) % ht->size;
+	while (ht->t[cur].k && strcmp(ht->t[cur].k, key))
 		if (++cur >= ht->size)
 			cur = 0;
 	if (!ht->t[cur].k)
 	{
 		ht->t[cur].k = (string)malloc(l + 1);
-		strcpy(ht->t[cur].k, name);
+		strcpy(ht->t[cur].k, key);
 		ht->t[cur].v = ht->n_elements++;
 	}
 	return ht->t[cur].v;

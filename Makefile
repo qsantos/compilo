@@ -1,10 +1,16 @@
-CFLAGS := -O3 -Wall -Wextra -ansi -pedantic -std=c99 -g
-CFILES := ast.c main.c printer.c error.c latex.c static.c hash.c u32stack.c
+CFLAGS := -O3 -Wall -Wextra -ansi -pedantic -std=c99
+CFILES := ast.c context.c error.c hash.c latex.c main.c printer.c static.c u32stack.c
 OFILES := $(CFILES:.c=.o)
 
 .PHONY: all clean
 
 all: compilo
+
+test: compilo
+	./test
+
+ltest: compilo
+	./test
 
 compilo: parser.tab.o lex.yy.o $(OFILES)
 	gcc $^ -o $@

@@ -27,7 +27,7 @@ void u32stack_delete(u32stack** s)
 		u32stack_pop(s);
 }
 
-void u32stack_push(u32 e, u32stack** s)
+void u32stack_push(u32stack** s, u32 e)
 {
 	u32stack* t = (u32stack*) malloc(sizeof(u32stack));
 	assert(t);

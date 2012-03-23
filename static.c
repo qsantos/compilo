@@ -17,128 +17,41 @@
  */
 
 #include "static.h"
-#include <stdlib.h>
-#include <assert.h>
-#include <stdio.h>
-#include <stdarg.h>
 
-/* CONTEXT ALTERATION */
-context* Context_New(u32 size)
-{
-	context* c = (context*) malloc(sizeof(context));
-	assert(c);
-	
-	c->ht = HashTable_new(size);
-	
-	c->ht2st = (u32stack*)malloc(sizeof(u32stack*) * size);
-	memset(c->ht2st, 0, sizeof(u32stack*) * size);
-	
-	c->st = (symbol*) malloc(sizeof(symbol) * size);
-	while (size)
-	{
-		c->st[size - 1].isDeclared = false;
-		c->st[size - 1].isDefined  = false;
-		size --;
-	}
-	
-	c->err = false;
-	c->defined = NULL;
-	c->forget  = NULL;
-	return c;
-}
-void Context_Delete(context* c)
-{
-	u32stack_delete(&c->forget);
-	u32stack_delete(&c->defined);
-	for (u32 i = 0; i < c->ht->size; i++)
-		u32stack_delete(c->ht2st[i]);
-	free(c->ht2st);
-	HashTable_delete(c->ht);
-	free(c->st);
-	free(c);
-}
-void Context_BeginBlock(context* c)
-{
-	u32stack_push(0, &c->forget);
-}
-void Context_Define(context* c, u32 id)
-{
-	u32stack_push(id, &c->defined);
-	c->forget->head++;
-}
-void Context_EndBlock(context* c)
-{
-	u32 k = u32stack_pop(&c->forget);
-	while (k)
-	{
-		u32 id = u32stack_pop(&c->defined);
-		c->st[id].isDeclared = false;
-		c->st[id].isDefined  = false;
-		k--;
-	}
-}
-void Static_Error(context* c, position* pos, cstring format, ...)
-{
-	va_list va;
-	va_start(va, format);
-	fprintf(stderr, "Line %d, character %d: ", pos->first_line, pos->first_column);
-	vfprintf(stderr, format, va);
-	fprintf(stderr, "\n");
-	va_end(va);
-	c->err = true;
-}
+/* Static analysis */
 
-/* TYPE COMPARISON */
-void Type_Check(Type* t1, Type* t2, position* pos, context* c)
-{
-	if (!Type_Comp(t1, t2))
-	{
-		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
-		Type_Print(stderr, t1);
-		fprintf(stderr, "' and '");
-		Type_Print(stderr, t2);
-		fprintf(stderr, "' mismatch.\n");
-		c->err = true;
-	}
-}
-
-
-/* SYMBOLS DECLARATION, DEFINITION AND TYPE CHECK */
 void Check_Expr(Expr* e, context* c)
 {
-	HashTable* ht = c->ht;
-	symbol*    st = c->st;
-	string     name;
-	u32        k;
-	Type*      t;
+	symbol* symb;
+	string  name;
 	switch (e->type)
 	{
 	case EXPR_FUN_CALL:
 		name = e->v.call.name;
-		k = HashTable_find(ht, name);
-		if (!st[k].isDeclared)
+		symb = Context_Get(c, name);
+		if (!symb)
 		{
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
 		}
 		Check_ExprList(e->v.call.params, c);
 		if (!c->err)
-			Check_TypeParams(st[k].v.f, e, c);
+			Check_TypeParams(symb->v.f, e, c);
 		break;
 	case EXPR_AFF:
 		name = e->v.aff.name;
-		k = HashTable_find(ht, name);
-		if (!st[k].isDeclared)
+		symb = Context_Get(c, name);
+		if (!symb)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
 		Check_Expr(e->v.aff.expr, c);
 		if (!c->err)
-			Check_TypeExpr(st[k].v.t, e->v.aff.expr, c);
+			Check_TypeExpr(symb->v.t, e->v.aff.expr, c);
 		break;
 	case EXPR_VAR:
 		name = e->v.var.name;
-		k = HashTable_find(ht, name);
-		if (!st[k].isDeclared)
+		symb = Context_Get(c, name);
+		if (!symb)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
@@ -149,7 +62,7 @@ void Check_Expr(Expr* e, context* c)
 		break;
 	case EXPR_DEREF:
 	case EXPR_ADDR:
-		t = Type_Expr(e->v.uni_op, c);
+		Type_Expr(e->v.uni_op, c);
 		Check_Expr(e, c);
 		break;
 	case EXPR_EQ:
@@ -188,35 +101,32 @@ void Check_ExprList(ExprList* l, context* c)
 
 void Check_Stmt(Stmt* s, bool needRet, context* c)
 {
-	HashTable* ht = c->ht;
-	symbol*    st = c->st;
-	string     name;
-	u32        k;
+	symbol* symb;
+	string  name;
 	switch (s->type)
 	{
 	case STMT_DECL:
 		name = s->v.decl.name;
-		k = HashTable_find(ht, name);
-		if (st[k].isDeclared)
+		symb = Context_Get(c, name);
+		if (!Context_CanDeclare(c, name))
 		{
 			Static_Error(c, &s->v.decl.pos, "redeclaration of %s", name);
-			Static_Error(c, &s->v.decl.pos, "previous declaration was here: Line %d, character %d", st[k].pos->first_line, st[k].pos->first_column);
+			Static_Error(c, &s->v.decl.pos, "previous declaration was here: Line %d, character %d", symb->pos->first_line, symb->pos->first_column);
 		}
 		else
 		{
-			Context_Define(c, k);
-			st[k].isDeclared = true;
-			st[k].isFun      = false;
-			st[k].pos        = &s->v.decl.pos;
-			st[k].v.t        = s->v.decl.t;
+			symb = Context_Declare(c, name);
+			symb->isFun      = false;
+			symb->pos        = &s->v.decl.pos;
+			symb->v.t        = s->v.decl.t;
 			if (s->v.decl.val)
 			{
 				Check_Expr(s->v.decl.val, c);
-				st[k].isDefined = true;
+				symb->isDefined = true;
 				Check_TypeExpr(s->v.decl.t, s->v.decl.val, c);
 			}
 			else
-				st[k].isDefined = false;
+				symb->isDefined = false;
 		}
 		break;
 	case STMT_EXPR:
@@ -252,9 +162,9 @@ void Check_Stmt(Stmt* s, bool needRet, context* c)
 			Check_Stmt(s->v.ifz.iftrue, false, c);		
 		break;
 	case STMT_BLOCK:
-		Context_BeginBlock(c);
+		Context_BeginScope(c);
 		Check_StmtList(s->v.block, needRet, c);
-		Context_EndBlock(c);
+		Context_EndScope(c);
 		break;
 	default:
 		break;
@@ -277,23 +187,20 @@ void Check_StmtList(StmtList* l, bool needRet, context* c)
 
 void Check_Param(Param* p, context* c)
 {
-	HashTable* ht   = c->ht;
-	symbol*    st   = c->st;
 	string     name = p->name;
-	u32 k = HashTable_find(ht, name);
-	if (st[k].isDeclared)
+	symbol* symb = Context_Get(c, name);
+	if (symb)
 	{
 		Static_Error(c, &p->pos, "redeclaration of %s", name);
-		Static_Error(c, &p->pos, "previous declaration was here: Line %d, character %d", st[k].pos->first_line, st[k].pos->first_column);
+		Static_Error(c, &p->pos, "previous declaration was here: Line %d, character %d", symb->pos->first_line, symb->pos->first_column);
 	}
 	else
 	{
-		Context_Define(c, k);
-		st[k].isDeclared = true;
-		st[k].isDefined  = false;
-		st[k].isFun      = false;
-		st[k].pos        = &p->pos;
-		st[k].v.t        = p->type;
+		symb = Context_Declare(c, name);
+		symb->isDefined  = false;
+		symb->isFun      = false;
+		symb->pos        = &p->pos;
+		symb->v.t        = p->type;
 	}
 }
 
@@ -308,64 +215,59 @@ void Check_ParamList(ParamList* l, context* c)
 
 void Check_FunDecl(FunDecl* fd, context* c)
 {
-	HashTable* ht   = c->ht;
-	symbol*    st   = c->st;
 	string     name = fd->name;
-	u32 k = HashTable_find(ht, name);
-	if (st[k].isDefined)
+	symbol* symb = Context_Get(c, name);
+	if (symb)
 	{
 		Static_Error(c, &fd->pos, "redeclaration of %s", name);
-		Static_Error(c, &fd->pos, "previous declaration was here: Line %d, character %d", st[k].pos->first_line, st[k].pos->first_column);
+		Static_Error(c, &fd->pos, "previous declaration was here: Line %d, character %d", symb->pos->first_line, symb->pos->first_column);
 	}
 	else
 	{
-		Context_Define(c, k);
+		symb = Context_Declare(c, name);
 		c->cur_fun = fd;
-		st[k].isDeclared = true;
-		st[k].isFun      = true;
-		st[k].pos        = &fd->pos;
-		st[k].v.f        = fd;
-		Context_BeginBlock(c);
+		symb->isFun      = true;
+		symb->pos        = &fd->pos;
+		symb->v.f        = fd;
+		Context_BeginScope(c);
 		Check_ParamList(fd->params, c);
 		Check_Stmt(fd->stmt, !Type_Comp(fd->type, &TVoid), c);
-		Context_EndBlock(c);
+		Context_EndScope(c);
 	}
 }
 
 void Check_Program(Program* l, context* c)
 {
-	Context_BeginBlock(c);
+	Context_BeginScope(c);
 	while (l)
 	{
 		Check_FunDecl(l->head, c);
 		l = l->tail;
 	}
-	Context_EndBlock(c);
+	Context_EndScope(c);
 }
 
 /* Typage */
 
 Type* Type_Expr(Expr* e, context* c)
 {
-	HashTable* ht   = c->ht;
-	symbol*    st   = c->st;
-	u32 k;
+	symbol* symb;
 	Type* t;
 	switch (e->type)
 	{
 	case EXPR_INTEGER:
 		return &TInt;
 	case EXPR_FUN_CALL:
-		k = HashTable_find(ht, e->v.call.name);
-		return st[k].v.f->type;
+		symb = Context_Get(c, e->v.call.name);
+		return symb->v.f->type;
 	case EXPR_AFF:
-		k = HashTable_find(ht, e->v.aff.name);
-		t = st[k].v.t;
-		Type_Check(t, Type_Expr(e->v.aff.expr, c), &e->pos, c);
+		symb = Context_Get(c, e->v.aff.name);
+		t = symb->v.t;
+		Check_Types(t, Type_Expr(e->v.aff.expr, c), &e->pos, c);
 		return t;
 	case EXPR_VAR:
-		k = HashTable_find(ht, e->v.var.name);
-		return st[k].v.t;
+		symb = Context_Get(c, e->v.var.name);
+		return symb->v.t;
 	case EXPR_EQ:
 	case EXPR_NEQ:
 	case EXPR_LE:
@@ -379,14 +281,14 @@ Type* Type_Expr(Expr* e, context* c)
 	case EXPR_MOD:
 	case EXPR_NEG:
 		t = Type_Expr(e->v.bin_op.left, c);
-		Type_Check(t, Type_Expr(e->v.bin_op.right, c), &e->pos, c);
+		Check_Types(t, Type_Expr(e->v.bin_op.right, c), &e->pos, c);
 		return t;
 	case EXPR_MINUS:
 		return Type_Expr(e->v.uni_op, c);
 	case EXPR_IFTE:
 		t = Type_Expr(e->v.tern_op.op1, c);
 		t = Type_Expr(e->v.tern_op.op2, c);
-		Type_Check(t, Type_Expr(e->v.tern_op.op3, c), &e->pos, c);
+		Check_Types(t, Type_Expr(e->v.tern_op.op3, c), &e->pos, c);
 		return t;
 	case EXPR_DEREF:
 		t = Type_Expr(e->v.uni_op, c);
@@ -404,9 +306,22 @@ Type* Type_Expr(Expr* e, context* c)
 	}
 }
 
+void Check_Types(Type* t1, Type* t2, position* pos, context* c)
+{
+	if (!Type_Comp(t1, t2))
+	{
+		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
+		Type_Print(stderr, t1);
+		fprintf(stderr, "' and '");
+		Type_Print(stderr, t2);
+		fprintf(stderr, "' mismatch.\n");
+		c->err = true;
+	}
+}
+
 void Check_TypeExpr(Type* t, Expr* e, context* c)
 {
-	Type_Check(t, Type_Expr(e, c), &e->pos, c);
+	Check_Types(t, Type_Expr(e, c), &e->pos, c);
 }
 
 void Check_TypeParams(FunDecl* fd, Expr* e, context* c)

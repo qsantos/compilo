@@ -30,7 +30,7 @@ struct u32stack
 };
 
 void u32stack_delete(u32stack**);
-void u32stack_push(u32, u32stack**);
+void u32stack_push(u32stack**, u32);
 u32  u32stack_pop(u32stack**);
 
 #endif
