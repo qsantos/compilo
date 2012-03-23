@@ -101,6 +101,7 @@ void Check_Expr(Expr* e, context* c)
 	symbol*    st = c->st;
 	string     name;
 	u32        k;
+	Type*      t;
 	switch (e->type)
 	{
 	case EXPR_FUN_CALL:
@@ -138,12 +139,9 @@ void Check_Expr(Expr* e, context* c)
 		Check_Expr(e->v.uni_op, c);
 		break;
 	case EXPR_DEREF:
-		/* XXX: typage  */
-		Check_Expr(e->v.uni_op, c);
-		break;
 	case EXPR_ADDR:
-		/* XXX: typage */
-		Check_Expr(e->v.uni_op, c);
+		t = Type_Expr(e->v.uni_op, c);
+		Check_Expr(e, c);
 		break;
 	case EXPR_EQ:
 	case EXPR_NEQ:

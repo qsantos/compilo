@@ -62,6 +62,7 @@ void Static_Error(context*, position*, cstring, ...);
 
 /* TYPE COMPARISON */
 void Type_Check(Type*, Type*, position*, context*);
+Type* Type_Expr(Expr*, context*);
 
 /* SYMBOLS DECLARATION, DEFINITION AND TYPE CHECK */
 void Check_Expr     (Expr*,      context*);
