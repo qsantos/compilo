@@ -18,6 +18,8 @@ The Makefile allows the use of:
 * make test
 * make ltest
 
+Use 'make test' or 'make ltest' (uses less) to run a test.
+
 Currently implemented:
 * types (void, char, int) and pointers;
 * function declarations and calls;
