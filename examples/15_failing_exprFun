@@ -1,0 +1,11 @@
+char f(void)
+{
+	char x;
+	return x;
+}
+
+int main(void)
+{
+	int x = 1 + f();
+	return 0;
+}
