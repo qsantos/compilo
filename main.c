@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 	else
 		Program_Print(current_prog);
 
-	context* c = Context_New(32000);
+	context* c = Context_New(32768);
 
 	Check_Program(current_prog, c);
 

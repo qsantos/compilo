@@ -83,7 +83,8 @@ symbol* Context_Declare(context* c, cstring name)
 	c->forget->head++;
 	
 	symbol* symb = &c->st[globalId];
-	symb->depth = c->depth;
+	symb->id     = globalId;
+	symb->depth  = c->depth;
 	
 	globalId++;
 	

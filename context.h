@@ -44,6 +44,7 @@
 
 typedef struct
 {
+	u32  id;
 	bool isFun;      // variable or function
 	bool isDefined;  // if function, has it been defined ? if variable, has it been initialized ?
 	union
@@ -53,6 +54,7 @@ typedef struct
 	} v;
 	position* pos;
 	u32       depth; // depth at which it has been declared
+	u32       reg;   // register associated in the 
 } symbol;
 
 typedef struct
@@ -68,12 +70,13 @@ typedef struct
 } context;
 
 context* Context_New(u32);
-void Context_Delete    (context*);
-void Context_BeginScope(context*);
-void Context_EndScope  (context*);
-symbol* Context_Declare(context*, cstring);
-symbol* Context_Get    (context*, cstring);
-bool Context_CanDeclare(context*, cstring);
+void     Context_Delete    (context*);
+void     Context_BeginScope(context*);
+void     Context_EndScope  (context*);
+symbol*  Context_Declare   (context*, cstring);
+symbol*  Context_Get       (context*, cstring);
+bool     Context_CanDeclare(context*, cstring);
+
 void Static_Error(context*, position*, cstring, ...);
 
 #endif

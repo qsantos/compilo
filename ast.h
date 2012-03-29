@@ -66,9 +66,9 @@ struct Expr
 	union
 	{
 		s32 i;
-		struct { string name; ExprList* params; } call;
-		struct { string name; Expr* expr; } aff;
-		struct { string name; } var;
+		struct { string name; u32 id; ExprList* params; } call;
+		struct { string name; u32 id; Expr* expr; } aff;
+		struct { string name; u32 id; } var;
 		struct { struct Expr* left, * right; } bin_op;
 		struct { struct Expr* op1, * op2, * op3; } tern_op;
 		struct Expr* uni_op;
@@ -200,6 +200,7 @@ typedef struct
 {
 	Type*      type;
 	string     name;
+	u32        id;
 	ParamList* params;
 	Stmt*      stmt;
 	position   pos;

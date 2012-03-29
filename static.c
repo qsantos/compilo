@@ -27,8 +27,9 @@ void Check_Expr(Expr* e, context* c)
 	switch (e->type)
 	{
 	case EXPR_FUN_CALL:
-		name = e->v.call.name;
-		symb = Context_Get(c, name);
+		name         = e->v.call.name;
+		symb         = Context_Get(c, name);
+		e->v.call.id = symb->id;
 		if (!symb)
 		{
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
@@ -38,8 +39,9 @@ void Check_Expr(Expr* e, context* c)
 			Check_TypeParams(symb->v.f, e, c);
 		break;
 	case EXPR_AFF:
-		name = e->v.aff.name;
-		symb = Context_Get(c, name);
+		name        = e->v.aff.name;
+		symb        = Context_Get(c, name);
+		e->v.aff.id = symb->id;
 		if (!symb)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
@@ -49,8 +51,9 @@ void Check_Expr(Expr* e, context* c)
 			Check_TypeExpr(symb->v.t, e->v.aff.expr, c);
 		break;
 	case EXPR_VAR:
-		name = e->v.var.name;
-		symb = Context_Get(c, name);
+		name        = e->v.var.name;
+		symb        = Context_Get(c, name);
+		e->v.var.id = symb->id;
 		if (!symb)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
@@ -187,7 +190,7 @@ void Check_StmtList(StmtList* l, bool needRet, context* c)
 
 void Check_Param(Param* p, context* c)
 {
-	string     name = p->name;
+	string  name = p->name;
 	symbol* symb = Context_Get(c, name);
 	if (symb)
 	{
@@ -215,7 +218,7 @@ void Check_ParamList(ParamList* l, context* c)
 
 void Check_FunDecl(FunDecl* fd, context* c)
 {
-	string     name = fd->name;
+	string  name = fd->name;
 	symbol* symb = Context_Get(c, name);
 	if (symb)
 	{
@@ -225,10 +228,12 @@ void Check_FunDecl(FunDecl* fd, context* c)
 	else
 	{
 		symb = Context_Declare(c, name);
-		c->cur_fun = fd;
 		symb->isFun      = true;
 		symb->pos        = &fd->pos;
 		symb->v.f        = fd;
+	       
+		c->cur_fun = fd;
+		fd->id = symb->id;
 		Context_BeginScope(c);
 		Check_ParamList(fd->params, c);
 		Check_Stmt(fd->stmt, !Type_Comp(fd->type, &TVoid), c);
@@ -252,7 +257,7 @@ void Check_Program(Program* l, context* c)
 Type* Type_Expr(Expr* e, context* c)
 {
 	symbol* symb;
-	Type* t;
+	Type*   t;
 	switch (e->type)
 	{
 	case EXPR_INTEGER:
