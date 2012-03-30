@@ -46,22 +46,14 @@ struct Expr
 		EXPR_FUN_CALL,
 		EXPR_AFF,
 		EXPR_VAR,
-		EXPR_NEG,
-		EXPR_EQ,
-		EXPR_NEQ,
-		EXPR_LE,
-		EXPR_LT,
-		EXPR_GE,
-		EXPR_GT,
-		EXPR_ADD,
-		EXPR_SUB,
-		EXPR_MUL,
-		EXPR_DIV,
+		EXPR_NEG, EXPR_AND,  EXPR_OR,  EXPR_XOR,
+		EXPR_NOT, EXPR_LAND, EXPR_LOR,
+		EXPR_EQ,  EXPR_NEQ,  EXPR_LE,  EXPR_LT,  EXPR_GE,  EXPR_GT,
+		EXPR_ADD, EXPR_SUB,  EXPR_MUL, EXPR_DIV, EXPR_MOD,
 		EXPR_MINUS,
-		EXPR_MOD,
 		EXPR_IFTE,
 		EXPR_DEREF,
-		EXPR_ADDR
+		EXPR_ADDR,
 	} type;
 	union
 	{
@@ -78,20 +70,26 @@ struct Expr
 /* Constructors */
 Expr* Expr_Integer(s32, position*);
 Expr* Expr_Fun_Call(string, ExprList*, position*);
-Expr* Expr_Aff(string, Expr*, position*);
-Expr* Expr_Var(string, position*);
-Expr* Expr_Neg(Expr*, position*);
-Expr* Expr_Eq (Expr*, Expr*, position*);
-Expr* Expr_Neq(Expr*, Expr*, position*);
-Expr* Expr_Le (Expr*, Expr*, position*);
-Expr* Expr_Lt (Expr*, Expr*, position*);
-Expr* Expr_Ge (Expr*, Expr*, position*);
-Expr* Expr_Gt (Expr*, Expr*, position*);
-Expr* Expr_Add(Expr*, Expr*, position*);
-Expr* Expr_Sub(Expr*, Expr*, position*);
-Expr* Expr_Mul(Expr*, Expr*, position*);
-Expr* Expr_Div(Expr*, Expr*, position*);
-Expr* Expr_Mod(Expr*, Expr*, position*);
+Expr* Expr_Aff (string, Expr*, position*);
+Expr* Expr_Var (string, position*);
+Expr* Expr_Neg (Expr*, position*);
+Expr* Expr_Not (Expr*, position*);
+Expr* Expr_And (Expr*, Expr*, position*);
+Expr* Expr_Or  (Expr*, Expr*, position*);
+Expr* Expr_Xor (Expr*, Expr*, position*);
+Expr* Expr_Land(Expr*, Expr*, position*);
+Expr* Expr_Lor (Expr*, Expr*, position*);
+Expr* Expr_Eq  (Expr*, Expr*, position*);
+Expr* Expr_Neq (Expr*, Expr*, position*);
+Expr* Expr_Le  (Expr*, Expr*, position*);
+Expr* Expr_Lt  (Expr*, Expr*, position*);
+Expr* Expr_Ge  (Expr*, Expr*, position*);
+Expr* Expr_Gt  (Expr*, Expr*, position*);
+Expr* Expr_Add (Expr*, Expr*, position*);
+Expr* Expr_Sub (Expr*, Expr*, position*);
+Expr* Expr_Mul (Expr*, Expr*, position*);
+Expr* Expr_Div (Expr*, Expr*, position*);
+Expr* Expr_Mod (Expr*, Expr*, position*);
 Expr* Expr_Minus(Expr*, position*);
 Expr* Expr_Deref(Expr*, position*);
 Expr* Expr_Addr(Expr*, position*);

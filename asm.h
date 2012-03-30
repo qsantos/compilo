@@ -16,23 +16,53 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATIC_H
-#define STATIC_H
+#ifndef ASM_H
+#define ASM_H
 
+#include "types.h"
+#include "ast.h"
 #include "context.h"
 
-void Check_Expr     (Expr*,            Context*);
-void Check_ExprList (ExprList*,        Context*);
-void Check_Stmt     (Stmt*,      bool, Context*);
-void Check_StmtList (StmtList*,  bool, Context*);
-void Check_Param    (Param*,           Context*);
-void Check_ParamList(ParamList*,       Context*);
-void Check_FunDecl  (FunDecl*,         Context*);
-void Check_Program  (Program*,         Context*);
+typedef enum
+{
+	INSN_SET,  INSN_MOV,
+	INSN_NEG,  INSN_AND,  INSN_OR,  INSN_XOR,
+	INSN_NOT,  INSN_LAND, INSN_LOR,
+	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,  INSN_GE,  INSN_GT,
+	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV, INSN_MOD,
+	INSN_PUSH, INSN_POP,
+	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL,
+} ASM_INSN;
 
-Type* Type_Expr(Expr*, Context*);
-void Check_Types(Type*, Type*, position*, Context*);
-void Check_TypeExpr  (Type*,    Expr*, Context*);
-void Check_TypeParams(FunDecl*, Expr*, Context*);
+typedef struct RegList RegList;
+struct RegList
+{
+	u32      head;
+	RegList* tail;
+};
+
+typedef struct
+{
+	ASM_INSN insn;
+	union
+	{
+		struct { u32 r0; u32 r1; u32 r2; } r;
+		RegList p;
+	} v;
+} Instr;
+
+typedef struct
+{
+	Instr* code;
+	u32 len;
+	u32 avail;
+	u32 reg;
+} ASM;
+
+ASM* ASM_New();
+void ASM_Delete (ASM*);
+void ASM_Push   (ASM*, ASM_INSN, u32, u32, u32);
+u32  ASM_NewReg (ASM*);
+u32  ASM_GenExpr(ASM*, Expr*, Context*);
 
 #endif

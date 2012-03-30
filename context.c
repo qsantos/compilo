@@ -22,9 +22,9 @@
 #include <stdarg.h>
 #include <string.h>
 
-context* Context_New(u32 size)
+Context* Context_New(u32 size)
 {
-	context* c = (context*)malloc(sizeof(context));
+	Context* c = (Context*)malloc(sizeof(Context));
 	
 	c->ht = HashTable_New(size);
 	
@@ -34,13 +34,14 @@ context* Context_New(u32 size)
 	c->st = (symbol*) malloc(sizeof(symbol) * size);
 	memset(c->st, 0, sizeof(symbol) * size);
 	
+	c->n_symbs = 0;
 	c->err = false;
 	c->defined = NULL;
 	c->forget  = NULL;
 	return c;
 }
 
-void Context_Delete(context* c)
+void Context_Delete(Context* c)
 {
 	u32stack_delete(&c->forget);
 	u32stack_delete(&c->defined);
@@ -54,13 +55,13 @@ void Context_Delete(context* c)
 	free(c);
 }
 
-void Context_BeginScope(context* c)
+void Context_BeginScope(Context* c)
 {
 	u32stack_push(&c->forget, 0);
 	c->depth++;
 }
 
-void Context_EndScope(context* c)
+void Context_EndScope(Context* c)
 {
 	u32 k = u32stack_pop(&c->forget);
 	while (k)
@@ -73,25 +74,25 @@ void Context_EndScope(context* c)
 	c->depth--;
 }
 
-symbol* Context_Declare(context* c, cstring name)
+symbol* Context_Declare(Context* c, cstring name)
 {
-	u32 localId = HashTable_Find(c->ht, name);
 	static u32 globalId = 0; // TODO
 	
-	u32stack_push(&c->l2g[localId], globalId);
+	u32 localId = HashTable_Find(c->ht, name);
+	u32stack_push(&c->l2g[localId], c->n_symbs);
 	u32stack_push(&c->defined,      localId);
 	c->forget->head++;
 	
-	symbol* symb = &c->st[globalId];
+	symbol* symb = &c->st[c->n_symbs];
 	symb->id     = globalId;
 	symb->depth  = c->depth;
+	c->n_symbs++;
 	
 	globalId++;
-	
 	return symb;
 }
 
-symbol* Context_Get(context* c, cstring name)
+symbol* Context_Get(Context* c, cstring name)
 {
 	if (!HashTable_Exists(c->ht, name))
 		return NULL;
@@ -104,13 +105,13 @@ symbol* Context_Get(context* c, cstring name)
 	return &c->st[globalId];
 }
 
-bool Context_CanDeclare(context* c, cstring name)
+bool Context_CanDeclare(Context* c, cstring name)
 {
 	symbol* symb = Context_Get(c, name);
 	return !symb || symb->depth < c->depth;
 }
 
-void Static_Error(context* c, position* pos, cstring format, ...)
+void Static_Error(Context* c, position* pos, cstring format, ...)
 {
 	va_list va;
 	va_start(va, format);

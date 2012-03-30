@@ -1,6 +1,9 @@
 /*
- *   A Tiny C to SPIM Compiler
- *   Copyright (C) 2012 Thomas GREGOIRE, Quentin SANTOS
+ *       \\                                                        //
+ *        \\_        A Tiny C to SPIM Compiler                   _//
+ *     .---(')       Copyright (C) 2012 Thomas  GREGOIRE,       (')---. 
+ *   o( )_-\_                           Quentin SANTOS           _/-_( )o
+ *      jgs                                                        jgs
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,12 +27,13 @@
 #include "u32stack.h"
 #include "hash.h"
 
-/* ABOUT THE SYMBOLS
- * Basically, a symbol is a string.
- * The HashTable provide an integer (local) identifier associated.
- * Depending on the context, the same string can have several meanings.
- * Thus, a transition is made from local to global identifiers.
+/*   ABOUT THE SYMBOLS
+ *   Basically, a symbol is a string.
+ *   The HashTable provide an integer (local) identifier associated.
+ *   Depending on the context, the same string can have several meanings.
+ *   Thus, a transition is made from local to global identifiers.
  */
+
 /* ABOUT THE TABLE OF SYMBOLS
  * When a symbol is declared:
    - local identifier pushed on defined;
@@ -63,20 +67,21 @@ typedef struct
 	HashTable* ht;      // transition from string to u32
 	u32stack** l2g;     // local to global transition table (table of stacks);
 	symbol*    st;      // information about symbols
+	u32        n_symbs; // symbol counter
 	u32stack*  defined; // list of the symbols of the current scope
 	u32stack*  forget;  // number of symbols in the current scope
 	FunDecl*   cur_fun; // current function (if needed)
 	u32        depth;   // helps to know if one can redeclare a variable
-} context;
+} Context;
 
-context* Context_New(u32);
-void     Context_Delete    (context*);
-void     Context_BeginScope(context*);
-void     Context_EndScope  (context*);
-symbol*  Context_Declare   (context*, cstring);
-symbol*  Context_Get       (context*, cstring);
-bool     Context_CanDeclare(context*, cstring);
+Context* Context_New(u32);
+void     Context_Delete    (Context*);
+void     Context_BeginScope(Context*);
+void     Context_EndScope  (Context*);
+symbol*  Context_Declare   (Context*, cstring);
+symbol*  Context_Get       (Context*, cstring);
+bool     Context_CanDeclare(Context*, cstring);
 
-void Static_Error(context*, position*, cstring, ...);
+void Static_Error(Context*, position*, cstring, ...);
 
 #endif

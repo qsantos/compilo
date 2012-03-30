@@ -20,7 +20,7 @@
 
 /* Static analysis */
 
-void Check_Expr(Expr* e, context* c)
+void Check_Expr(Expr* e, Context* c)
 {
 	symbol* symb;
 	string  name;
@@ -60,25 +60,14 @@ void Check_Expr(Expr* e, context* c)
 		}
 		break;
 	case EXPR_NEG:
+	case EXPR_NOT:
 	case EXPR_MINUS:
 		Check_Expr(e->v.uni_op, c);
 		break;
-	case EXPR_DEREF:
-	case EXPR_ADDR:
-		Type_Expr(e->v.uni_op, c);
-		Check_Expr(e, c);
-		break;
-	case EXPR_EQ:
-	case EXPR_NEQ:
-	case EXPR_LE:
-	case EXPR_LT:
-	case EXPR_GE:
-	case EXPR_GT:
-	case EXPR_ADD:
-	case EXPR_SUB:
-	case EXPR_MUL:
-	case EXPR_DIV:
-	case EXPR_MOD:
+	case EXPR_AND:  case EXPR_OR:  case EXPR_XOR:
+	case EXPR_LAND: case EXPR_LOR:
+	case EXPR_EQ:   case EXPR_NEQ: case EXPR_LE:  case EXPR_LT:  case EXPR_GE:  case EXPR_GT:
+	case EXPR_ADD:  case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_MOD:
 		Check_Expr(e->v.bin_op.left,  c);
 		Check_Expr(e->v.bin_op.right, c);
 		break;
@@ -87,13 +76,18 @@ void Check_Expr(Expr* e, context* c)
 		Check_Expr(e->v.tern_op.op2, c);
 		Check_Expr(e->v.tern_op.op3, c);
 		break;
+	case EXPR_DEREF:
+	case EXPR_ADDR:
+		Type_Expr(e->v.uni_op, c);
+		Check_Expr(e, c);
+		break;
 	default:
 		/* No problem... */
 		break;
 	}
 }
 
-void Check_ExprList(ExprList* l, context* c)
+void Check_ExprList(ExprList* l, Context* c)
 {
 	while (l)
 	{
@@ -102,7 +96,7 @@ void Check_ExprList(ExprList* l, context* c)
 	}
 }
 
-void Check_Stmt(Stmt* s, bool needRet, context* c)
+void Check_Stmt(Stmt* s, bool needRet, Context* c)
 {
 	symbol* symb;
 	string  name;
@@ -177,7 +171,7 @@ void Check_Stmt(Stmt* s, bool needRet, context* c)
 		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->name);
 }
 
-void Check_StmtList(StmtList* l, bool needRet, context* c)
+void Check_StmtList(StmtList* l, bool needRet, Context* c)
 {
 	if (!l && needRet)
 		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->name);
@@ -188,7 +182,7 @@ void Check_StmtList(StmtList* l, bool needRet, context* c)
 	}
 }
 
-void Check_Param(Param* p, context* c)
+void Check_Param(Param* p, Context* c)
 {
 	string  name = p->name;
 	symbol* symb = Context_Get(c, name);
@@ -207,7 +201,7 @@ void Check_Param(Param* p, context* c)
 	}
 }
 
-void Check_ParamList(ParamList* l, context* c)
+void Check_ParamList(ParamList* l, Context* c)
 {
 	while (l)
 	{
@@ -216,7 +210,7 @@ void Check_ParamList(ParamList* l, context* c)
 	}
 }
 
-void Check_FunDecl(FunDecl* fd, context* c)
+void Check_FunDecl(FunDecl* fd, Context* c)
 {
 	string  name = fd->name;
 	symbol* symb = Context_Get(c, name);
@@ -241,7 +235,7 @@ void Check_FunDecl(FunDecl* fd, context* c)
 	}
 }
 
-void Check_Program(Program* l, context* c)
+void Check_Program(Program* l, Context* c)
 {
 	Context_BeginScope(c);
 	while (l)
@@ -254,7 +248,7 @@ void Check_Program(Program* l, context* c)
 
 /* Typage */
 
-Type* Type_Expr(Expr* e, context* c)
+Type* Type_Expr(Expr* e, Context* c)
 {
 	symbol* symb;
 	Type*   t;
@@ -273,23 +267,17 @@ Type* Type_Expr(Expr* e, context* c)
 	case EXPR_VAR:
 		symb = Context_Get(c, e->v.var.name);
 		return symb->v.t;
-	case EXPR_EQ:
-	case EXPR_NEQ:
-	case EXPR_LE:
-	case EXPR_LT:
-	case EXPR_GE:
-	case EXPR_GT:
-	case EXPR_ADD:
-	case EXPR_SUB:
-	case EXPR_MUL:
-	case EXPR_DIV:
-	case EXPR_MOD:
 	case EXPR_NEG:
+	case EXPR_NOT:
+	case EXPR_MINUS:
+		return Type_Expr(e->v.uni_op, c);
+	case EXPR_AND:  case EXPR_OR:  case EXPR_XOR:
+	case EXPR_LAND: case EXPR_LOR:
+	case EXPR_EQ:   case EXPR_NEQ: case EXPR_LE:  case EXPR_LT:  case EXPR_GE:  case EXPR_GT:
+	case EXPR_ADD:  case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_MOD:
 		t = Type_Expr(e->v.bin_op.left, c);
 		Check_Types(t, Type_Expr(e->v.bin_op.right, c), &e->pos, c);
 		return t;
-	case EXPR_MINUS:
-		return Type_Expr(e->v.uni_op, c);
 	case EXPR_IFTE:
 		t = Type_Expr(e->v.tern_op.op1, c);
 		t = Type_Expr(e->v.tern_op.op2, c);
@@ -311,7 +299,7 @@ Type* Type_Expr(Expr* e, context* c)
 	}
 }
 
-void Check_Types(Type* t1, Type* t2, position* pos, context* c)
+void Check_Types(Type* t1, Type* t2, position* pos, Context* c)
 {
 	if (!Type_Comp(t1, t2))
 	{
@@ -324,12 +312,12 @@ void Check_Types(Type* t1, Type* t2, position* pos, context* c)
 	}
 }
 
-void Check_TypeExpr(Type* t, Expr* e, context* c)
+void Check_TypeExpr(Type* t, Expr* e, Context* c)
 {
 	Check_Types(t, Type_Expr(e, c), &e->pos, c);
 }
 
-void Check_TypeParams(FunDecl* fd, Expr* e, context* c)
+void Check_TypeParams(FunDecl* fd, Expr* e, Context* c)
 {
 	ParamList* p = fd->params;
 	ExprList*  l = e->v.call.params;

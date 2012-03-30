@@ -1,5 +1,5 @@
 CFLAGS := -O3 -Wall -Wextra -ansi -pedantic -std=c99 -g
-CFILES := ast.c context.c error.c hash.c latex.c main.c printer.c static.c u32stack.c
+CFILES := asm.c ast.c context.c error.c hash.c latex.c main.c printer.c static.c u32stack.c
 OFILES := $(CFILES:.c=.o)
 
 .PHONY: all clean

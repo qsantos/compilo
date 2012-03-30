@@ -47,18 +47,19 @@ extern int yyerror(const char*);
 %token <symbol> SYMBOL
 %token WHILE DO FOR IF ELSE RETURN
 %token VOID CHAR INT
+%token LAND LOR
 
 %nonassoc IF_ALONE
 %nonassoc ELSE
+%left LAND LOR
 %left '='
 %left EQ NEQ LE GE '<' '>'
 %left '?' ':'
-%left '!'
-%left '%'
+%left '!' '~' '&' '|' '^'
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 %nonassoc MINUS_ALONE
-%nonassoc STAR '&'
+%nonassoc STAR ESP_ALONE
 
 %type <stmt> instr
 %type <stmt> statement
@@ -138,20 +139,26 @@ expression:
      | SYMBOL '=' expression                               { $$ = Expr_Aff($1, $3, (position*) &@$);            }
      | SYMBOL                                              { $$ = Expr_Var($1, (position*) &@$);                }
      | '!' expression                                      { $$ = Expr_Neg($2, (position*) &@$);                }
-     | expression EQ  expression                           { $$ = Expr_Eq ($1, $3, (position*) &@$);            }
-     | expression NEQ expression                           { $$ = Expr_Neq($1, $3, (position*) &@$);            }
-     | expression LE  expression                           { $$ = Expr_Le ($1, $3, (position*) &@$);            }
-     | expression '<' expression                           { $$ = Expr_Lt ($1, $3, (position*) &@$);            }
-     | expression GE  expression                           { $$ = Expr_Ge ($1, $3, (position*) &@$);            }
-     | expression '>' expression                           { $$ = Expr_Gt ($1, $3, (position*) &@$);            }
-     | expression '+' expression                           { $$ = Expr_Add($1, $3, (position*) &@$);            }
-     | expression '-' expression                           { $$ = Expr_Sub($1, $3, (position*) &@$);            }
-     | expression '*' expression                           { $$ = Expr_Mul($1, $3, (position*) &@$);            }
-     | expression '/' expression                           { $$ = Expr_Div($1, $3, (position*) &@$);            }
-     | expression '%' expression                           { $$ = Expr_Mod($1, $3, (position*) &@$);            }
+     | '~' expression                                      { $$ = Expr_Not($2, (position*) &@$);                }
+     | expression '&'  expression                          { $$ = Expr_And ($1, $3, (position*) &@$);           }
+     | expression '|'  expression                          { $$ = Expr_Or  ($1, $3, (position*) &@$);           }
+     | expression '^'  expression                          { $$ = Expr_Xor ($1, $3, (position*) &@$);           }
+     | expression LAND expression                          { $$ = Expr_Land($1, $3, (position*) &@$);           }
+     | expression LOR  expression                          { $$ = Expr_Lor ($1, $3, (position*) &@$);           }
+     | expression EQ   expression                          { $$ = Expr_Eq  ($1, $3, (position*) &@$);           }
+     | expression NEQ  expression                          { $$ = Expr_Neq ($1, $3, (position*) &@$);           }
+     | expression LE   expression                          { $$ = Expr_Le  ($1, $3, (position*) &@$);           }
+     | expression '<'  expression                          { $$ = Expr_Lt  ($1, $3, (position*) &@$);           }
+     | expression GE   expression                          { $$ = Expr_Ge  ($1, $3, (position*) &@$);           }
+     | expression '>'  expression                          { $$ = Expr_Gt  ($1, $3, (position*) &@$);           }
+     | expression '+'  expression                          { $$ = Expr_Add ($1, $3, (position*) &@$);           }
+     | expression '-'  expression                          { $$ = Expr_Sub ($1, $3, (position*) &@$);           }
+     | expression '*'  expression                          { $$ = Expr_Mul ($1, $3, (position*) &@$);           }
+     | expression '/'  expression                          { $$ = Expr_Div ($1, $3, (position*) &@$);           }
+     | expression '%'  expression                          { $$ = Expr_Mod ($1, $3, (position*) &@$);           }
      | '-' expression %prec MINUS_ALONE                    { $$ = Expr_Minus($2, (position*) &@$);              }
      | '*' expression %prec STAR                           { $$ = Expr_Deref($2, (position*) &@$);              }
-     | '&' expression                                      { $$ = Expr_Addr($2, (position*) &@$);               }
+     | '&' expression %prec ESP_ALONE                      { $$ = Expr_Addr($2, (position*) &@$);               }
      | expression '?' expression ':' expression            { $$ = Expr_Ifte($1,$3,$5, (position*) &@$);         }
      | '(' expression ')'                                  { $$ = $2;                                           }
 ;
