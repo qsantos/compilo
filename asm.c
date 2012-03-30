@@ -1,6 +1,9 @@
-/*
- *   A Tiny C to SPIM Compiler
- *   Copyright (C) 2012 Thomas GREGOIRE, Quentin SANTOS
+/*\
+ *       \\          A Tiny C to SPIM Compiler                     //
+ *        \\_        Copyright (C) 2012 Thomas  REGOIRE          _//
+ *     .---(')                          Quentin SANTOS          (')---. 
+ *   o( )_-\_        Logos by jgs                                _/-_( )o
+ *
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -14,7 +17,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+\*/
 
 #include "asm.h"
 
@@ -49,7 +52,7 @@ void ASM_Push(ASM* a, ASM_INSN insn, u32 r0, u32 r1, u32 r2)
 		a->code = (Instr*)realloc(a->code, sizeof(Instr) * a->avail);
 		assert(a->code);
 	}
-	Instr i = { insn, r0, r1, r2 };
+	Instr i = { insn, { { r0, r1, r2 } } };
 	a->code[a->len++] = i;
 }
 
