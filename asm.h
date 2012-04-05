@@ -66,6 +66,7 @@ ASM* ASM_New();
 void ASM_Delete (ASM*);
 void ASM_Push   (ASM*, ASM_INSN, u32, u32, u32);
 u32  ASM_NewReg (ASM*);
-u32  ASM_GenExpr(ASM*, Expr*, Context*);
+u32  ASM_GenExpr(ASM*, Context*, Expr*);
+void ASM_GenStmt(ASM*, Context*, Stmt*);
 
 #endif

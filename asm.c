@@ -62,22 +62,24 @@ u32 ASM_NewReg(ASM* a)
 }
 
 #define ASM_UNIOP(INSTR) \
-	r0 = ASM_GenExpr(a, e->v.uni_op, c); \
+	r0 = ASM_GenExpr(a, c, e->v.uni_op); \
 	ASM_Push(a, INSTR, r0, r0, 0); \
 	break;
 #define ASM_BINOP(INSTR) \
-	r0 = ASM_GenExpr(a, e->v.bin_op.left,  c); \
-	r1 = ASM_GenExpr(a, e->v.bin_op.right, c); \
+	r0 = ASM_GenExpr(a, c, e->v.bin_op.left); \
+	r1 = ASM_GenExpr(a, c, e->v.bin_op.right); \
 	ASM_Push(a, INSTR, r0, r0, r1); \
 	break;
 
-u32 ASM_GenExpr(ASM* a, Expr* e, Context* c)
+u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 {
 	assert(a);
+	assert(c);
 	assert(e);
 	
 	u32 r0 = 0;
 	u32 r1;
+	u32 r2;
 	
 	switch (e->type)
 	{
@@ -85,10 +87,9 @@ u32 ASM_GenExpr(ASM* a, Expr* e, Context* c)
 		r0 = ASM_NewReg(a);
 		ASM_Push(a, INSN_SET, r0, e->v.i, 0);
 		break;
-	case EXPR_FUN_CALL:
+	case EXPR_FUN_CALL: // TODO
 		r0 = ASM_NewReg(a);
 		c->st[e->v.call.id].reg = r0;
-		// Label
 		break;
 	case EXPR_AFF:
 		r0 = ASM_NewReg(a);
@@ -125,7 +126,14 @@ u32 ASM_GenExpr(ASM* a, Expr* e, Context* c)
 	
 	case EXPR_MINUS:
 		break;
-	case EXPR_IFTE:
+	case EXPR_IFTE: // TODO
+		r0 = ASM_GenExpr(a, c, e->v.tern_op.op1);
+		ASM_Push(a, INSN_JZ, r0, 0, 0); // label1
+		r1 = ASM_GenExpr(a, c, e->v.tern_op.op1);
+		ASM_Push(a, INSN_JMP, 0, 0, 0); // label2
+		// label1
+		r2 = ASM_GenExpr(a, c, e->v.tern_op.op1);
+		// label2
 		break;
 	case EXPR_DEREF:
 		break;
@@ -136,4 +144,34 @@ u32 ASM_GenExpr(ASM* a, Expr* e, Context* c)
 	}
 	
 	return r0;
+}
+
+void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
+{
+	assert(a);
+	assert(c);
+	assert(s);
+	
+	switch (s->type)
+	{
+	case STMT_NOTHING:
+		break;
+	case STMT_DECL:
+		break;
+	case STMT_EXPR:
+		ASM_GenExpr(a, c, s->v.expr);
+		break;
+	case STMT_WHILE:
+		break;
+	case STMT_DO:
+		break;
+	case STMT_FO::
+		break;
+	case STMT_IF:
+		break;
+	case STMT_RETURN:
+		break;
+	case STMT_BLOCK:
+		break;
+	}
 }
