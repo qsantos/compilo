@@ -26,11 +26,11 @@
 
 ASM* ASM_New()
 {
-	ASM* ret   = (ASM*)malloc(sizeof(ASM));
+	ASM* ret   = (ASM*) malloc(sizeof(ASM));
 	assert(ret);
 	ret->len   = 0;
 	ret->avail = 1024;
-	ret->code  = (Instr*)malloc(sizeof(Instr) * ret->avail);
+	ret->code  = (Instr*) malloc(sizeof(Instr) * ret->avail);
 	assert(ret->code);
 	ret->reg   = 0;
 	return ret;
@@ -49,7 +49,7 @@ void ASM_Push(ASM* a, ASM_INSN insn, u32 r0, u32 r1, u32 r2)
 	if (a->len == a->avail)
 	{
 		a->avail *= 2;
-		a->code = (Instr*)realloc(a->code, sizeof(Instr) * a->avail);
+		a->code = (Instr*) realloc(a->code, sizeof(Instr) * a->avail);
 		assert(a->code);
 	}
 	Instr i = { insn, { { r0, r1, r2 } } };

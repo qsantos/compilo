@@ -33,7 +33,6 @@ typedef enum
 	INSN_NOT,  INSN_LAND, INSN_LOR,
 	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,  INSN_GE,  INSN_GT,
 	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV, INSN_MOD,
-	INSN_PUSH, INSN_POP,
 	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL,
 } ASM_INSN;
 
@@ -57,9 +56,9 @@ typedef struct
 typedef struct
 {
 	Instr* code;
-	u32 len;
-	u32 avail;
-	u32 reg;
+	u32    len;
+	u32    avail;
+	u32    reg;
 } ASM;
 
 ASM* ASM_New();
