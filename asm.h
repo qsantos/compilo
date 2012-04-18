@@ -25,6 +25,7 @@
 #include "types.h"
 #include "ast.h"
 #include "context.h"
+#include "salmon.h"
 
 typedef enum
 {
@@ -45,6 +46,7 @@ typedef struct
 		struct { u32 r0; u32 r1; u32 r2; } r;
 		u32stack* p;
 	} v;
+	Salmon s;
 } Instr;
 
 typedef struct

@@ -46,6 +46,18 @@ Set* Set_Pair(u32 n, u32 a, u32 b)
 	return s;
 }
 
+Set* Set_Copy(Set* s)
+{
+	Set* c = Set_New(s->n);
+	memcpy(c->obj, s->obj, sizeof(bool) * s->n);
+	return c;
+}
+
+void Set_Append(u32 a, Set* s)
+{
+	s->obj[a] = true;
+}
+
 void Set_Delete(Set* s)
 {
 	free(s->obj);
@@ -55,7 +67,7 @@ void Set_Delete(Set* s)
 Set* Set_Union(Set* a, Set* b)
 {
 	assert(a->n == b->n);
-	Set* s = Set_New(a->n);
+	s = Set_New(a->n);
 	for (u32 i = 0; i < n; i ++)
 		s = a->obj[i] || b->obj[i];
 	return s;
