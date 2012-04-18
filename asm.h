@@ -1,6 +1,6 @@
 /*\
  *       \\          A Tiny C to SPIM Compiler                     //
- *        \\_        Copyright (C) 2012 Thomas  REGOIRE          _//
+ *        \\_        Copyright (C) 2012 Thomas  GREGOIRE         _//
  *     .---(')                          Quentin SANTOS          (')---. 
  *   o( )_-\_        Logos by jgs                                _/-_( )o
  *
@@ -31,7 +31,7 @@ typedef enum
 	INSN_SET,  INSN_MOV,
 	INSN_NEG,  INSN_AND,  INSN_OR,  INSN_XOR,
 	INSN_NOT,  INSN_LAND, INSN_LOR,
-	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,   INSN_GE,     INSN_GT,
+	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,   INSN_GE,  INSN_GT,
 	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV,  INSN_MOD,
 	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL,
 	INSN_LBL,  INSN_FUNDEF,

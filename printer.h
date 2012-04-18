@@ -1,6 +1,6 @@
 /*\
  *       \\          A Tiny C to SPIM Compiler                     //
- *        \\_        Copyright (C) 2012 Thomas  REGOIRE          _//
+ *        \\_        Copyright (C) 2012 Thomas  GREGOIRE         _//
  *     .---(')                          Quentin SANTOS          (')---. 
  *   o( )_-\_        Logos by jgs                                _/-_( )o
  *
