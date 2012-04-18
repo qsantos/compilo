@@ -1,6 +1,6 @@
 /*\
  *       \\          A Tiny C to SPIM Compiler                     //
- *        \\_        Copyright (C) 2012 Thomas  REGOIRE          _//
+ *        \\_        Copyright (C) 2012 Thomas  GREGOIRE         _//
  *     .---(')                          Quentin SANTOS          (')---. 
  *   o( )_-\_        Logos by jgs                                _/-_( )o
  *
@@ -19,21 +19,53 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
-#ifndef PRETTY_PRINTER_H
-#define PRETTY_PRINTER_H
+#include "set.h"
 
-#include "ast.h"
-#include "asm.h"
+Set* Set_New(u32 n)
+{
+	Set* s = (Set*) malloc(sizeof(Set));
+	assert(s);
+	s->n = n;
+	s->obj = (bool*) calloc(n, sizeof(bool));
+	assert(s->obj);
+	return s;
+}
 
-void Print_ExprList (ExprList*);
-void Print_Expr     (Expr*);
-void Print_StmtList (StmtList*);
-void Print_Stmt     (Stmt*);
-void Print_Param    (Param*);
-void Print_ParamList(ParamList*);
-void Print_FunDecl  (FunDecl*);
-void Print_Program  (Program*);
+Set* Set_Singleton(u32 n, u32 a)
+{
+	Set* s = Set_New(n);
+	s->obj[a] = true;
+	return s;
+}
 
-void Print_ASM      (ASM*);
+Set* Set_Pair(u32 n, u32 a, u32 b)
+{
+	Set* s = Set_New(n);
+	s->obj[a] = true;
+	s->obj[b] = true;
+	return s;
+}
 
-#endif
+void Set_Delete(Set* s)
+{
+	free(s->obj);
+	free(s);
+}
+
+Set* Set_Union(Set* a, Set* b)
+{
+	assert(a->n == b->n);
+	Set* s = Set_New(a->n);
+	for (u32 i = 0; i < n; i ++)
+		s = a->obj[i] || b->obj[i];
+	return s;
+}
+
+Set* Set_Diff(Set* a, Set* b)
+{
+	assert(a->n == b->n);
+	Set* s = Set_New(a->n);
+	for (u32 i = 0; i < n; i ++)
+		s = a->obj[i] && !b->obj[i];
+	return s;
+}

@@ -34,18 +34,31 @@ Program* current_prog = NULL;
 int main(int argc, char** argv)
 {
 	yyparse();
-
-	if (argc > 1 && !strcmp(argv[1], "--latex"))
-		Program_Latex(current_prog);
+	
+	if (argc > 1)
+	{
+		if (!strcmp(argv[1], "--latex"))
+			Program_Latex(current_prog);
+		else
+			Print_Program(current_prog);
+	}
 	else
-		Program_Print(current_prog);
-
-	Context* c = Context_New(32768);
-
-	Check_Program(current_prog, c);
-
-	Context_Delete(c);
+	{
+		Context* c = Context_New(32768);
+		Check_Program(current_prog, c);
+		if (!c->err)
+		{
+			ASM* a = ASM_New(c);
+			ASM_GenProgram(a, c, current_prog);
+			
+			Print_ASM(a);
+			
+			ASM_Delete(a);
+		}
+		Context_Delete(c);
+	}
+	
 	Program_Delete(current_prog);
-
+	
 	return 0;
 }

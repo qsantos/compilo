@@ -1,6 +1,6 @@
 /*\
  *       \\          A Tiny C to SPIM Compiler                     //
- *        \\_        Copyright (C) 2012 Thomas  REGOIRE          _//
+ *        \\_        Copyright (C) 2012 Thomas  GREGOIRE         _//
  *     .---(')                          Quentin SANTOS          (')---. 
  *   o( )_-\_        Logos by jgs                                _/-_( )o
  *
@@ -19,21 +19,23 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
-#ifndef PRETTY_PRINTER_H
-#define PRETTY_PRINTER_H
+#ifndef SET_H
+#define SET_H
 
-#include "ast.h"
-#include "asm.h"
+#include "types.h"
 
-void Print_ExprList (ExprList*);
-void Print_Expr     (Expr*);
-void Print_StmtList (StmtList*);
-void Print_Stmt     (Stmt*);
-void Print_Param    (Param*);
-void Print_ParamList(ParamList*);
-void Print_FunDecl  (FunDecl*);
-void Print_Program  (Program*);
+typedef struct
+{
+	u32   n;
+	bool* obj;
+} Set;
 
-void Print_ASM      (ASM*);
+Set* Set_New(u32);
+Set* Set_Singleton(u32, u32);
+Set* Set_Pair(u32, u32, u32);
+void Set_Delete(Set*);
+
+Set* Set_Union(Set*, Set*);
+Set* Set_Diff(Set*, Set*);
 
 #endif

@@ -339,9 +339,9 @@ void Check_Types(Type* t1, Type* t2, position* pos, Context* c)
 	if (!Type_Comp(t1, t2))
 	{
 		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
-		Type_Print(stderr, t1);
+		Print_Type(stderr, t1);
 		fprintf(stderr, "' and '");
-		Type_Print(stderr, t2);
+		Print_Type(stderr, t2);
 		fprintf(stderr, "' mismatch.\n");
 		c->err = true;
 	}

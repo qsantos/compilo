@@ -131,7 +131,7 @@ Type* Type_Ptr(Type*);
 void Type_Delete(Type*);
 /* Utils */
 bool Type_Comp(Type*, Type*);
-void Type_Print(FILE*, Type*);
+void Print_Type(FILE*, Type*);
 
 
 

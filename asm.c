@@ -37,6 +37,11 @@ ASM* ASM_New(Context* c)
 	
 	ret->n_regs = 0;
 	
+	ret->n_labels = 0;
+	ret->a_labels = 1024;
+	ret->labels   = (u32*) malloc(sizeof(Instr) * ret->a_labels);
+	assert(ret->labels);
+	
 	ret->funCalls = (u32stack**) malloc(sizeof(u32stack*) * c->n_symbs);
 	assert(ret->funCalls);
 	memset(ret->funCalls, 0, sizeof(u32stack*) * c->n_symbs);
@@ -105,9 +110,10 @@ void ASM_LabelPos(ASM* a, u32 label)
 	while (label >= a->a_labels)
 	{
 		a->a_labels *= 2;
-		a->labels = (u32*)realloc(a->labels, sizeof(u32) * a->a_code);
+		a->labels = (u32*)realloc(a->labels, sizeof(u32) * a->a_labels);
 		assert(a->labels);
 	}
+	ASM_Push(a, INSN_LBL, label, 0, 0);
 	a->labels[label] = a->n_code;
 }
 
@@ -155,13 +161,9 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		regs = NULL;
 		break;
 	case EXPR_AFF:
-		r0 = ASM_NewReg(a);
-		c->st[e->v.aff.id].reg = r0;
-		if (e->v.aff.expr)
-		{
-			r1 = ASM_GenExpr(a, c, e->v.aff.expr);
-			ASM_Push(a, INSN_MOV, r0, r1, 0);
-		}
+		r0 = c->st[e->v.aff.id].reg;
+		r1 = ASM_GenExpr(a, c, e->v.aff.expr);
+		ASM_Push(a, INSN_MOV, r0, r1, 0);
 		break;
 	case EXPR_VAR:
 		r0 = c->st[e->v.aff.id].reg;
@@ -223,6 +225,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	assert(s);
 	
 	u32 r0;
+	u32 r1;
 	u32 l0;
 	u32 l1;
 	StmtList* l;
@@ -232,7 +235,13 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_NOTHING:
 		break;
 	case STMT_DECL:
-		c->st[s->v.decl.id].reg = ASM_NewReg(a);
+		r0 = ASM_NewReg(a);
+		c->st[s->v.decl.id].reg = r0;
+		if (s->v.decl.val)
+		{
+			r1 = ASM_GenExpr(a, c, s->v.decl.val);
+			ASM_Push(a, INSN_MOV, r0, r1, 0);
+		}
 		break;
 	case STMT_EXPR:
 		ASM_GenExpr(a, c, s->v.expr);
@@ -253,8 +262,8 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		l1 = ASM_NewLabel(a);
 		
 		ASM_LabelPos(a, l0);
-		ASM_GenStmt(a, c, s->v.whilez.stmt);
-		r0 = ASM_GenExpr(a, c, s->v.whilez.cond);
+		ASM_GenStmt(a, c, s->v.doz.stmt);
+		r0 = ASM_GenExpr(a, c, s->v.doz.cond);
 		ASM_Push(a, INSN_JZ, r0, l1, 0);
 		ASM_Push(a, INSN_JMP, l0, 0, 0);
 		ASM_LabelPos(a, l1);
@@ -268,9 +277,9 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		r0 = ASM_GenExpr(a, c, s->v.forz.b);
 		ASM_Push(a, INSN_JZ, r0, l1, 0);
 		ASM_GenStmt(a, c, s->v.forz.stmt);
+		ASM_GenStmt(a, c, s->v.forz.c);
 		ASM_Push(a, INSN_JMP, l0, 0, 0);
 		ASM_LabelPos(a, l1);
-		ASM_GenStmt(a, c, s->v.forz.c);
 		break;
 	case STMT_IF:
 		l0 = ASM_NewLabel(a);

@@ -238,7 +238,7 @@ bool Type_Comp(Type* t1, Type* t2)
 	}
 }
 
-void Type_Print(FILE* f, Type* t)
+void Print_Type(FILE* f, Type* t)
 {
 	switch (t->type)
 	{
@@ -252,7 +252,7 @@ void Type_Print(FILE* f, Type* t)
 		fprintf(f, "int");
 		break;
 	case TYPE_PTR:
-		Type_Print(f, t->v.ptr);
+		Print_Type(f, t->v.ptr);
 		fprintf(f, "*");
 		break;
 	default:

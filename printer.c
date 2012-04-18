@@ -20,34 +20,35 @@
 \*/
 
 #include "printer.h"
-#include <stdio.h>
 
-void ExprList_Print(ExprList* l)
+#include <stdio.h>
+#include <assert.h>
+
+void Print_ExprList(ExprList* l)
 {
 	if (l)
 	{
-		Expr_Print(l->head);
+		Print_Expr(l->head);
 		l = l->tail;
 		while (l)
 		{
 			printf(", ");
-			Expr_Print(l->head);
+			Print_Expr(l->head);
 			l = l->tail;
 		}
 	}
 }
 
-#define PRINT_BINOP(CODE, NAME)			\
-	case EXPR_##CODE :			\
+#define EXPR_BINOP(NAME)			\
 	printf(#NAME);				\
 	printf("(");				\
-	Expr_Print(e->v.bin_op.left);		\
+	Print_Expr(e->v.bin_op.left);		\
 	printf(", ");				\
-	Expr_Print(e->v.bin_op.right);		\
+	Print_Expr(e->v.bin_op.right);		\
 	printf(")");				\
 	break;
 
-void Expr_Print(Expr* e)
+void Print_Expr(Expr* e)
 {
 	if (!e)
 	{
@@ -61,50 +62,50 @@ void Expr_Print(Expr* e)
 		break;
 	case EXPR_FUN_CALL:
 		printf("Call(%s, ", e->v.call.name);
-		ExprList_Print(e->v.call.params);
+		Print_ExprList(e->v.call.params);
 		printf(")");
 		break;
 	case EXPR_AFF:
 		printf("Aff(%s, ", e->v.aff.name);
-		Expr_Print(e->v.aff.expr);
+		Print_Expr(e->v.aff.expr);
 		printf(")");
 		break;
 	case EXPR_VAR:
 		printf("Var(%s)", e->v.var.name);
 		break;
-		PRINT_BINOP(EQ,  Eq );
-		PRINT_BINOP(NEQ, Neq);
-		PRINT_BINOP(LE,  Le );
-		PRINT_BINOP(LT,  Lt );
-		PRINT_BINOP(GE,  Ge );
-		PRINT_BINOP(GT,  Gt );
-		PRINT_BINOP(ADD, Add);
-		PRINT_BINOP(SUB, Sub);
-		PRINT_BINOP(MUL, Mul);
-		PRINT_BINOP(DIV, Div);
-		PRINT_BINOP(MOD, Mod);
+	case EXPR_EQ:  EXPR_BINOP(Eq );
+	case EXPR_NEQ: EXPR_BINOP(Neq);
+	case EXPR_LE:  EXPR_BINOP(Le );
+	case EXPR_LT:  EXPR_BINOP(Lt );
+	case EXPR_GE:  EXPR_BINOP(Ge );
+	case EXPR_GT:  EXPR_BINOP(Gt );
+	case EXPR_ADD: EXPR_BINOP(Add);
+	case EXPR_SUB: EXPR_BINOP(Sub);
+	case EXPR_MUL: EXPR_BINOP(Mul);
+	case EXPR_DIV: EXPR_BINOP(Div);
+	case EXPR_MOD: EXPR_BINOP(Mod);
 	case EXPR_MINUS:
 		printf("Minus(");
-		Expr_Print(e->v.uni_op);
+		Print_Expr(e->v.uni_op);
 		printf(")");
 		break;
 	case EXPR_DEREF:
 		printf("Deref(");
-		Expr_Print(e->v.uni_op);
+		Print_Expr(e->v.uni_op);
 		printf(")");
 		break;
 	case EXPR_ADDR:
 		printf("Addr(");
-		Expr_Print(e->v.uni_op);
+		Print_Expr(e->v.uni_op);
 		printf(")");
 		break;
 	case EXPR_IFTE:
 		printf("Ifte(");
-		Expr_Print(e->v.tern_op.op1);
+		Print_Expr(e->v.tern_op.op1);
 		printf(", ");
-		Expr_Print(e->v.tern_op.op2);
+		Print_Expr(e->v.tern_op.op2);
 		printf(", ");
-		Expr_Print(e->v.tern_op.op3);
+		Print_Expr(e->v.tern_op.op3);
 		printf(")");
 		break;
 	default:
@@ -112,7 +113,7 @@ void Expr_Print(Expr* e)
 	}
 }
 
-void StmtList_Print(StmtList* l)
+void Print_StmtList(StmtList* l)
 {
 	if (!l)
 	{
@@ -121,18 +122,18 @@ void StmtList_Print(StmtList* l)
 	}
 	if (l)
 	{
-		Stmt_Print(l->head);
+		Print_Stmt(l->head);
 		l = l->tail;
 		while (l)
 		{
 			printf(", ");
-			Stmt_Print(l->head);
+			Print_Stmt(l->head);
 			l = l->tail;
 		}
 	}
 }
 
-void Stmt_Print(Stmt* s)
+void Print_Stmt(Stmt* s)
 {
 	if (!s)
 	{
@@ -146,66 +147,66 @@ void Stmt_Print(Stmt* s)
 		break;
 	case STMT_DECL:
 		printf("Decl(");
-		Type_Print(stdout, s->v.decl.t);
+		Print_Type(stdout, s->v.decl.t);
 		printf(", %s, ", s->v.decl.name);
-		Expr_Print(s->v.decl.val);
+		Print_Expr(s->v.decl.val);
 		printf(")");
 		break;
 	case STMT_EXPR:
-		Expr_Print(s->v.expr);
+		Print_Expr(s->v.expr);
 		break;
 	case STMT_WHILE:
 		printf("While(");
-		Expr_Print(s->v.whilez.cond);
+		Print_Expr(s->v.whilez.cond);
 		printf(", ");
-		Stmt_Print(s->v.whilez.stmt);
+		Print_Stmt(s->v.whilez.stmt);
 		printf(")");
 		break;
 	case STMT_DO:
 		printf("Do(");
-		Stmt_Print(s->v.doz.stmt);
+		Print_Stmt(s->v.doz.stmt);
 		printf(", ");
-		Expr_Print(s->v.doz.cond);
+		Print_Expr(s->v.doz.cond);
 		printf(")");
 		break;
 	case STMT_FOR:
 		printf("For(");
-		Stmt_Print(s->v.forz.a);
+		Print_Stmt(s->v.forz.a);
 		printf(", ");
-		Stmt_Print(s->v.forz.b);
+		Print_Expr(s->v.forz.b);
 		printf(", ");
-		Stmt_Print(s->v.forz.c);
+		Print_Stmt(s->v.forz.c);
 		printf(", ");
-		Stmt_Print(s->v.forz.stmt);
+		Print_Stmt(s->v.forz.stmt);
 		printf(")");
 		break;
 	case STMT_IF:
 		printf("If(");
-		Expr_Print(s->v.ifz.cond);
+		Print_Expr(s->v.ifz.cond);
 		printf(", ");
-		Stmt_Print(s->v.ifz.iftrue);
+		Print_Stmt(s->v.ifz.iftrue);
 		if (s->v.ifz.iffalse)
 		{
 			printf(", ");
-			Stmt_Print(s->v.ifz.iffalse);
+			Print_Stmt(s->v.ifz.iffalse);
 		}
 		printf(")");
 		break;
 	case STMT_RETURN:
 		printf("Return(");
-		Expr_Print(s->v.expr);
+		Print_Expr(s->v.expr);
 		printf(")");
 		break;
 	case STMT_BLOCK:
 		printf("Block(");
-		StmtList_Print(s->v.block);
+		Print_StmtList(s->v.block);
 		printf(")");
 	default:
 		break;
 	}
 }
 
-void Param_Print(Param* p)
+void Print_Param(Param* p)
 {
 	if (!p)
 	{
@@ -213,11 +214,11 @@ void Param_Print(Param* p)
 		return;
 	}
 	printf("Param(");
-	Type_Print(stdout, p->type);
+	Print_Type(stdout, p->type);
 	printf(", %s)", p->name);
 }
 
-void ParamList_Print(ParamList* l)
+void Print_ParamList(ParamList* l)
 {
 	if (!l)
 	{
@@ -225,18 +226,18 @@ void ParamList_Print(ParamList* l)
 		return;
 	}
 	printf("ParamList(");
-	Param_Print(l->head);
+	Print_Param(l->head);
 	l = l->tail;
 	while (l)
 	{
 		printf(", ");
-		Param_Print(l->head);
+		Print_Param(l->head);
 		l = l->tail;
 	}
 	printf(")");
 }
 
-void FunDecl_Print(FunDecl* f)
+void Print_FunDecl(FunDecl* f)
 {
 	if (!f)
 	{
@@ -244,27 +245,98 @@ void FunDecl_Print(FunDecl* f)
 		return;
 	}
 	printf("FunDecl(");
-	Type_Print(stdout, f->type);
+	Print_Type(stdout, f->type);
 	printf(", %s, ", f->name);
-	ParamList_Print(f->params);
+	Print_ParamList(f->params);
 	printf(", ");
-	Stmt_Print(f->stmt);
+	Print_Stmt(f->stmt);
 	printf(")");
 }
 
-void Program_Print(Program* p)
+void Print_Program(Program* p)
 {
 	if (!p)
 		return;
 	printf("Program(");
-	FunDecl_Print(p->head);
+	Print_FunDecl(p->head);
 	p = p->tail;
 	while (p)
 	{
 		printf(", ");
-		FunDecl_Print(p->head);
+		Print_FunDecl(p->head);
 		p = p->tail;
 	}
 	printf(")");
 	printf("\n");
 }
+
+#define ASM_BINOP(STR)                                                                  \
+	printf("%s $%lu, $%lu, $%lu\n", STR, instr.v.r.r0, instr.v.r.r1, instr.v.r.r2); \
+	break;                                                                          \
+
+void Print_ASM(ASM* a)
+{
+	assert(a);
+	
+	u32stack* regs;
+	
+	for (u32 i = 0; i < a->n_code; i++)
+	{
+		Instr instr = a->code[i];
+		switch (instr.insn)
+		{
+		case INSN_SET:
+			printf("Set  $%lu, %lu\n", instr.v.r.r0, instr.v.r.r1);
+			break;
+		case INSN_MOV:
+			printf("Mov  $%lu, $%lu\n", instr.v.r.r0, instr.v.r.r1);
+			break;
+		case INSN_NEG:  ASM_BINOP("Neg ");
+		case INSN_AND:  ASM_BINOP("And ");
+		case INSN_OR:   ASM_BINOP("Or  ");
+		case INSN_XOR:  ASM_BINOP("Xor ");
+		case INSN_NOT:  ASM_BINOP("Not ");
+		case INSN_LAND: ASM_BINOP("Land");
+		case INSN_LOR:  ASM_BINOP("Lor ");
+		case INSN_EQ:   ASM_BINOP("Eq  ");
+		case INSN_NEQ:  ASM_BINOP("Neq ");
+		case INSN_LE:   ASM_BINOP("Le  ");
+		case INSN_LT:   ASM_BINOP("Lt  ");
+		case INSN_GE:   ASM_BINOP("Ge  ");
+		case INSN_GT:   ASM_BINOP("Gt  ");
+		case INSN_ADD:  ASM_BINOP("Add ");
+		case INSN_SUB:  ASM_BINOP("Sub ");
+		case INSN_MUL:  ASM_BINOP("Mul ");
+		case INSN_DIV:  ASM_BINOP("Div ");
+		case INSN_MOD:  ASM_BINOP("Mod ");
+		case INSN_JMP:
+			printf("Jmp  .%lu\n", instr.v.r.r0);
+			break;
+		case INSN_JZ:
+			printf("Jz   $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
+			break;
+		case INSN_JNZ:
+			printf("Jnz  $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
+			break;
+		case INSN_CALL:
+			regs = instr.v.p;
+			assert(regs);
+			printf("Call .%lu", regs->head);
+			regs = regs->tail;
+			while (regs)
+			{
+				printf(", %lu", regs->head);
+				regs = regs->tail;
+			}
+			printf("\n");
+			break;
+		case INSN_LBL:
+			printf(".%lu\n", instr.v.r.r0);
+			break;
+		case INSN_FUNDEF:
+			printf("This is a function\n");
+			break;
+		}
+	}
+}
+
