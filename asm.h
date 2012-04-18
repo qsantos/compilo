@@ -31,17 +31,10 @@ typedef enum
 	INSN_SET,  INSN_MOV,
 	INSN_NEG,  INSN_AND,  INSN_OR,  INSN_XOR,
 	INSN_NOT,  INSN_LAND, INSN_LOR,
-	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,  INSN_GE,  INSN_GT,
-	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV, INSN_MOD,
-	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL,
+	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,   INSN_GE,     INSN_GT,
+	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV,  INSN_MOD,
+	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL, INSN_FUNDEF,
 } ASM_INSN;
-
-typedef struct RegList RegList;
-struct RegList
-{
-	u32      head;
-	RegList* tail;
-};
 
 typedef struct
 {
@@ -49,23 +42,35 @@ typedef struct
 	union
 	{
 		struct { u32 r0; u32 r1; u32 r2; } r;
-		RegList p;
+		u32stack* p;
 	} v;
 } Instr;
 
 typedef struct
 {
-	Instr* code;
-	u32    len;
-	u32    avail;
-	u32    reg;
+	Instr*      code;
+	u32         n_code;
+	u32         a_code;
+	
+	u32         n_regs;
+	
+	u32*        labels;
+	u32         n_labels;
+	u32         a_labels;
+	
+	u32stack**  funCalls; // for each function, list of calls
 } ASM;
 
-ASM* ASM_New();
-void ASM_Delete (ASM*);
-void ASM_Push   (ASM*, ASM_INSN, u32, u32, u32);
-u32  ASM_NewReg (ASM*);
-u32  ASM_GenExpr(ASM*, Context*, Expr*);
-void ASM_GenStmt(ASM*, Context*, Stmt*);
+ASM* ASM_New       (Context*);
+void ASM_Delete    (ASM*);
+void ASM_Push      (ASM*, ASM_INSN, u32, u32, u32);
+void ASM_PushList  (ASM*, ASM_INSN, u32stack*);
+u32  ASM_NewReg    (ASM*);
+u32  ASM_NewLabel  (ASM*);
+void ASM_LabelPos  (ASM*, u32);
+u32  ASM_GenExpr   (ASM*, Context*, Expr*);
+void ASM_GenStmt   (ASM*, Context*, Stmt*);
+void ASM_GenFun    (ASM*, Context*, FunDecl*);
+void ASM_GenProgram(ASM*, Context*, Program*);
 
 #endif

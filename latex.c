@@ -213,7 +213,7 @@ static void printStmt(Stmt* s)
 	case STMT_FOR:
 		beginNode("For");
 		printStmt(s->v.forz.a);
-		printStmt(s->v.forz.b);
+		printExpr(s->v.forz.b);
 		printStmt(s->v.forz.c);
 		printStmt(s->v.forz.stmt);
 		endNode();

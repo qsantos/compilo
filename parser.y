@@ -108,7 +108,7 @@ statement:
        instr ';'                                           { $$ = $1;                                           }
      | WHILE '(' expression ')' statement                  { $$ = Stmt_While($3, $5);                           }
      | DO statement WHILE '(' expression ')'               { $$ = Stmt_Do($2, $5);                              }
-     | FOR '(' instr ';' instr ';' instr ')' statement     { $$ = Stmt_For($3, $5, $7, $9);                     }
+     | FOR '(' instr ';' expression ';' instr ')' statement{ $$ = Stmt_For($3, $5, $7, $9);                     }
      | IF '(' expression ')' statement %prec IF_ALONE      { $$ = Stmt_If($3, $5, NULL);                        }
      | IF '(' expression ')' statement ELSE statement      { $$ = Stmt_If($3, $5, $7);                          }
      | '{' statement_list '}'                              { $$ = Stmt_Block($2);                               }

@@ -158,12 +158,12 @@ struct Stmt
 	} type;
 	union
 	{
-		struct { Type* t; string name; Expr* val; position pos; } decl;
+		struct { Type* t; string name; u32 id; Expr* val; position pos; } decl;
 		Expr* expr;
 		struct { Expr* cond; Stmt* stmt; } whilez;
 		struct { Stmt* stmt; Expr* cond; } doz;
-		struct { Stmt* a; Stmt* b; Stmt* c; Stmt* stmt; } forz;
-		struct { Expr* cond; Stmt* iftrue, * iffalse; } ifz;
+		struct { Stmt* a; Expr* b; Stmt* c; Stmt* stmt; } forz;
+		struct { Expr* cond; Stmt* iftrue; Stmt* iffalse; } ifz;
 		StmtList* block;
 	} v;
 	position pos;
@@ -174,7 +174,7 @@ Stmt* Stmt_Decl(Type*, string, Expr*, position* pos);
 Stmt* Stmt_Expr(Expr*);
 Stmt* Stmt_While(Expr*, Stmt*);
 Stmt* Stmt_Do(Stmt*, Expr*);
-Stmt* Stmt_For(Stmt*, Stmt*, Stmt*, Stmt*);
+Stmt* Stmt_For(Stmt*, Expr*, Stmt*, Stmt*);
 Stmt* Stmt_If(Expr*, Stmt*, Stmt*);
 Stmt* Stmt_Return(Expr*);
 Stmt* Stmt_Block(StmtList*);
@@ -190,6 +190,7 @@ typedef struct
 {
 	Type*    type;
 	string   name;
+	u32      id;
 	position pos;
 } Param;
 typedef struct ParamList

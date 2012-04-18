@@ -21,10 +21,15 @@
 
 #include "static.h"
 
+#include <assert.h>
+
 /* Static analysis */
 
 void Check_Expr(Expr* e, Context* c)
 {
+	assert(e);
+	assert(c);
+	
 	symbol* symb;
 	string  name;
 	switch (e->type)
@@ -101,13 +106,16 @@ void Check_ExprList(ExprList* l, Context* c)
 
 void Check_Stmt(Stmt* s, bool needRet, Context* c)
 {
+	assert(s);
+	assert(c);
+	
 	symbol* symb;
 	string  name;
 	switch (s->type)
 	{
 	case STMT_DECL:
-		name = s->v.decl.name;
-		symb = Context_Get(c, name);
+		name         = s->v.decl.name;
+		symb         = Context_Get(c, name);
 		if (!Context_CanDeclare(c, name))
 		{
 			Static_Error(c, &s->v.decl.pos, "redeclaration of %s", name);
@@ -119,6 +127,8 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 			symb->isFun      = false;
 			symb->pos        = &s->v.decl.pos;
 			symb->v.t        = s->v.decl.t;
+			
+			s->v.decl.id = symb->id;
 			if (s->v.decl.val)
 			{
 				Check_Expr(s->v.decl.val, c);
@@ -147,7 +157,7 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 		break;
 	case STMT_FOR:
 		Check_Stmt(s->v.forz.a,    false, c);
-		Check_Stmt(s->v.forz.b,    false, c);
+		Check_Expr(s->v.forz.b,           c);
 		Check_Stmt(s->v.forz.c,    false, c);
 		Check_Stmt(s->v.forz.stmt, false, c);
 		break;
@@ -176,6 +186,8 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 
 void Check_StmtList(StmtList* l, bool needRet, Context* c)
 {
+	assert(c);
+	
 	if (!l && needRet)
 		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->name);
 	while (l)
@@ -187,6 +199,9 @@ void Check_StmtList(StmtList* l, bool needRet, Context* c)
 
 void Check_Param(Param* p, Context* c)
 {
+	assert(p);
+	assert(c);
+	
 	string  name = p->name;
 	symbol* symb = Context_Get(c, name);
 	if (symb)
@@ -201,11 +216,15 @@ void Check_Param(Param* p, Context* c)
 		symb->isFun      = false;
 		symb->pos        = &p->pos;
 		symb->v.t        = p->type;
+		
+		p->id        = symb->id;
 	}
 }
 
 void Check_ParamList(ParamList* l, Context* c)
 {
+	assert(c);
+	
 	while (l)
 	{
 		Check_Param(l->head, c);
@@ -215,6 +234,9 @@ void Check_ParamList(ParamList* l, Context* c)
 
 void Check_FunDecl(FunDecl* fd, Context* c)
 {
+	assert(fd);
+	assert(c);
+	
 	string  name = fd->name;
 	symbol* symb = Context_Get(c, name);
 	if (symb)
@@ -240,6 +262,8 @@ void Check_FunDecl(FunDecl* fd, Context* c)
 
 void Check_Program(Program* l, Context* c)
 {
+	assert(c);
+	
 	Context_BeginScope(c);
 	while (l)
 	{
@@ -253,6 +277,9 @@ void Check_Program(Program* l, Context* c)
 
 Type* Type_Expr(Expr* e, Context* c)
 {
+	assert(e);
+	assert(c);
+	
 	symbol* symb;
 	Type*   t;
 	switch (e->type)
@@ -304,6 +331,11 @@ Type* Type_Expr(Expr* e, Context* c)
 
 void Check_Types(Type* t1, Type* t2, position* pos, Context* c)
 {
+	assert(t1);
+	assert(t2);
+	assert(pos);
+	assert(c);
+	
 	if (!Type_Comp(t1, t2))
 	{
 		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
@@ -317,11 +349,19 @@ void Check_Types(Type* t1, Type* t2, position* pos, Context* c)
 
 void Check_TypeExpr(Type* t, Expr* e, Context* c)
 {
+	assert(t);
+	assert(e);
+	assert(c);
+	
 	Check_Types(t, Type_Expr(e, c), &e->pos, c);
 }
 
 void Check_TypeParams(FunDecl* fd, Expr* e, Context* c)
 {
+	assert(fd);
+	assert(e);
+	assert(c);
+	
 	ParamList* p = fd->params;
 	ExprList*  l = e->v.call.params;
 	while (l && p)

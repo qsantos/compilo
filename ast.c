@@ -309,7 +309,7 @@ Stmt* Stmt_Do(Stmt* stmt, Expr* cond)
 	s->v.doz.cond = cond;
 	return s;
 }
-Stmt* Stmt_For(Stmt* a, Stmt* b, Stmt* c, Stmt* stmt)
+Stmt* Stmt_For(Stmt* a, Expr* b, Stmt* c, Stmt* stmt)
 {
 	Stmt* s = (Stmt*) malloc(sizeof(Stmt));
 	assert(s);
