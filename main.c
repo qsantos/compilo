@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 			Salmon_Vivacity(a);
 			
 			Print_ASM(a);
-//			ASM_Simulate(a, c);
+			ASM_Simulate(a, c);
 			
 			ASM_Delete(a);
 		}

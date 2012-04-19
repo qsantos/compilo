@@ -8,6 +8,6 @@ int pgcd(int a, int b)
 
 int main(void)
 {
-	pgcd(12, 16);
+	pgcd(16, 12);
 	return 0;
 }

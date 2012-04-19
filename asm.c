@@ -175,7 +175,10 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		es = e->v.call.params;
 		while (es)
 		{
-			u32stack_push(&regs, ASM_GenExpr(a, c, es->head));
+			r0 = ASM_GenExpr(a, c, es->head);
+			r1 = ASM_NewReg(a, c);
+			ASM_Push(a, INSN_MOV, r1, r0, 0);
+			u32stack_push(&regs, r1);
 			es = es->tail;
 		}
 		u32stack_push(&(a->funCalls[e->v.call.id]), a->n_code);
@@ -318,7 +321,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		ASM_GenStmt(a, c, s->v.ifz.iffalse);
 		ASM_LabelPos(a, l1);
 		break;
-	case STMT_RETURN: // TODO
+	case STMT_RETURN:
 		assert(c->cur_fun);
 		r0 = ASM_GenExpr(a, c, s->v.expr);
 		ASM_Push(a, INSN_MOV, c->st[c->cur_fun->id].reg, r0, 0);
@@ -345,7 +348,6 @@ void ASM_GenFun (ASM* a, Context* c, FunDecl* f)
 	c->st[f->id].reg = ASM_NewReg(a, c);
 	u32 l = ASM_NewLabel(a);
 	c->st[f->id].label = l;
-	c->st[f->id].nonParamRegs = 0;
 	
 	ParamList* p = f->params;
 	while (p)
@@ -354,12 +356,12 @@ void ASM_GenFun (ASM* a, Context* c, FunDecl* f)
 		c->st[p->head->id].reg = r0;
 		p = p->tail;
 	}
+	c->st[f->id].nonParamRegs = 0;
 	
 	ASM_LabelPos(a, l);
 	a->code[a->n_code-1].v.r.r1 = f->id;
 	ASM_GenStmt(a, c, f->stmt);
 	ASM_Push(a, INSN_RET, 0, 0, 0);
-
 	
 	c->cur_fun = oldfun;
 }
@@ -476,13 +478,13 @@ void ASM_Simulate(ASM* a, Context* c)
 			
 			// params
 			v = s.nonParamRegs;
-			while (params)
+			while (params && args)
 			{
 				u32stack_push(&stack, regs[params->head]);
 				u32stack_push(&stackedRegs, params->head);
 				v++;
 				
-				printf("# $%lu < $%lu\n", params->head, args->head);
+				printf("# $%lu < $%lu (%lu)\n", params->head, args->head, regs[args->head]);
 				regs[params->head] = regs[args->head];
 				args   = args->tail;
 				params = params->tail;
