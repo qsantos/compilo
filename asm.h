@@ -27,6 +27,8 @@
 #include "context.h"
 #include "set.h"
 
+#define REG_RETURN 0
+
 typedef struct
 {
 	s32  jmp;

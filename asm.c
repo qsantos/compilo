@@ -35,7 +35,7 @@ ASM* ASM_New(Context* c)
 	ret->code   = (Instr*) malloc(sizeof(Instr) * ret->a_code);
 	assert(ret->code);
 	
-	ret->n_regs = 0;
+	ret->n_regs = 1;
 	
 	ret->n_labels = 0;
 	ret->a_labels = 1024;
@@ -52,7 +52,7 @@ ASM* ASM_New(Context* c)
 void ASM_Delete(ASM* a)
 {
 	assert(a);
-	
+/*	
 	for (u32 i = 0; i < a->n_code; i++)
 	{
 		Set_Delete(a->code[i].s.use);
@@ -60,7 +60,7 @@ void ASM_Delete(ASM* a)
 		Set_Delete(a->code[i].s.in);
 		Set_Delete(a->code[i].s.out);
 	}
-	
+*/	
 	free(a->code);
 	free(a);
 }
@@ -324,7 +324,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_RETURN:
 		assert(c->cur_fun);
 		r0 = ASM_GenExpr(a, c, s->v.expr);
-		ASM_Push(a, INSN_MOV, c->st[c->cur_fun->id].reg, r0, 0);
+		ASM_Push(a, INSN_MOV, REG_RETURN, r0, 0);
 		break;
 	case STMT_BLOCK:
 		l = s->v.block;
@@ -345,7 +345,7 @@ void ASM_GenFun (ASM* a, Context* c, FunDecl* f)
 	
 	FunDecl* oldfun = c->cur_fun;
 	c->cur_fun = f;
-	c->st[f->id].reg = ASM_NewReg(a, c);
+//	c->st[f->id].reg = ASM_NewReg(a, c);
 	u32 l = ASM_NewLabel(a);
 	c->st[f->id].label = l;
 	
