@@ -52,6 +52,7 @@ ASM* ASM_New(Context* c)
 void ASM_Delete(ASM* a)
 {
 	assert(a);
+	
 	free(a->code);
 	free(a);
 }
@@ -59,6 +60,7 @@ void ASM_Delete(ASM* a)
 void ASM_Push(ASM* a, ASM_INSN insn, u32 r0, u32 r1, u32 r2)
 {
 	assert(a);
+	
 	if (a->n_code == a->a_code)
 	{
 		a->a_code *= 2;
@@ -75,6 +77,7 @@ void ASM_Push(ASM* a, ASM_INSN insn, u32 r0, u32 r1, u32 r2)
 void ASM_PushList(ASM* a, ASM_INSN insn, u32stack* reg)
 {
 	assert(a);
+	
 	if (a->n_code == a->a_code)
 	{
 		a->a_code *= 2;
@@ -86,15 +89,23 @@ void ASM_PushList(ASM* a, ASM_INSN insn, u32stack* reg)
 	a->n_code++;
 }
 
-u32 ASM_NewReg(ASM* a)
+u32 ASM_NewReg(ASM* a, Context* c)
 {
 	assert(a);
+	assert(c);
+	
+	if (c->cur_fun)
+	{
+		u32stack_push(&c->st[c->cur_fun->id].usedRegs, a->n_regs);
+		c->st[c->cur_fun->id].nonParamRegs++;
+	}
 	return a->n_regs++;
 }
 
 u32 ASM_NewLabel(ASM* a)
 {
 	assert(a);
+	
 	if (a->n_labels == a->a_labels)
 	{
 		a->a_labels *= 2;
@@ -107,6 +118,7 @@ u32 ASM_NewLabel(ASM* a)
 void ASM_LabelPos(ASM* a, u32 label)
 {
 	assert(a);
+	
 	while (label >= a->a_labels)
 	{
 		a->a_labels *= 2;
@@ -118,13 +130,13 @@ void ASM_LabelPos(ASM* a, u32 label)
 }
 
 #define ASM_UNIOP(INSTR)                           \
-	r0 = ASM_NewReg(a);                        \
+	r0 = ASM_NewReg(a, c);                        \
 	r1 = ASM_GenExpr(a, c, e->v.uni_op);       \
 	ASM_Push(a, INSTR, r0, r1, 0);             \
 	break;                                     \
 
 #define ASM_BINOP(INSTR)                           \
-	r0 = ASM_NewReg(a);                        \
+	r0 = ASM_NewReg(a, c);                        \
 	r1 = ASM_GenExpr(a, c, e->v.bin_op.left);  \
 	r2 = ASM_GenExpr(a, c, e->v.bin_op.right); \
 	ASM_Push(a, INSTR, r0, r1, r2);            \
@@ -148,7 +160,7 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 	switch (e->type)
 	{
 	case EXPR_INTEGER:
-		r0 = ASM_NewReg(a);
+		r0 = ASM_NewReg(a, c);
 		ASM_Push(a, INSN_SET, r0, e->v.i, 0);
 		break;
 	case EXPR_FUN_CALL:
@@ -190,18 +202,16 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 	case EXPR_SUB:  ASM_BINOP(INSN_SUB);
 	case EXPR_MUL:  ASM_BINOP(INSN_MUL);
 	case EXPR_DIV:  ASM_BINOP(INSN_DIV);
-	case EXPR_MOD:
-
-ASM_BINOP(INSN_MOD);
+	case EXPR_MOD:  ASM_BINOP(INSN_MOD);
 	
 	case EXPR_MINUS:
 		r0 = ASM_GenExpr(a, c, e->v.uni_op);
-		r1 = ASM_NewReg(a);
+		r1 = ASM_NewReg(a, c);
 		ASM_Push(a, INSN_SET, r0,  0, 0);
 		ASM_Push(a, INSN_SUB, r0, r1, 0);
 		break;
 	case EXPR_IFTE:
-		r3 = ASM_NewReg(a);
+		r3 = ASM_NewReg(a, c);
 		l0 = ASM_NewLabel(a);
 		l1 = ASM_NewLabel(a);
 		
@@ -242,7 +252,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_NOTHING:
 		break;
 	case STMT_DECL:
-		r0 = ASM_NewReg(a);
+		r0 = ASM_NewReg(a, c);
 		c->st[s->v.decl.id].reg = r0;
 		if (s->v.decl.val)
 		{
@@ -324,25 +334,24 @@ void ASM_GenFun (ASM* a, Context* c, FunDecl* f)
 	
 	FunDecl* oldfun = c->cur_fun;
 	c->cur_fun = f;
-	
-	c->st[f->id].reg = ASM_NewReg(a);
+	c->st[f->id].reg = ASM_NewReg(a, c);
 	u32 l = ASM_NewLabel(a);
 	c->st[f->id].label = l;
+	c->st[f->id].nonParamRegs = 0;
 	
-	u32stack* paramStack;
 	ParamList* p = f->params;
 	while (p)
 	{
-		u32 r0 = ASM_NewReg(a);
-		u32stack_push(&paramStack, r0);
+		u32 r0 = ASM_NewReg(a, c);
 		c->st[p->head->id].reg = r0;
 		p = p->tail;
 	}
 	
-	ASM_PushList(a, INSN_FUNDEF, paramStack);
 	ASM_LabelPos(a, l);
+	a->code[a->n_code-1].v.r.r1 = f->id;
 	ASM_GenStmt(a, c, f->stmt);
 	ASM_Push(a, INSN_RET, 0, 0, 0);
+
 	
 	c->cur_fun = oldfun;
 }
@@ -372,21 +381,24 @@ void ASM_GenProgram(ASM* a, Context* c, Program* p)
 #define rr0 regs[i.v.r.r0]
 #define rr1 regs[i.v.r.r1]
 #define rr2 regs[i.v.r.r2]
-void ASM_Simulate(ASM* a)
+void ASM_Simulate(ASM* a, Context* c)
 {
 	assert(a);
 	
 	u32* regs = (u32*) malloc(sizeof(u32) * a->n_regs);
 	assert(regs);
 	
-	bool c = true;
+	bool stop = false;
 	u32 ip = 0;
 	u32 v;
 	u32stack* stack = NULL;
 	u32stack* args;
 	u32stack* params;
+	u32stack* stackedRegs;
+	u32stack* stackedRegCounts;
+	symbol s;
 	
-	while (c && ip < a->n_code)
+	while (!stop && ip < a->n_code)
 	{
 		Instr i  = a->code[ip++];
 		u32 res = i.v.r.r0;
@@ -417,7 +429,10 @@ void ASM_Simulate(ASM* a)
 		case INSN_MUL:  rr0 = rr1 * rr2;     printf("$%lu <- %lu\n", res, rr0); break;
 		case INSN_DIV:  rr0 = rr1 / rr2;     printf("$%lu <- %lu\n", res, rr0); break;
 		case INSN_MOD:  rr0 = rr1 % rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_JMP:  ip = rr0;            printf("goto %lu\n",    ip);       break;
+		case INSN_JMP:
+			ip = a->labels[i.v.r.r0];
+			printf("goto .%lu\n", i.v.r.r0);
+			break;
 		case INSN_JZ:
 			if (!rr0)
 			{
@@ -433,28 +448,48 @@ void ASM_Simulate(ASM* a)
 			}
 			break;
 		case INSN_CALL:
+			u32stack_push(&stack, ip);
+			
 			args = i.v.p;
 			printf("Call .%lu\n", args->head);
 			v = a->labels[args->head];
 			args = args->tail;
-			params = a->code[v - 1].v.p;
-			while (args && params)
+			ip = v;
+			
+			// non-params
+			s = c->st[a->code[v].v.r.r1];
+			params = s.usedRegs;
+			for (v = 0; v < s.nonParamRegs; v++)
 			{
+				u32stack_push(&stack, regs[params->head]);
+				u32stack_push(&stackedRegs, params->head);
+				params = params->tail;
+			}
+			
+			// params
+			v = s.nonParamRegs;
+			while (params)
+			{
+				u32stack_push(&stack, regs[params->head]);
+				u32stack_push(&stackedRegs, params->head);
+				v++;
+				
 				printf("# $%lu < $%lu\n", params->head, args->head);
 				regs[params->head] = regs[args->head];
 				args   = args->tail;
 				params = params->tail;
 			}
-			u32stack_push(&stack, ip);
-			ip = v;
+			u32stack_push(&stackedRegCounts, v);
 			break;
 		case INSN_RET:
+			v = u32stack_pop(&stackedRegCounts);
+			while (v--)
+				regs[u32stack_pop(&stackedRegs)] = u32stack_pop(&stack);
 			ip = u32stack_pop(&stack);
 			if (!stack)
-				c = false;
+				stop = true;
 			break;
 		case INSN_LBL:
-		case INSN_FUNDEF:
 			break;
 		}
 	}

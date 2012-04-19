@@ -1,4 +1,5 @@
 /*\
+
  *       \\          A Tiny C to SPIM Compiler                     //
  *        \\_        Copyright (C) 2012 Thomas  GREGOIRE         _//
  *     .---(')                          Quentin SANTOS          (')---. 
@@ -23,6 +24,7 @@
 
 #include <string.h>
 #include <assert.h>
+#include <string.h>
 
 /* Static analysis */
 

@@ -1,7 +1,7 @@
 int main(void)
 {
-	int x;
-	int y;
+	int x = 3;
+	int y = 8;
 	do
 	{
 		y = x - 1;

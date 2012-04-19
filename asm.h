@@ -26,19 +26,6 @@
 #include "ast.h"
 #include "context.h"
 
-/* XXX: move it properly into salmon.c */
-#include "set.h"
-
-typedef struct
-{
-        s32  jmp;
-	Set* in;
-	Set* use;
-	Set* out;
-	Set* def;
-} Salmon;
-/* * */
-
 typedef enum
 {
 	INSN_SET,  INSN_MOV,
@@ -47,7 +34,7 @@ typedef enum
 	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,   INSN_GE,  INSN_GT,
 	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV,  INSN_MOD,
 	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL, INSN_RET,
-	INSN_LBL,  INSN_FUNDEF,
+	INSN_LBL,
 } ASM_INSN;
 
 typedef struct
@@ -58,7 +45,6 @@ typedef struct
 		struct { u32 r0; u32 r1; u32 r2; } r;
 		u32stack* p;
 	} v;
-	Salmon s;
 } Instr;
 
 typedef struct
@@ -80,7 +66,7 @@ ASM* ASM_New       (Context*);
 void ASM_Delete    (ASM*);
 void ASM_Push      (ASM*, ASM_INSN, u32, u32, u32);
 void ASM_PushList  (ASM*, ASM_INSN, u32stack*);
-u32  ASM_NewReg    (ASM*);
+u32  ASM_NewReg    (ASM*, Context*);
 u32  ASM_NewLabel  (ASM*);
 void ASM_LabelPos  (ASM*, u32);
 u32  ASM_GenExpr   (ASM*, Context*, Expr*);
@@ -88,6 +74,6 @@ void ASM_GenStmt   (ASM*, Context*, Stmt*);
 void ASM_GenFun    (ASM*, Context*, FunDecl*);
 void ASM_GenProgram(ASM*, Context*, Program*);
 
-void ASM_Simulate(ASM*);
+void ASM_Simulate  (ASM*, Context*);
 
 #endif

@@ -334,10 +334,9 @@ void Print_ASM(ASM* a)
 			printf("\tRet\n");
 			break;
 		case INSN_LBL:
+			if (instr.v.r.r1)
+				printf("Function ");
 			printf(".%lu\n", instr.v.r.r0);
-			break;
-		case INSN_FUNDEF:
-			printf("Function ");
 			break;
 		}
 	}

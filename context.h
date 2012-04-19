@@ -59,7 +59,11 @@ typedef struct
 	position* pos;
 	u32       depth; // depth at which it has been declared
 	u32       reg;
-	u32       label; // for functions
+	
+	// for functions
+	u32       label;
+	u32stack* usedRegs;
+	u32       nonParamRegs;
 } symbol;
 
 typedef struct
