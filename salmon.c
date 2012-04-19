@@ -21,8 +21,11 @@
 
 #include "salmon.h"
 
+#include <stdlib.h>
+#include <assert.h>
+
 /* XXX: DEBUG */
-void Set_Display(Set* s)
+/*void Set_Display(Set* s)
 {
 	for (u32 i = 0; i < s->n; i++)
 		if (s->obj[i])
@@ -44,8 +47,7 @@ void Salmon_VivacityDebug(u32 n, ASM* a)
 		printf("use: ");
 		Set_Display(a->code[i].s.use);
 	}
-}
-
+}*/
 
 void Salmon_BuildFlow(ASM* a)
 {
@@ -140,4 +142,88 @@ void Salmon_Vivacity(ASM* a)
 	}
 	
 	//Salmon_VivacityDebug(n, a);
+}
+
+IntGraph* IntGraph_New(u32 n)
+{
+	IntGraph* g = (IntGraph*) malloc(sizeof(IntGraph));
+	assert(g);
+	
+	g->n = n;
+	g->d = (u32*) calloc(n, sizeof(u32));
+	assert(g->d);
+	g->e = (edge*) calloc(n * n, sizeof(edge));
+	assert(g->e);
+	
+	return g;
+}
+
+void IntGraph_AddInterf(IntGraph* g, u32 i, u32 j)
+{
+	if (!g->e[i + j * g->n].interf)
+	{
+		g->e[i + j * g->n].interf = true;
+		g->e[j + i * g->n].interf = true;
+		g->d[i]++;
+		g->d[j]++;
+	}
+}
+
+void IntGraph_AddMove(IntGraph* g, u32 i, u32 j)
+{
+	if (!g->e[i + j * g->n].pref)
+	{
+		g->e[i + j * g->n].pref = true;
+		g->e[j + i * g->n].pref = true;
+		g->d[i]++;
+		g->d[j]++;
+	}
+}
+
+void IntGraph_Delete(IntGraph* g)
+{
+	free(g->d);
+	free(g->e);
+	free(g);
+}
+
+IntGraph* Salmon_Interference(ASM* a)
+{
+	IntGraph* g = IntGraph_New(a->n_regs);
+	
+	for (u32 i = 0; i < a->n_code; i++)
+	{
+		switch (a->code[i].insn)
+		{
+		case INSN_MOV:
+			for (u32 j = 0; j < a->n_code; j++)
+			{
+				if (a->code[i].s.out->obj[j] || j != a->code[i].v.r.r1)
+					IntGraph_AddMove(g, a->code[i].v.r.r0, j);
+			}
+			break;
+
+		case INSN_SET:
+		case INSN_NEG: case INSN_NOT:
+		case INSN_AND: case INSN_OR:  case INSN_XOR: case INSN_LAND: case INSN_LOR:
+		case INSN_EQ:  case INSN_NEQ: case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
+		case INSN_ADD: case INSN_SUB: case INSN_MUL: case INSN_DIV:  case INSN_MOD:
+			for (u32 j = 0; j < a->n_code; j++)
+			{
+				if (a->code[i].s.out->obj[j])
+					IntGraph_AddInterf(g, a->code[i].v.r.r0, j);
+			}
+			break;
+
+		default:
+			break;
+
+		}
+	}
+	
+	return g;
+}
+
+RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
+{
 }

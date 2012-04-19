@@ -23,8 +23,38 @@
 #define SALMON_H
 
 #include "asm.h"
+#include "u32stack.h"
+
+typedef struct
+{
+	bool interf;
+	bool pref;
+} edge;
+
+typedef struct
+{
+	u32   n;
+	u32*  d;
+	edge* e;
+} IntGraph;
+
+IntGraph* IntGraph_New(u32);
+void IntGraph_AddInterf(IntGraph*, u32, u32);
+void IntGraph_AddMove(IntGraph*, u32, u32);
+void IntGraph_Delete(IntGraph*);
+
+typedef struct
+{
+	bool spilled;
+	u32  color;
+} RegAlloc;
 
 void Salmon_BuildFlow(ASM*);
+
 void Salmon_Vivacity(ASM*);
+
+IntGraph* Salmon_Interference(ASM*);
+
+RegAlloc* Salmon_RegAlloc(IntGraph*, u32);
 
 #endif
