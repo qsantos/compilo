@@ -19,16 +19,14 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
-#include "context.h"
 #include "salmon.h"
 
-void Salmon_Vivacity(ASM* a, context* c)
+void Salmon_BuildFlow(ASM* a, Context* c)
 {
 	u32 n = a->n_code;
 	for (u32 i = 0; i < n; i ++)
 	{
 		a->code[i].s.jmp  = -1;
-		a->code[i].s.next = NULL;
 		a->code[i].s.use  = Set_New(n);
 		a->code[i].s.out  = Set_New(n);
 		a->code[i].s.def  = Set_New(n);
@@ -38,15 +36,15 @@ void Salmon_Vivacity(ASM* a, context* c)
 		case INSN_SET:
 			break;
 		case INSN_MOV:  case INSN_NEG: case INSN_NOT:
-			Set_Append(a->code[i].v.r0, a->code[i].s.def);
-			Set_Append(a->code[i].v.r1, a->code[i].s.use);
+			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
+			Set_Append(a->code[i].v.r.r1, a->code[i].s.use);
 			break;
 		case INSN_AND:  case INSN_OR:  case INSN_XOR: case INSN_LAND: case INSN_LOR:
 		case INSN_EQ:   case INSN_NEQ: case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
 		case INSN_ADD:  case INSN_SUB: case INSN_MUL: case INSN_DIV:  case INSN_MOD:
-			Set_Append(a->code[i].v.r0, a->code[i].s.def);
-			Set_Append(a->code[i].v.r1, a->code[i].s.use);
-			Set_Append(a->code[i].v.r2, a->code[i].s.use);
+			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
+			Set_Append(a->code[i].v.r.r1, a->code[i].s.use);
+			Set_Append(a->code[i].v.r.r2, a->code[i].s.use);
 			break;
 		case INSN_JMP:  case INSN_JZ:  case INSN_JNZ:
 			a->code[i].s.jmp = a->labels[a->code[i].v.r.r0];
@@ -54,16 +52,22 @@ void Salmon_Vivacity(ASM* a, context* c)
 		case INSN_CALL:
 		case INSN_LBL:
 			/* TODO */
+		default:
+			break;
 		}
 		
 		a->code[i].s.in = Set_Copy(a->code[i].s.use);
 	}
-	
+}
+
+void Salmon_Vivacity(ASM* a)
+{
+	u32 n = a->n_code;	
 	bool changed = true;
 	while (changed)
 	{
 		changed = false;
-		for (u32 i = 0; i < n; i ++)
+		for (s32 i = n-1; i >= 0; i --)
 		{
 			Set* tmp;
 			
@@ -81,14 +85,14 @@ void Salmon_Vivacity(ASM* a, context* c)
 				if (a->code[i].s.jmp)
 					out = Set_Union(a->code[i+1].s.in, a->code[a->code[i].s.jmp].s.in);
 				else
-					out = Set_Copy(a->code[i+1]);
+					out = Set_Copy(a->code[i+1].s.in);
 			}
 			else
 			{
 				if (a->code[i].s.jmp)
 					out = Set_Copy(a->code[a->code[i].s.jmp].s.in);
 				else
-					out = Set_New();
+					out = Set_New(n);
 			}
 			
 			changed = changed || Set_Cmp(out, a->code[i].s.out);

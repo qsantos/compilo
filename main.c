@@ -27,6 +27,7 @@
 #include "printer.h"
 #include "latex.h"
 #include "static.h"
+#include "salmon.h"
 
 extern int yyparse(void);
 
@@ -52,6 +53,9 @@ int main(int argc, char** argv)
 		{
 			ASM* a = ASM_New(c);
 			ASM_GenProgram(a, c, current_prog);
+
+			Salmon_BuildFlow(a, c);
+			Salmon_Vivacity(a);
 			
 			Print_ASM(a);
 			ASM_Simulate(a);

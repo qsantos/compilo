@@ -35,6 +35,7 @@ Set* Set_Singleton(u32, u32);
 Set* Set_Pair(u32, u32, u32);
 Set* Set_Copy(Set*);
 void Set_Append(u32, Set*);
+bool Set_Cmp(Set*, Set*);
 void Set_Delete(Set*);
 
 Set* Set_Union(Set*, Set*);

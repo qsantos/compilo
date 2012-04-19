@@ -21,6 +21,10 @@
 
 #include "set.h"
 
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
 Set* Set_New(u32 n)
 {
 	Set* s = (Set*) malloc(sizeof(Set));
@@ -67,9 +71,9 @@ void Set_Delete(Set* s)
 Set* Set_Union(Set* a, Set* b)
 {
 	assert(a->n == b->n);
-	s = Set_New(a->n);
-	for (u32 i = 0; i < n; i ++)
-		s = a->obj[i] || b->obj[i];
+	Set* s = Set_New(a->n);
+	for (u32 i = 0; i < a->n; i ++)
+		s->obj[i] = a->obj[i] || b->obj[i];
 	return s;
 }
 
@@ -77,7 +81,21 @@ Set* Set_Diff(Set* a, Set* b)
 {
 	assert(a->n == b->n);
 	Set* s = Set_New(a->n);
-	for (u32 i = 0; i < n; i ++)
-		s = a->obj[i] && !b->obj[i];
+	for (u32 i = 0; i < a->n; i ++)
+		s->obj[i] = a->obj[i] && !b->obj[i];
 	return s;
+}
+
+bool Set_Cmp(Set* a, Set* b)
+{
+	if (a->n != b->n)
+		return false;
+	bool diff = false;
+	u32 i = 0;
+	while (!diff && i < a->n)
+	{
+		diff = (a->obj[i] != b->obj[i]);
+		i++;
+	}
+	return diff;
 }

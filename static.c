@@ -21,6 +21,7 @@
 
 #include "static.h"
 
+#include <string.h>
 #include <assert.h>
 
 /* Static analysis */
