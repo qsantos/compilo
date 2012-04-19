@@ -53,7 +53,7 @@ void Context_Delete(Context* c)
 		u32stack_delete(&c->l2g[i]);
 	free(c->l2g);
 	
-	HashTable_Delete(c->ht);
+//	HashTable_Delete(c->ht); TODO
 	free(c->st);
 	free(c);
 }

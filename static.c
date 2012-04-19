@@ -34,6 +34,8 @@ void Check_Expr(Expr* e, Context* c)
 	string  name;
 	switch (e->type)
 	{
+	case EXPR_INTEGER:
+		break;
 	case EXPR_FUN_CALL:
 		name         = e->v.call.name;
 		symb         = Context_Get(c, name);
@@ -89,9 +91,6 @@ void Check_Expr(Expr* e, Context* c)
 		Type_Expr(e->v.uni_op, c);
 		Check_Expr(e, c);
 		break;
-	default:
-		/* No problem... */
-		break;
 	}
 }
 
@@ -113,6 +112,8 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 	string  name;
 	switch (s->type)
 	{
+	case STMT_NOTHING:
+		break;
 	case STMT_DECL:
 		name         = s->v.decl.name;
 		symb         = Context_Get(c, name);
@@ -156,10 +157,12 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 		Check_Expr(s->v.doz.cond, c);
 		break;
 	case STMT_FOR:
+		Context_BeginScope(c);
 		Check_Stmt(s->v.forz.a,    false, c);
 		Check_Expr(s->v.forz.b,           c);
 		Check_Stmt(s->v.forz.c,    false, c);
 		Check_Stmt(s->v.forz.stmt, false, c);
+		Context_EndScope(c);
 		break;
 	case STMT_IF:
 		Check_Expr(s->v.ifz.cond, c);
@@ -175,8 +178,6 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 		Context_BeginScope(c);
 		Check_StmtList(s->v.block, needRet, c);
 		Context_EndScope(c);
-		break;
-	default:
 		break;
 	}
 
@@ -250,7 +251,10 @@ void Check_FunDecl(FunDecl* fd, Context* c)
 		symb->isFun      = true;
 		symb->pos        = &fd->pos;
 		symb->v.f        = fd;
-	       
+		
+		if (!strcmp(name, "main"))
+			c->main = symb->id;
+		
 		c->cur_fun = fd;
 		fd->id = symb->id;
 		Context_BeginScope(c);
@@ -324,9 +328,10 @@ Type* Type_Expr(Expr* e, Context* c)
 			return &TInt;
 	case EXPR_ADDR:
 		return Type_Ptr(Type_Expr(e->v.uni_op, c));
-	default:
-		return &TInt;
 	}
+	
+	assert(false);
+	return NULL;
 }
 
 void Check_Types(Type* t1, Type* t2, position* pos, Context* c)

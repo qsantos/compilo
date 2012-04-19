@@ -25,7 +25,6 @@
 #include "types.h"
 #include "ast.h"
 #include "context.h"
-#include "salmon.h"
 
 typedef enum
 {
@@ -34,7 +33,7 @@ typedef enum
 	INSN_NOT,  INSN_LAND, INSN_LOR,
 	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,   INSN_GE,  INSN_GT,
 	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV,  INSN_MOD,
-	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL,
+	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL, INSN_RET,
 	INSN_LBL,  INSN_FUNDEF,
 } ASM_INSN;
 
@@ -46,7 +45,6 @@ typedef struct
 		struct { u32 r0; u32 r1; u32 r2; } r;
 		u32stack* p;
 	} v;
-	Salmon s;
 } Instr;
 
 typedef struct
@@ -75,5 +73,7 @@ u32  ASM_GenExpr   (ASM*, Context*, Expr*);
 void ASM_GenStmt   (ASM*, Context*, Stmt*);
 void ASM_GenFun    (ASM*, Context*, FunDecl*);
 void ASM_GenProgram(ASM*, Context*, Program*);
+
+void ASM_Simulate(ASM*);
 
 #endif

@@ -33,7 +33,9 @@ extern int yyparse(void);
 Program* current_prog = NULL;
 int main(int argc, char** argv)
 {
-	yyparse();
+	u32 res = yyparse();
+	if (res)
+		return res;
 	
 	if (argc > 1)
 	{
@@ -52,6 +54,7 @@ int main(int argc, char** argv)
 			ASM_GenProgram(a, c, current_prog);
 			
 			Print_ASM(a);
+			ASM_Simulate(a);
 			
 			ASM_Delete(a);
 		}

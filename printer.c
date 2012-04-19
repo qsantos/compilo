@@ -271,7 +271,7 @@ void Print_Program(Program* p)
 }
 
 #define ASM_BINOP(STR)                                                                  \
-	printf("%s $%lu, $%lu, $%lu\n", STR, instr.v.r.r0, instr.v.r.r1, instr.v.r.r2); \
+	printf("\t%s $%lu, $%lu, $%lu\n", STR, instr.v.r.r0, instr.v.r.r1, instr.v.r.r2); \
 	break;                                                                          \
 
 void Print_ASM(ASM* a)
@@ -286,10 +286,10 @@ void Print_ASM(ASM* a)
 		switch (instr.insn)
 		{
 		case INSN_SET:
-			printf("Set  $%lu, %lu\n", instr.v.r.r0, instr.v.r.r1);
+			printf("\tSet  $%lu, %lu\n", instr.v.r.r0, instr.v.r.r1);
 			break;
 		case INSN_MOV:
-			printf("Mov  $%lu, $%lu\n", instr.v.r.r0, instr.v.r.r1);
+			printf("\tMov  $%lu, $%lu\n", instr.v.r.r0, instr.v.r.r1);
 			break;
 		case INSN_NEG:  ASM_BINOP("Neg ");
 		case INSN_AND:  ASM_BINOP("And ");
@@ -310,31 +310,34 @@ void Print_ASM(ASM* a)
 		case INSN_DIV:  ASM_BINOP("Div ");
 		case INSN_MOD:  ASM_BINOP("Mod ");
 		case INSN_JMP:
-			printf("Jmp  .%lu\n", instr.v.r.r0);
+			printf("\tJmp  .%lu\n", instr.v.r.r0);
 			break;
 		case INSN_JZ:
-			printf("Jz   $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
+			printf("\tJz   $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
 			break;
 		case INSN_JNZ:
-			printf("Jnz  $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
+			printf("\tJnz  $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
 			break;
 		case INSN_CALL:
 			regs = instr.v.p;
 			assert(regs);
-			printf("Call .%lu", regs->head);
+			printf("\tCall .%lu", regs->head);
 			regs = regs->tail;
 			while (regs)
 			{
-				printf(", %lu", regs->head);
+				printf(", $%lu", regs->head);
 				regs = regs->tail;
 			}
 			printf("\n");
+			break;
+		case INSN_RET:
+			printf("\tRet\n");
 			break;
 		case INSN_LBL:
 			printf(".%lu\n", instr.v.r.r0);
 			break;
 		case INSN_FUNDEF:
-			printf("This is a function\n");
+			printf("Function ");
 			break;
 		}
 	}

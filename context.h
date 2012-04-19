@@ -58,7 +58,8 @@ typedef struct
 	} v;
 	position* pos;
 	u32       depth; // depth at which it has been declared
-	u32       reg;   // register associated in the 
+	u32       reg;
+	u32       label; // for functions
 } symbol;
 
 typedef struct
@@ -72,6 +73,7 @@ typedef struct
 	u32stack*  forget;  // number of symbols in the current scope
 	FunDecl*   cur_fun; // current function (if needed)
 	u32        depth;   // helps to know if one can redeclare a variable
+	u32        main;    // global identifier of main function
 } Context;
 
 Context* Context_New(u32);

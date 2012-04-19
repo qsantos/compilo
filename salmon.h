@@ -18,3 +18,28 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*/
+
+#ifndef SALMON_DECLARED
+#define SALMON_DECLARED
+
+#include "set.h"
+
+typedef struct
+{
+        s32  jmp;
+	Set* in;
+	Set* use;
+	Set* out;
+	Set* def;
+} Salmon;
+
+#endif
+
+#ifndef SALMON_H
+#define SALMON_H
+
+#include "asm.h"
+
+void Salmon_Vivacity(ASM*);
+
+#endif
