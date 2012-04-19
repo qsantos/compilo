@@ -25,6 +25,16 @@
 #include "types.h"
 #include "ast.h"
 #include "context.h"
+#include "set.h"
+
+typedef struct
+{
+	s32  jmp;
+	Set* use;
+	Set* in;
+	Set* out;
+	Set* def;
+} Salmon;
 
 typedef enum
 {
@@ -45,6 +55,7 @@ typedef struct
 		struct { u32 r0; u32 r1; u32 r2; } r;
 		u32stack* p;
 	} v;
+	Salmon s;
 } Instr;
 
 typedef struct

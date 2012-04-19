@@ -53,6 +53,14 @@ void ASM_Delete(ASM* a)
 {
 	assert(a);
 	
+	for (u32 i = 0; i < a->n_code; i++)
+	{
+		Set_Delete(a->code[i].s.use);
+		Set_Delete(a->code[i].s.def);
+		Set_Delete(a->code[i].s.in);
+		Set_Delete(a->code[i].s.out);
+	}
+	
 	free(a->code);
 	free(a);
 }

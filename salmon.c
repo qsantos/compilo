@@ -21,9 +21,36 @@
 
 #include "salmon.h"
 
-void Salmon_BuildFlow(ASM* a, Context* c)
+/* XXX: DEBUG */
+void Set_Display(Set* s)
+{
+	for (u32 i = 0; i < s->n; i++)
+		if (s->obj[i])
+			printf("%lu, ", i);
+	printf("\n");
+}
+
+void Salmon_VivacityDebug(u32 n, ASM* a)
+{
+	for (u32 i = 0; i < n; i ++)
+	{
+		printf("-- %lu\n", i);
+		printf("in: ");
+		Set_Display(a->code[i].s.in);
+		printf("out: ");
+		Set_Display(a->code[i].s.out);
+		printf("def: ");
+		Set_Display(a->code[i].s.def);
+		printf("use: ");
+		Set_Display(a->code[i].s.use);
+	}
+}
+
+
+void Salmon_BuildFlow(ASM* a)
 {
 	u32 n = a->n_code;
+	u32stack* s;
 	for (u32 i = 0; i < n; i ++)
 	{
 		a->code[i].s.jmp  = -1;
@@ -34,6 +61,7 @@ void Salmon_BuildFlow(ASM* a, Context* c)
 		switch (a->code[i].insn)
 		{
 		case INSN_SET:
+			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
 			break;
 		case INSN_MOV:  case INSN_NEG: case INSN_NOT:
 			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
@@ -50,8 +78,16 @@ void Salmon_BuildFlow(ASM* a, Context* c)
 			a->code[i].s.jmp = a->labels[a->code[i].v.r.r0];
 			break;
 		case INSN_CALL:
-		case INSN_LBL:
-			/* TODO */
+			s = a->code[i].v.p->tail;
+			while (s)
+			{
+				Set_Append(s->head, a->code[i].s.use);
+				s = s->tail;
+			}
+			break;
+		case INSN_RET:
+			Set_Append(0, a->code[i].s.def);
+			break;
 		default:
 			break;
 		}
@@ -67,12 +103,12 @@ void Salmon_Vivacity(ASM* a)
 	while (changed)
 	{
 		changed = false;
-		for (s32 i = n-1; i >= 0; i --)
+		u32 i = n - 1;
+		do
 		{
 			Set* tmp;
-			
 			tmp = Set_Diff(a->code[i].s.out, a->code[i].s.def);
-			Set* in  = Set_Union(a->code[i].s.in, tmp);
+			Set* in = Set_Union(a->code[i].s.use, tmp);
 			Set_Delete(tmp);
 			
 			changed = changed || Set_Cmp(in, a->code[i].s.in);
@@ -82,14 +118,14 @@ void Salmon_Vivacity(ASM* a)
 			Set* out;
 			if (i < (n-1))
 			{
-				if (a->code[i].s.jmp)
+				if (a->code[i].s.jmp != -1)
 					out = Set_Union(a->code[i+1].s.in, a->code[a->code[i].s.jmp].s.in);
 				else
 					out = Set_Copy(a->code[i+1].s.in);
 			}
 			else
 			{
-				if (a->code[i].s.jmp)
+				if (a->code[i].s.jmp != -1)
 					out = Set_Copy(a->code[a->code[i].s.jmp].s.in);
 				else
 					out = Set_New(n);
@@ -98,6 +134,10 @@ void Salmon_Vivacity(ASM* a)
 			changed = changed || Set_Cmp(out, a->code[i].s.out);
 			Set_Delete(a->code[i].s.out);
 			a->code[i].s.out = out;
-		}
+			
+			i--;
+		} while (i);
 	}
+	
+	//Salmon_VivacityDebug(n, a);
 }

@@ -23,9 +23,8 @@
 #define SALMON_H
 
 #include "asm.h"
-#include "context.h"
 
-void Salmon_BuildFlow(ASM*, Context*);
+void Salmon_BuildFlow(ASM*);
 void Salmon_Vivacity(ASM*);
 
 #endif
