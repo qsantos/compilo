@@ -32,10 +32,10 @@
 typedef struct
 {
 	s32  jmp;
+	Set* def;
 	Set* use;
 	Set* in;
 	Set* out;
-	Set* def;
 } Salmon;
 
 typedef enum
