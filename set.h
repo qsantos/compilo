@@ -30,15 +30,14 @@ typedef struct
 	bool* obj;
 } Set;
 
-Set* Set_New(u32);
+Set* Set_New      (u32);
+void Set_Delete   (Set*);
 Set* Set_Singleton(u32, u32);
-Set* Set_Pair(u32, u32, u32);
-Set* Set_Copy(Set*);
-void Set_Append(u32, Set*);
-bool Set_Cmp(Set*, Set*);
-void Set_Delete(Set*);
-
-Set* Set_Union(Set*, Set*);
-Set* Set_Diff (Set*, Set*);
+Set* Set_Pair     (u32, u32, u32);
+Set* Set_Copy     (Set*);
+Set* Set_Union    (Set*, Set*);
+Set* Set_Diff     (Set*, Set*);
+void Set_Append   (Set*, u32);
+bool Set_Cmp      (Set*, Set*);
 
 #endif

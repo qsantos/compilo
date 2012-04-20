@@ -160,7 +160,12 @@ void ASM_toMIPS(ASM* a, Context* c)
 	assert(c);
 	
 	IntGraph* ig = Salmon_Interference(a);
-	RegAlloc* ra = Salmon_RegAlloc(ig, 27);
+	RegAlloc* ra = Salmon_RegAlloc(ig, N_REGS);
+	
+//	u32 heap = 0;
+//	for (u32 i = 0; i < N_REGS; i++)
+//		if (ra[i].spilled)
+//			ra[i].color = heap++;
 	
 	for (u32 ip = 0; ip < a->n_code; ip++)
 	{
@@ -197,19 +202,19 @@ void ASM_toMIPS(ASM* a, Context* c)
 			printf("\tMOVE $%lu, $%lu\n",       REG(r0), REG(r1));
 			printf("\tSUB  $%lu, $%lu, $%lu\n", REG(r0), REG(r0), REG_TMP0);
 		case INSN_JMP:
-			printf("\tJ .l%lu\n", i.v.r.r0);
+			printf("\tJ l%lu\n", i.v.r.r0);
 			break;
 		case INSN_JZ:
 			printf("\tBNEZ $%lu, 8\n", REG(r0));
-			printf("\tJ    .l%lu\n", i.v.r.r1);
+			printf("\tJ    l%lu\n", i.v.r.r1);
 			break;
 		case INSN_JNZ:
 			printf("\tBEQZ $%lu, 8\n", REG(r0));
-			printf("\tJ    .l%lu\n", i.v.r.r1);
+			printf("\tJ    l%lu\n", i.v.r.r1);
 			break;
 		case INSN_CALL: break;
 		case INSN_RET:  break;
-		case INSN_LBL:  printf(".l%lu\n", i.v.r.r0); break;
+		case INSN_LBL:  printf("l%lu:\n", i.v.r.r0); break;
 		}
 	}
 }

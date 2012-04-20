@@ -56,26 +56,26 @@ void Salmon_BuildFlow(ASM* a)
 	u32stack* s;
 	for (u32 i = 0; i < n; i ++)
 	{
-		a->code[i].s.jmp  = -1;
-		a->code[i].s.use  = Set_New(n);
-		a->code[i].s.out  = Set_New(n);
-		a->code[i].s.def  = Set_New(n);
+		a->code[i].s.jmp = -1;
+		a->code[i].s.use = Set_New(n);
+		a->code[i].s.out = Set_New(n);
+		a->code[i].s.def = Set_New(n);
 		
 		switch (a->code[i].insn)
 		{
 		case INSN_SET:
-			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
+			Set_Append(a->code[i].s.def, a->code[i].v.r.r0);
 			break;
 		case INSN_MOV:  case INSN_NOT: case INSN_LNOT:
-			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
-			Set_Append(a->code[i].v.r.r1, a->code[i].s.use);
+			Set_Append(a->code[i].s.def, a->code[i].v.r.r0);
+			Set_Append(a->code[i].s.use, a->code[i].v.r.r1);
 			break;
 		case INSN_AND:  case INSN_OR:  case INSN_XOR: case INSN_LAND: case INSN_LOR:
 		case INSN_EQ:   case INSN_NEQ: case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
 		case INSN_ADD:  case INSN_SUB: case INSN_MUL: case INSN_DIV:  case INSN_MOD:
-			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
-			Set_Append(a->code[i].v.r.r1, a->code[i].s.use);
-			Set_Append(a->code[i].v.r.r2, a->code[i].s.use);
+			Set_Append(a->code[i].s.def, a->code[i].v.r.r0);
+			Set_Append(a->code[i].s.use, a->code[i].v.r.r1);
+			Set_Append(a->code[i].s.use, a->code[i].v.r.r2);
 			break;
 		case INSN_JMP:  case INSN_JZ:  case INSN_JNZ:
 			a->code[i].s.jmp = a->labels[a->code[i].v.r.r0];
@@ -84,12 +84,12 @@ void Salmon_BuildFlow(ASM* a)
 			s = a->code[i].v.p->tail;
 			while (s)
 			{
-				Set_Append(s->head, a->code[i].s.use);
+				Set_Append(a->code[i].s.use, s->head);
 				s = s->tail;
 			}
 			break;
 		case INSN_RET:
-			Set_Append(0, a->code[i].s.def);
+			Set_Append(a->code[i].s.def, 0);
 			break;
 		default:
 			break;

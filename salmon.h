@@ -40,10 +40,10 @@ typedef struct
 	edge* e;
 } IntGraph;
 
-IntGraph* IntGraph_New(u32);
-void IntGraph_AddInterf(IntGraph*, u32, u32);
-void IntGraph_AddMove(IntGraph*, u32, u32);
-void IntGraph_Delete(IntGraph*);
+IntGraph* IntGraph_New      (u32);
+void      IntGraph_AddInterf(IntGraph*, u32, u32);
+void      IntGraph_AddMove  (IntGraph*, u32, u32);
+void      IntGraph_Delete   (IntGraph*);
 
 typedef struct
 {
@@ -51,12 +51,9 @@ typedef struct
 	u32  color;
 } RegAlloc;
 
-void Salmon_BuildFlow(ASM*);
-
-void Salmon_Vivacity(ASM*);
-
+void      Salmon_BuildFlow   (ASM*);
+void      Salmon_Vivacity    (ASM*);
 IntGraph* Salmon_Interference(ASM*);
-
-RegAlloc* Salmon_RegAlloc(IntGraph*, u32);
+RegAlloc* Salmon_RegAlloc    (IntGraph*, u32);
 
 #endif

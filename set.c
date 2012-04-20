@@ -35,6 +35,12 @@ Set* Set_New(u32 n)
 	return s;
 }
 
+void Set_Delete(Set* s)
+{
+	free(s->obj);
+	free(s);
+}
+
 Set* Set_Singleton(u32 n, u32 a)
 {
 	Set* s = Set_New(n);
@@ -57,15 +63,9 @@ Set* Set_Copy(Set* s)
 	return c;
 }
 
-void Set_Append(u32 a, Set* s)
+void Set_Append(Set* s, u32 a)
 {
 	s->obj[a] = true;
-}
-
-void Set_Delete(Set* s)
-{
-	free(s->obj);
-	free(s);
 }
 
 Set* Set_Union(Set* a, Set* b)
