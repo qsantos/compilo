@@ -285,6 +285,9 @@ void Print_ASM(ASM* a)
 		Instr instr = a->code[i];
 		switch (instr.insn)
 		{
+		case INSN_STOP:
+			printf("\tStop\n");
+			break;
 		case INSN_SET:
 			printf("\tSet  $%lu, %lu\n", instr.v.r.r0, instr.v.r.r1);
 			break;

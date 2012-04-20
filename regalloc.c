@@ -168,7 +168,7 @@ IntGraph* Salmon_Interference(ASM* a)
 {
 	IntGraph* g = IntGraph_New(a->n_regs);
 	
-	for (u32 i = 0; i < a->n_code; i++)
+	for (u32 i = 0; i < a->n_regs-1; i++)
 	{
 		switch (a->code[i].insn)
 		{
@@ -182,9 +182,9 @@ IntGraph* Salmon_Interference(ASM* a)
 
 		case INSN_SET:
 		case INSN_NOT: case INSN_LNOT:
-		case INSN_AND: case INSN_OR:  case INSN_XOR: case INSN_LAND: case INSN_LOR:
-		case INSN_EQ:  case INSN_NEQ: case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
-		case INSN_ADD: case INSN_SUB: case INSN_MUL: case INSN_DIV:  case INSN_MOD:
+		case INSN_AND: case INSN_OR:   case INSN_XOR: case INSN_LAND: case INSN_LOR:
+		case INSN_EQ:  case INSN_NEQ:  case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
+		case INSN_ADD: case INSN_SUB:  case INSN_MUL: case INSN_DIV:  case INSN_MOD:
 			for (u32 j = 0; j < a->n_code; j++)
 			{
 				if (a->code[i].s.out->obj[j])
@@ -214,13 +214,110 @@ typedef struct
 	u32 v2;
 } IRC_Op;
 
+/* 1er cas: on peut retirer un sommet */
+bool RA_DelVertex(IntGraph* g, IRC_Op* op, u32 k)
+{
+	bool found = false;
+	u32 v = 0;
+	while (!found && v < g->n)
+	{
+		if (!g->dead[v] && g->d[v] < k && !g->move[v])
+		{
+			IntGraph_Simplify(g, v);
+			found = true;
+			op->kind = SIMPLIFY;
+			op->v1   = v;
+		}
+		else
+			v++;
+	}
+	return found;
+}
+
+/* 2ème cas: on peut fusionner deux sommets */
+bool RA_DelEdge(IntGraph* g, IRC_Op* op, u32 k, bool* nb)
+{
+	bool found = false;
+	for (u32 i = 0; i < g->n && !found; i++)
+	{
+		for (u32 j = i+1; j < g->n && !found; j++)
+		{
+			if (!g->dead[i] && !g->dead[j] && g->e[i + j * g->n].pref)
+			{
+				memset(nb, false, sizeof(bool) * g->n);
+				
+				for (u32 k = 0; k < g->n; k++)
+					if (!g->dead[k] && g->e[i + k * g->n].interf && (k != j))
+						nb[k] = true;
+				for (u32 k = 0; k < g->n; k++)
+					if (!g->dead[k] && g->e[j + k * g->n].interf && (k != i))
+						nb[k] = true;
+				
+				u32 count = 0;
+				for (u32 k = 0; k < g->n; k++)
+					if (nb[k])
+						count++;
+				
+				if (count < k)
+				{
+					IntGraph_Coalesce(g, i, j);
+					found = true;
+					op->kind = COALESCE;
+					op->v1   = i;
+					op->v2   = j;
+				}
+			}
+		}
+	}
+	return found;
+}
+
+/* 3ème cas: on peut supprimer une arête de préférence */
+bool RA_DelPref(IntGraph* g, IRC_Op* op)
+{
+	bool found = false;
+	u32 v = 0;
+	while (!found && v < g->n)
+	{
+		if (!g->dead[v] && g->move[v])
+		{
+			IntGraph_DeletePref(g, v);
+			found      = true;
+			op->kind = DELPREFS;
+			op->v1   = v;
+		}
+		else
+			v++;
+	}
+	return found;
+}
+
+/* 4ème cas: spilling */
+void RA_Spill(IntGraph* g, IRC_Op* op, RegAlloc* ra, bool* colored)
+{
+	bool found = false;
+	u32 v = 0;
+	while (!found && v < g->n)
+	{
+		if (!g->dead)
+		{
+			IntGraph_Simplify(g, v);
+			ra[v].spilled = true;
+			colored[v]    = true;
+			found         = true;
+			op->kind      = SPILLING;
+		}
+	}
+}
+
+
 RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 {
 	/* Allocation des registres */
 	RegAlloc* ra = (RegAlloc*) calloc(g->n, sizeof(RegAlloc));
 	assert(ra);
 	bool* colored = (bool*) calloc(g->n, sizeof(bool));
-	assert(ra);
+	assert(colored);
 	
 	/* Suite des graphes obtenus en réduisant g de proche en proche */
 	u32 t   = 0;    // numéro du graphe actuel
@@ -250,95 +347,13 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 			assert(s);
 		}
 		s[t] = IntGraph_Copy(s[t-1]);
-		
-		/* 1er cas: on peut retirer un sommet */
-		bool found = false;
-		u32 v = 0;
-		while (!found && v < g->n)
-		{
-			if (!g->dead[v] && g->d[v] < k && !g->move[v])
-			{
-				IntGraph_Simplify(s[t], v);
-				rem--;
-				found = true;
-				op[t].kind = SIMPLIFY;
-				op[t].v1   = v;
-			}
-			else
-				v++;
-		}
-		if (found)
-			continue;
 
-		/* 2ème cas: on peut fusionner deux sommets */
-		found = false;
-		for (u32 i = 0; i < g->n && !found; i++)
-		{
-			for (u32 j = i+1; j < g->n && !found; j++)
-			{
-				if (!g->dead[i] && !g->dead[j] && g->e[i + j * g->n].pref)
-				{
-					memset(nb, false, sizeof(bool) * g->n);
-					
-					for (u32 k = 0; k < g->n; k++)
-						if (!g->dead[k] && g->e[i + k * g->n].interf && (k != j))
-							nb[k] = true;
-					for (u32 k = 0; k < g->n; k++)
-						if (!g->dead[k] && g->e[j + k * g->n].interf && (k != i))
-							nb[k] = true;
-					
-					u32 count = 0;
-					for (u32 k = 0; k < g->n; k++)
-						if (nb[k])
-							count++;
-
-					if (count < k)
-					{
-						IntGraph_Coalesce(s[t], i, j);
-						rem--;
-						found = true;
-						op[t].kind = COALESCE;
-						op[t].v1   = i;
-						op[t].v2   = j;
-					}
-				}
-			}
-		}
-		if (found)
-			continue;
-		
-		/* 3ème cas: on peut supprimer une arête de préférence */
-		found = false;
-		v = 0;
-		while (!found && v < g->n)
-		{
-			if (!g->dead[v] && g->move[v])
-			{
-				IntGraph_DeletePref(s[t], v);
-				found      = true;
-				op[t].kind = DELPREFS;
-				op[t].v1   = v;
-			}
-			else
-				v++;
-		}
-		if (found)
-			continue;
-		
-		/* 4ème cas: spilling */
-		found = false;
-		v = 0;
-		while (!found && v < g->n)
-		{
-			if (!g->dead)
-			{
-				IntGraph_Simplify(s[t], v);
-				ra[v].spilled = true;
-				colored[v]    = true;
-				found         = true;
-				op[t].kind    = SPILLING;
-			}
-		}
+		/* Les 4 cas...  */
+		if (RA_DelVertex(s[t], &op[t], k))     { rem --; continue; }
+		if (RA_DelEdge(s[t],   &op[t], k, nb)) { rem --; continue; }
+		if (RA_DelPref(s[t],   &op[t]))        {         continue; }
+		RA_Spill(s[t], &op[t], ra, colored);
+		rem--;
 	}
 	
 	/* Tableau utilisé localement pour déterminer quelle couleur
@@ -354,9 +369,8 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 		
 		u32 v1;
 		u32 v2;
-		switch (op[i].kind)
+		if (op[i].kind == SIMPLIFY)
 		{
-		case SIMPLIFY:
 			v1 = op[i].v1;
 			for (u32 j = 0; j < g->n; j++)
 			{
@@ -375,9 +389,9 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 			}
 			
 			ra[v1].color = r;
-			break;
-			
-		case COALESCE:
+		}
+		else if (op[i].kind == COALESCE)
+		{
 			v1 = op[i].v1;
 			v2 = op[i].v2;
 			for (u32 j = 0; j < g->n; j++)
@@ -403,14 +417,6 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 			
 			ra[v1].color = r;
 			ra[v2].color = r;
-			break;
-			
-		case DELPREFS:
-			/* FIXME: Nothing to do ? */
-			break;
-			
-		default:
-			break;
 		}
 	}
 	

@@ -7,10 +7,10 @@ OFILES := $(CFILES:.c=.o)
 all: compilo
 
 test: compilo
-	./test
+	@./test
 
 ltest: compilo
-	./ltest
+	@./ltest
 
 compilo: parser.tab.o lex.yy.o $(OFILES)
 	gcc $^ -o $@
@@ -29,3 +29,6 @@ parser.tab.c: parser.y
 
 clean:
 	-rm -f $(OFILES) parser.tab.c lex.yy.c parser.tab.o lex.yy.o lexer.h parser.h
+
+tgz: compilo
+	tar zcvf GregoireSantos.tgz *.h *.c lexer.lex parser.y examples CHANGELOG compilo LICENCE LOGO ltest Makefile README test

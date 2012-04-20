@@ -40,6 +40,7 @@ typedef struct
 
 typedef enum
 {
+	INSN_STOP,
 	INSN_SET,  INSN_MOV,
 	INSN_NOT,  INSN_AND,  INSN_OR,  INSN_XOR,
 	INSN_LNOT, INSN_LAND, INSN_LOR,

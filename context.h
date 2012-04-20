@@ -63,7 +63,7 @@ typedef struct
 	// for functions
 	u32       label;
 	u32stack* usedRegs;
-	u32       nonParamRegs;
+	u32stack* params;
 } symbol;
 
 typedef struct
