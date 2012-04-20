@@ -35,6 +35,8 @@ typedef struct
 {
 	u32   n;
 	u32*  d;
+	bool* move;
+	bool* dead;
 	edge* e;
 } IntGraph;
 
