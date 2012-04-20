@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include "salmon.h"
+#include "regalloc.h"
 
 #define rr0 regs[i.v.r.r0]
 #define rr1 regs[i.v.r.r1]
