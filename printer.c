@@ -291,11 +291,11 @@ void Print_ASM(ASM* a)
 		case INSN_MOV:
 			printf("\tMov  $%lu, $%lu\n", instr.v.r.r0, instr.v.r.r1);
 			break;
-		case INSN_NEG:  ASM_BINOP("Neg ");
+		case INSN_NOT:  ASM_BINOP("Not ");
 		case INSN_AND:  ASM_BINOP("And ");
 		case INSN_OR:   ASM_BINOP("Or  ");
 		case INSN_XOR:  ASM_BINOP("Xor ");
-		case INSN_NOT:  ASM_BINOP("Not ");
+		case INSN_LNOT: ASM_BINOP("Lnot ");
 		case INSN_LAND: ASM_BINOP("Land");
 		case INSN_LOR:  ASM_BINOP("Lor ");
 		case INSN_EQ:   ASM_BINOP("Eq  ");

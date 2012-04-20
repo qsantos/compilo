@@ -65,7 +65,7 @@ void Salmon_BuildFlow(ASM* a)
 		case INSN_SET:
 			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
 			break;
-		case INSN_MOV:  case INSN_NEG: case INSN_NOT:
+		case INSN_MOV:  case INSN_NOT: case INSN_LNOT:
 			Set_Append(a->code[i].v.r.r0, a->code[i].s.def);
 			Set_Append(a->code[i].v.r.r1, a->code[i].s.use);
 			break;
@@ -204,7 +204,7 @@ IntGraph* Salmon_Interference(ASM* a)
 			break;
 
 		case INSN_SET:
-		case INSN_NEG: case INSN_NOT:
+		case INSN_NOT: case INSN_LNOT:
 		case INSN_AND: case INSN_OR:  case INSN_XOR: case INSN_LAND: case INSN_LOR:
 		case INSN_EQ:  case INSN_NEQ: case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
 		case INSN_ADD: case INSN_SUB: case INSN_MUL: case INSN_DIV:  case INSN_MOD:

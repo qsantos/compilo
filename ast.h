@@ -49,10 +49,10 @@ struct Expr
 		EXPR_FUN_CALL,
 		EXPR_AFF,
 		EXPR_VAR,
-		EXPR_NEG, EXPR_AND,  EXPR_OR,  EXPR_XOR,
-		EXPR_NOT, EXPR_LAND, EXPR_LOR,
-		EXPR_EQ,  EXPR_NEQ,  EXPR_LE,  EXPR_LT,  EXPR_GE,  EXPR_GT,
-		EXPR_ADD, EXPR_SUB,  EXPR_MUL, EXPR_DIV, EXPR_MOD,
+		EXPR_NOT,   EXPR_AND,  EXPR_OR,  EXPR_XOR,
+		EXPR_LNOT,  EXPR_LAND, EXPR_LOR,
+		EXPR_EQ,    EXPR_NEQ,  EXPR_LE,  EXPR_LT,  EXPR_GE,  EXPR_GT,
+		EXPR_ADD,   EXPR_SUB,  EXPR_MUL, EXPR_DIV, EXPR_MOD,
 		EXPR_MINUS,
 		EXPR_IFTE,
 		EXPR_DEREF,
@@ -75,8 +75,8 @@ Expr* Expr_Integer(s32, position*);
 Expr* Expr_Fun_Call(string, ExprList*, position*);
 Expr* Expr_Aff (string, Expr*, position*);
 Expr* Expr_Var (string, position*);
-Expr* Expr_Neg (Expr*, position*);
 Expr* Expr_Not (Expr*, position*);
+Expr* Expr_Lnot(Expr*, position*);
 Expr* Expr_And (Expr*, Expr*, position*);
 Expr* Expr_Or  (Expr*, Expr*, position*);
 Expr* Expr_Xor (Expr*, Expr*, position*);

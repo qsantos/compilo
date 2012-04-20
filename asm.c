@@ -195,12 +195,11 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		r0 = c->st[e->v.aff.id].reg;
 		break;
 	
-	case EXPR_NEG:  ASM_UNIOP(INSN_NEG);
 	case EXPR_NOT:  ASM_UNIOP(INSN_NOT);
-	
 	case EXPR_AND:  ASM_BINOP(INSN_AND);
 	case EXPR_OR:   ASM_BINOP(INSN_OR);
 	case EXPR_XOR:  ASM_BINOP(INSN_XOR);
+	case EXPR_LNOT: ASM_UNIOP(INSN_LNOT);
 	case EXPR_LAND: ASM_BINOP(INSN_LAND);
 	case EXPR_LOR:  ASM_BINOP(INSN_LOR);
 	case EXPR_EQ:   ASM_BINOP(INSN_EQ);
@@ -324,7 +323,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_RETURN:
 		assert(c->cur_fun);
 		r0 = ASM_GenExpr(a, c, s->v.expr);
-		ASM_Push(a, INSN_MOV, REG_RETURN, r0, 0);
+		ASM_Push(a, INSN_MOV, VREG_RETURN, r0, 0);
 		break;
 	case STMT_BLOCK:
 		l = s->v.block;
@@ -386,124 +385,4 @@ void ASM_GenProgram(ASM* a, Context* c, Program* p)
 			calls = calls->tail;
 		}
 	}
-}
-
-#define rr0 regs[i.v.r.r0]
-#define rr1 regs[i.v.r.r1]
-#define rr2 regs[i.v.r.r2]
-void ASM_Simulate(ASM* a, Context* c)
-{
-	assert(a);
-	
-	u32* regs = (u32*) malloc(sizeof(u32) * a->n_regs);
-	assert(regs);
-	
-	bool stop = false;
-	u32 ip = 0;
-	u32 v;
-	u32stack* stack = NULL;
-	u32stack* args;
-	u32stack* params;
-	u32stack* stackedRegs;
-	u32stack* stackedRegCounts;
-	symbol s;
-	
-	while (!stop && ip < a->n_code)
-	{
-		Instr i  = a->code[ip++];
-		u32 res = i.v.r.r0;
-		
-		switch (i.insn)
-		{
-		case INSN_SET:
-			v = i.v.r.r1;
-			rr0 = v;
-			printf("$%lu <- %lu\n", res, v);
-			break;
-		case INSN_MOV:  rr0 = rr1;           printf("$%lu <- $%lu (%lu)\n", res, i.v.r.r1, rr0); break;
-		case INSN_NEG:  rr0 = !rr1;          printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_AND:  rr0 = rr1 & rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_OR:   rr0 = rr1 | rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_XOR:  rr0 = rr1 ^ rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_NOT:  rr0 = ~rr1;          printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_LAND: rr0 = (rr1 && rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_LOR:  rr0 = (rr1 || rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_EQ:   rr0 = (rr1 == rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_NEQ:  rr0 = (rr1 != rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_LE:   rr0 = (rr1 <= rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_LT:   rr0 = (rr1 <  rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_GE:   rr0 = (rr1 >= rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_GT:   rr0 = (rr1 >  rr2);  printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_ADD:  rr0 = rr1 + rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_SUB:  rr0 = rr1 - rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_MUL:  rr0 = rr1 * rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_DIV:  rr0 = rr1 / rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_MOD:  rr0 = rr1 % rr2;     printf("$%lu <- %lu\n", res, rr0); break;
-		case INSN_JMP:
-			ip = a->labels[i.v.r.r0];
-			printf("goto .%lu\n", i.v.r.r0);
-			break;
-		case INSN_JZ:
-			if (!rr0)
-			{
-				ip = a->labels[i.v.r.r1];
-				printf("goto .%lu\n", i.v.r.r1);
-			}
-			break;
-		case INSN_JNZ:
-			if (rr0)
-			{
-				ip = a->labels[rr1];
-				printf("goto .%lu\n", i.v.r.r1);
-			}
-			break;
-		case INSN_CALL:
-			u32stack_push(&stack, ip);
-			
-			args = i.v.p;
-			printf("Call .%lu\n", args->head);
-			v = a->labels[args->head];
-			args = args->tail;
-			ip = v;
-			
-			// non-params
-			s = c->st[a->code[v].v.r.r1];
-			params = s.usedRegs;
-			for (v = 0; v < s.nonParamRegs; v++)
-			{
-				u32stack_push(&stack, regs[params->head]);
-				u32stack_push(&stackedRegs, params->head);
-				params = params->tail;
-			}
-			
-			// params
-			v = s.nonParamRegs;
-			while (params && args)
-			{
-				u32stack_push(&stack, regs[params->head]);
-				u32stack_push(&stackedRegs, params->head);
-				v++;
-				
-				printf("# $%lu < $%lu (%lu)\n", params->head, args->head, regs[args->head]);
-				regs[params->head] = regs[args->head];
-				args   = args->tail;
-				params = params->tail;
-			}
-			u32stack_push(&stackedRegCounts, v);
-			break;
-		case INSN_RET:
-			v = u32stack_pop(&stackedRegCounts);
-			while (v--)
-				regs[u32stack_pop(&stackedRegs)] = u32stack_pop(&stack);
-			ip = u32stack_pop(&stack);
-			if (!stack)
-				stop = true;
-			break;
-		case INSN_LBL:
-			break;
-		}
-	}
-
-	u32stack_delete(&stack);
-	free(regs);
 }

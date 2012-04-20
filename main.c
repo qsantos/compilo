@@ -22,12 +22,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ast.h"
 #include "lexer.h"
 #include "printer.h"
 #include "latex.h"
 #include "static.h"
 #include "salmon.h"
+#include "exec.h"
 
 extern int yyparse(void);
 
@@ -54,11 +54,13 @@ int main(int argc, char** argv)
 			ASM* a = ASM_New(c);
 			ASM_GenProgram(a, c, current_prog);
 
-//			Salmon_BuildFlow(a);
-//			Salmon_Vivacity(a);
 			
 			Print_ASM(a);
 			ASM_Simulate(a, c);
+			
+			Salmon_BuildFlow(a);
+			Salmon_Vivacity(a);
+			ASM_toMIPS(a, c);
 			
 			ASM_Delete(a);
 		}

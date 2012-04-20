@@ -136,10 +136,10 @@ expression:
        INTEGER                                             { $$ = Expr_Integer($1, (position*) &@$);            }
      | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3, (position*) &@$);       }
      | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL, (position*) &@$);     }
-     | SYMBOL '=' expression                               { $$ = Expr_Aff($1, $3, (position*) &@$);            }
-     | SYMBOL                                              { $$ = Expr_Var($1, (position*) &@$);                }
-     | '!' expression                                      { $$ = Expr_Neg($2, (position*) &@$);                }
-     | '~' expression                                      { $$ = Expr_Not($2, (position*) &@$);                }
+     | SYMBOL '=' expression                               { $$ = Expr_Aff ($1, $3, (position*) &@$);           }
+     | SYMBOL                                              { $$ = Expr_Var ($1,     (position*) &@$);           }
+     | '!' expression                                      { $$ = Expr_Not ($2,     (position*) &@$);           }
+     | '~' expression                                      { $$ = Expr_Lnot($2,     (position*) &@$);           }
      | expression '&'  expression                          { $$ = Expr_And ($1, $3, (position*) &@$);           }
      | expression '|'  expression                          { $$ = Expr_Or  ($1, $3, (position*) &@$);           }
      | expression '^'  expression                          { $$ = Expr_Xor ($1, $3, (position*) &@$);           }

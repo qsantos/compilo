@@ -72,8 +72,8 @@ void Check_Expr(Expr* e, Context* c)
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
 		break;
-	case EXPR_NEG:
 	case EXPR_NOT:
+	case EXPR_LNOT:
 	case EXPR_MINUS:
 		Check_Expr(e->v.uni_op, c);
 		break;
@@ -304,8 +304,8 @@ Type* Type_Expr(Expr* e, Context* c)
 	case EXPR_VAR:
 		symb = Context_Get(c, e->v.var.name);
 		return symb->v.t;
-	case EXPR_NEG:
 	case EXPR_NOT:
+	case EXPR_LNOT:
 	case EXPR_MINUS:
 		return Type_Expr(e->v.uni_op, c);
 	case EXPR_AND:  case EXPR_OR:  case EXPR_XOR:

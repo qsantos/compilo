@@ -27,7 +27,7 @@
 #include "context.h"
 #include "set.h"
 
-#define REG_RETURN 0
+#define VREG_RETURN 0
 
 typedef struct
 {
@@ -41,8 +41,8 @@ typedef struct
 typedef enum
 {
 	INSN_SET,  INSN_MOV,
-	INSN_NEG,  INSN_AND,  INSN_OR,  INSN_XOR,
-	INSN_NOT,  INSN_LAND, INSN_LOR,
+	INSN_NOT,  INSN_AND,  INSN_OR,  INSN_XOR,
+	INSN_LNOT, INSN_LAND, INSN_LOR,
 	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,   INSN_GE,  INSN_GT,
 	INSN_ADD,  INSN_SUB,  INSN_MUL, INSN_DIV,  INSN_MOD,
 	INSN_JMP,  INSN_JZ,   INSN_JNZ, INSN_CALL, INSN_RET,
@@ -86,7 +86,5 @@ u32  ASM_GenExpr   (ASM*, Context*, Expr*);
 void ASM_GenStmt   (ASM*, Context*, Stmt*);
 void ASM_GenFun    (ASM*, Context*, FunDecl*);
 void ASM_GenProgram(ASM*, Context*, Program*);
-
-void ASM_Simulate  (ASM*, Context*);
 
 #endif
