@@ -354,7 +354,8 @@ void ASM_GenFun (ASM* a, Context* c, FunDecl* f)
 	}
 	
 	ASM_LabelPos(a, l);
-	a->code[a->n_code-1].v.r.r1 = f->id;
+	a->code[a->n_code-1].v.r.r1 = 1;
+	a->code[a->n_code-1].v.r.r2 = f->id;
 	ASM_GenStmt(a, c, f->stmt);
 	ASM_Push(a, INSN_RET, f->id, 0, 0);
 	
@@ -363,9 +364,8 @@ void ASM_GenFun (ASM* a, Context* c, FunDecl* f)
 
 void ASM_GenProgram(ASM* a, Context* c, Program* p)
 {
-	ASM_Push(a, INSN_CALL, 0, 0, 0);
+	ASM_PushList(a, INSN_CALL, NULL);
 	ASM_Push(a, INSN_STOP, 0, 0, 0);
-	
 	while (p)
 	{
 		ASM_GenFun(a, c, p->head);
@@ -378,8 +378,7 @@ void ASM_GenProgram(ASM* a, Context* c, Program* p)
 		u32stack* calls = a->funCalls[i];
 		while (calls)
 		{
-			u32 pos = calls->head;
-			u32stack_push(&(a->code[pos].v.p), c->st[i].label);
+			u32stack_push(&(a->code[calls->head].v.p), c->st[i].label);
 			calls = calls->tail;
 		}
 	}
