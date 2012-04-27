@@ -26,6 +26,7 @@
 #include <string.h>
 
 #define EDGE(G, U, V) ((G)->e[(V) * g->n + (U)])
+#include <stdio.h>
 IntGraph* IntGraph_New(u32 n)
 {
 	IntGraph* g = (IntGraph*) malloc(sizeof(IntGraph)); assert(g);
@@ -46,6 +47,16 @@ void IntGraph_Delete(IntGraph* g)
 	free(g->move);
 	free(g->d);
 	free(g);
+}
+
+IntGraph* IntGraph_Copy(IntGraph* g)
+{
+	IntGraph* c = IntGraph_New(g->n);
+	memcpy(c->d,    g->d,    sizeof(u32)  * g->n);
+	memcpy(c->move, g->move, sizeof(bool) * g->n);
+	memcpy(c->e,    g->e,    sizeof(edge) * g->n * g->n);
+	memcpy(c->dead, g->dead, sizeof(bool) * g->n);
+	return c;
 }
 
 bool IntGraph_AddInterf(IntGraph* g, u32 i, u32 j)
@@ -104,16 +115,6 @@ bool IntGraph_DelMove(IntGraph* g, u32 i, u32 j)
 		return false;
 }
 
-IntGraph* IntGraph_Copy(IntGraph* g)
-{
-	IntGraph* c = IntGraph_New(g->n);
-	memcpy(c->d,    g->d,    sizeof(u32)  * g->n);
-	memcpy(c->move, g->move, sizeof(bool) * g->n);
-	memcpy(c->e,    g->e,    sizeof(edge) * g->n * g->n);
-	memcpy(c->dead, g->dead, sizeof(bool) * g->n);
-	return c;
-}
-
 void IntGraph_Simplify(IntGraph* g, u32 v)
 {
 	g->dead[v] = true;
@@ -156,7 +157,6 @@ IntGraph* Salmon_Interference(ASM* a)
 					IntGraph_AddMove(g, a->code[i].v.r.r0, j);
 			}
 			break;
-
 		case INSN_SET:
 		case INSN_NOT: case INSN_LNOT:
 		case INSN_AND: case INSN_OR:   case INSN_XOR: case INSN_LAND: case INSN_LOR:
@@ -197,7 +197,6 @@ typedef struct
 bool RA_DelVertex(IntGraph* g, IRC_Op* op, u32 k)
 {
 	for (u32 v = 0; v < g->n; v++)
-	{
 		if (!g->dead[v] && g->d[v] < k && !g->move[v])
 		{
 			IntGraph_Simplify(g, v);
@@ -205,44 +204,36 @@ bool RA_DelVertex(IntGraph* g, IRC_Op* op, u32 k)
 			op->v1   = v;
 			return true;
 		}
-	}
 	return false;
 }
 
 /* 2. Tries to contract an edge with combined degree lower than k */
-bool RA_DelEdge(IntGraph* g, IRC_Op* op, u32 k, bool* nb)
+bool RA_DelEdge(IntGraph* g, IRC_Op* op, u32 k)
 {
 	for (u32 i = 0; i < g->n; i++)
-	{
-		for (u32 j = i+1; j < g->n; j++)
-		{
-			if (!g->dead[i] && !g->dead[j] && EDGE(g, i, j).pref)
-			{
-				memset(nb, false, sizeof(bool) * g->n);
-				
-				for (u32 k = 0; k < g->n; k++)
-					if (!g->dead[k] && EDGE(g, i, k).interf && (k != j))
-						nb[k] = true;
-				for (u32 k = 0; k < g->n; k++)
-					if (!g->dead[k] && EDGE(g, j, k).interf && (k != i))
-						nb[k] = true;
-				
-				u32 count = 0;
-				for (u32 k = 0; k < g->n; k++)
-					if (nb[k])
-						count++;
-				
-				if (count < k)
+		if (!g->dead[i])
+			for (u32 j = i+1; j < g->n; j++)
+				if (!g->dead[j] && EDGE(g, i, j).pref)
 				{
-					IntGraph_Coalesce(g, i, j);
-					op->kind = COALESCE;
-					op->v1   = i;
-					op->v2   = j;
-					return true;
+					u32 count = 0;
+					for (u32 k = 0; k < g->n; k++)
+					{
+						bool n = g->dead[k];
+						n = n && EDGE(g, i, k).interf && (k != j);
+						n = n && EDGE(g, j, k).interf && (k != i);
+						if (n)
+							count++;
+					}
+					
+					if (count < k)
+					{
+						IntGraph_Coalesce(g, i, j);
+						op->kind = COALESCE;
+						op->v1   = i;
+						op->v2   = j;
+						return true;
+					}
 				}
-			}
-		}
-	}
 	return false;
 }
 
@@ -250,7 +241,6 @@ bool RA_DelEdge(IntGraph* g, IRC_Op* op, u32 k, bool* nb)
 bool RA_DelPref(IntGraph* g, IRC_Op* op)
 {
 	for (u32 v = 0; v < g->n; v++)
-	{
 		if (!g->dead[v] && g->move[v])
 		{
 			for (u32 i = 0; i < g->n; i++)
@@ -260,24 +250,20 @@ bool RA_DelPref(IntGraph* g, IRC_Op* op)
 			op->v1   = v;
 			return true;
 		}
-	}
 	return false;
 }
 
 /* 4. Spilling */
-bool RA_Spill(IntGraph* g, IRC_Op* op, RegAlloc* ra, bool* colored)
+bool RA_Spill(IntGraph* g, IRC_Op* op, RegAlloc* ra)
 {
 	for (u32 v = 0; v < g->n; v++)
-	{
 		if (!g->dead)
 		{
 			IntGraph_Simplify(g, v);
 			ra[v].spilled = true;
-			colored[v]    = true;
 			op->kind      = SPILLING;
 			return true;
 		}
-	}
 	return true; //           /!\.
 }
 
@@ -296,8 +282,6 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 	
 	/* Suite des opérations effectuées */
 	IRC_Op* op = (IRC_Op*) malloc(sizeof(IRC_Op) * max); assert(op);
-	/* Sert pour compter les "voisins" d'une arête (cas 2) */
-	bool*   nb = (bool*)   malloc(sizeof(bool) * g->n);  assert(nb);
 	
 	u32 rem = g->n; // nombre de sommets restant à traiter
 	while (rem)
@@ -314,21 +298,10 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 		}
 		s[t] = IntGraph_Copy(s[t-1]);
 		
-		/* Les 4 cas...  */
-/* TODO
-		if (RA_DelVertex(s[t], &op[t], k))     { rem --; continue; }
-		if (RA_DelEdge(s[t],   &op[t], k, nb)) { rem --; continue; }
-		if (RA_DelPref(s[t],   &op[t]))        {         continue; }
-		RA_Spill(s[t], &op[t], ra, colored);
-		rem--;
-*/
-		(void)
-		(
-			(RA_DelVertex(s[t], &op[t], k)           && rem--) ||
-			(RA_DelEdge  (s[t], &op[t], k, nb)       && rem--) ||
-			(RA_DelPref  (s[t], &op[t])                      ) ||
-			(RA_Spill    (s[t], &op[t], ra, colored) && rem--)
-		);
+		     if (RA_DelVertex(s[t], &op[t], k))  rem--;
+		else if (RA_DelEdge  (s[t], &op[t], k))  rem--;
+		else if (RA_DelPref  (s[t], &op[t]))          ;
+		else if (RA_Spill    (s[t], &op[t], ra)) rem--;
 	}
 	
 	/* Tableau utilisé localement pour déterminer quelle couleur
@@ -343,10 +316,8 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 		{
 			u32 v1 = op[i].v1;
 			for (u32 j = 0; j < g->n; j++)
-			{
-				if (!s[i]->dead[j] && colored[j] && EDGE(s[i], v1, j).interf)
+				if (!s[i]->dead[j] && EDGE(s[i], v1, j).interf && colored[j])
 					col[ra[j].color] = true;
-			}
 			
 			for (u32 r = 0; r < k; r++)
 				if (!col[r])
@@ -354,21 +325,21 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 					ra[v1].color = r;
 					break;
 				}
+			
+			colored[i] = true;
 		}
 		else if (op[i].kind == COALESCE)
 		{
 			u32 v1 = op[i].v1;
 			u32 v2 = op[i].v2;
 			for (u32 j = 0; j < g->n; j++)
-			{
 				if (!s[i]->dead[j] && colored[j])
 				{
-					if ((j != v2) && EDGE(s[i], v1, j).interf)
-						col[ra[j].color] = true;
-					if ((j != v1) && EDGE(s[i], v2, j).interf)
+					bool n = EDGE(s[i], v1, j).interf && (j != v2);
+					n = n && EDGE(s[i], v2, j).interf && (j != v1);
+					if (n)
 						col[ra[j].color] = true;
 				}
-			}
 			
 			for (u32 r = 0; r < k; r++)
 				if (!col[r])
@@ -377,14 +348,14 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 					ra[v2].color = r;
 					break;
 				}
+			
+			colored[v1] = true;
+			colored[v2] = true;
 		}
 	}
 	
-	return ra; // TODO
-	
 	/* Cleaning */
 	free(col);
-	free(nb);
 	free(op);
 	for (u32 i = 0; i <= t; i++)
 		IntGraph_Delete(s[i]);

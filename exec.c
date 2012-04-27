@@ -187,8 +187,8 @@ void ASM_toMIPS(ASM* a, Context* c)
 	u32stack* params;
 	symbol    s;
 	
-//	IntGraph* ig = Salmon_Interference(a);
-	RegAlloc* ra = NULL; //Salmon_RegAlloc(ig, N_REGS);
+	IntGraph* ig = Salmon_Interference(a);
+	RegAlloc* ra = Salmon_RegAlloc(ig, N_REGS);
 	
 	printf("main:\n");
 	
