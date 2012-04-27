@@ -40,9 +40,12 @@ typedef struct
 } IntGraph;
 
 IntGraph* IntGraph_New      (u32);
-void      IntGraph_AddInterf(IntGraph*, u32, u32);
-void      IntGraph_AddMove  (IntGraph*, u32, u32);
 void      IntGraph_Delete   (IntGraph*);
+
+bool      IntGraph_AddInterf(IntGraph*, u32, u32);
+bool      IntGraph_DelInterf(IntGraph*, u32, u32);
+bool      IntGraph_AddMove  (IntGraph*, u32, u32);
+bool      IntGraph_DelMove  (IntGraph*, u32, u32);
 
 typedef struct
 {

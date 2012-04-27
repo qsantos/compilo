@@ -147,12 +147,11 @@ void ASM_Simulate(ASM* a, Context* c)
 	free(regs);
 }
 
-//u32 preg(RegAlloc* ra, u32 vreg)
-u32 preg(u32 vreg)
+u32 preg(RegAlloc* ra, u32 vreg)
 {
 	return 2+vreg;
-//	assert(!ra[vreg].spilled);
-//	return ra[vreg].color;
+	assert(!ra[vreg].spilled);
+	return ra[vreg].color;
 }
 
 void ASM_toMIPS_Push(u32 reg)
@@ -167,16 +166,16 @@ void ASM_toMIPS_Pop(u32 reg)
 	printf("\taddi $sp, $sp, 4\n");
 }
 
-void ASM_toMIPS_PopRegs(u32stack* params)
+void ASM_toMIPS_PopRegs(RegAlloc* ra, u32stack* params)
 {
 	if (params)
 	{
-		ASM_toMIPS_PopRegs(params->tail);
-		ASM_toMIPS_Pop(preg(params->head));
+		ASM_toMIPS_PopRegs(ra, params->tail);
+		ASM_toMIPS_Pop(preg(ra, params->head));
 	}
 }
 
-#define REG(VREG) preg(i.v.r.VREG)
+#define REG(VREG) preg(ra, i.v.r.VREG)
 #define MIPS_BINOP(OP) printf("\t%s $%.2lu, $%.2lu, $%.2lu\n", OP, REG(r0), REG(r1), REG(r2));
 void ASM_toMIPS(ASM* a, Context* c)
 {
@@ -189,7 +188,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 	symbol    s;
 	
 //	IntGraph* ig = Salmon_Interference(a);
-//	RegAlloc* ra = Salmon_RegAlloc(ig, N_REGS);
+	RegAlloc* ra = NULL; //Salmon_RegAlloc(ig, N_REGS);
 	
 	printf("main:\n");
 	
@@ -266,7 +265,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 			params = s.usedRegs;
 			while (params)
 			{
-				ASM_toMIPS_Push(preg(params->head));
+				ASM_toMIPS_Push(preg(ra, params->head));
 				params = params->tail;
 			}
 			
@@ -274,7 +273,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 			params = s.params;
 			while (params && args)
 			{
-				printf("\tmove $%.2lu, $%.2lu\n", preg(params->head), preg(args->head));
+				printf("\tmove $%.2lu, $%.2lu\n", preg(ra, params->head), preg(ra, args->head));
 				args   = args->tail;
 				params = params->tail;
 			}
@@ -283,7 +282,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 			break;
 		case INSN_RET:
 			ASM_toMIPS_Pop(REG_RA);
-			ASM_toMIPS_PopRegs(c->st[i.v.r.r0].usedRegs);
+			ASM_toMIPS_PopRegs(ra, c->st[i.v.r.r0].usedRegs);
 			printf("\tjr $ra\n");
 			break;
 		case INSN_LBL:

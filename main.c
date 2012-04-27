@@ -49,7 +49,13 @@ int main(int argc, char** argv)
 	{
 		Context* c = Context_New(32768);
 		Check_Program(current_prog, c);
-		if (!c->err)
+		if (c->err)
+		{
+			Context_Delete(c);
+			Program_Delete(current_prog);
+			return 1;
+		}
+		else
 		{
 			ASM* a = ASM_New(c);
 			ASM_GenProgram(a, c, current_prog);

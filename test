@@ -4,7 +4,9 @@ do
 	echo "Test de '$i':"
 	cat $i
 	echo "================="
-	./compilo < "$i"
+	./compilo < "$i" > tmp &&
+	spim -file tmp | tail -n1
 	echo "================="
 	echo ""
 done
+rm tmp
