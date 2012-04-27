@@ -51,14 +51,13 @@ void Salmon_VivacityDebug(u32 n, ASM* a)
 
 void Salmon_BuildFlow(ASM* a)
 {
-	u32 n = a->n_code;
 	u32stack* s;
-	for (u32 i = 0; i < n; i ++)
+	for (u32 i = 0; i < a->n_code; i ++)
 	{
 		a->code[i].s.jmp = -1;
-		a->code[i].s.use = Set_New(n);
-		a->code[i].s.out = Set_New(n);
-		a->code[i].s.def = Set_New(n);
+		a->code[i].s.use = Set_New(a->n_regs);
+		a->code[i].s.out = Set_New(a->n_regs);
+		a->code[i].s.def = Set_New(a->n_regs);
 		
 		switch (a->code[i].insn)
 		{
@@ -90,7 +89,8 @@ void Salmon_BuildFlow(ASM* a)
 		case INSN_RET:
 			Set_Append(a->code[i].s.def, 0);
 			break;
-		default:
+		case INSN_STOP:
+		case INSN_LBL:
 			break;
 		}
 		
@@ -100,25 +100,27 @@ void Salmon_BuildFlow(ASM* a)
 
 void Salmon_Vivacity(ASM* a)
 {
-	u32 n = a->n_code;	
 	bool changed = true;
 	while (changed)
 	{
 		changed = false;
-		u32 i = n - 1;
-		do
+		u32 i = a->n_code;
+		while (i)
 		{
+			i--;
+			
 			Set* tmp;
 			tmp = Set_Diff(a->code[i].s.out, a->code[i].s.def);
 			Set* in = Set_Union(a->code[i].s.use, tmp);
 			Set_Delete(tmp);
 			
-			changed = changed || Set_Cmp(in, a->code[i].s.in);
+			if (Set_Cmp(in, a->code[i].s.in))
+				changed = true;
 			Set_Delete(a->code[i].s.in);
 			a->code[i].s.in = in;
 			
 			Set* out;
-			if (i < (n-1))
+			if (i < a->n_code - 1)
 			{
 				if (a->code[i].s.jmp != -1)
 					out = Set_Union(a->code[i+1].s.in, a->code[a->code[i].s.jmp].s.in);
@@ -130,15 +132,14 @@ void Salmon_Vivacity(ASM* a)
 				if (a->code[i].s.jmp != -1)
 					out = Set_Copy(a->code[a->code[i].s.jmp].s.in);
 				else
-					out = Set_New(n);
+					out = Set_New(a->n_regs);
 			}
 			
-			changed = changed || Set_Cmp(out, a->code[i].s.out);
+			if (Set_Cmp(out, a->code[i].s.out))
+				changed = true;
 			Set_Delete(a->code[i].s.out);
 			a->code[i].s.out = out;
-			
-			i--;
-		} while (i);
+		}
 	}
 	
 	//Salmon_VivacityDebug(n, a);

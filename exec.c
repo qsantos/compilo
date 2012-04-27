@@ -149,9 +149,9 @@ void ASM_Simulate(ASM* a, Context* c)
 
 u32 preg(RegAlloc* ra, u32 vreg)
 {
-	return 2+vreg;
+//	return 2 + vreg;
 	assert(!ra[vreg].spilled);
-	return ra[vreg].color;
+	return 2 + ra[vreg].color;
 }
 
 void ASM_toMIPS_Push(u32 reg)

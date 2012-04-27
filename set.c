@@ -27,18 +27,25 @@
 
 Set* Set_New(u32 n)
 {
-	Set* s = (Set*) malloc(sizeof(Set));
-	assert(s);
+	Set* s = (Set*) malloc(sizeof(Set));      assert(s);
 	s->n = n;
-	s->obj = (bool*) calloc(n, sizeof(bool));
-	assert(s->obj);
+	s->obj = (bool*) calloc(n, sizeof(bool)); assert(s->obj);
 	return s;
 }
 
 void Set_Delete(Set* s)
 {
+	assert(s);
 	free(s->obj);
 	free(s);
+}
+
+Set* Set_Copy(Set* s)
+{
+	assert(s);
+	Set* c = Set_New(s->n);
+	memcpy(c->obj, s->obj, sizeof(bool) * s->n);
+	return c;
 }
 
 Set* Set_Singleton(u32 n, u32 a)
@@ -56,13 +63,6 @@ Set* Set_Pair(u32 n, u32 a, u32 b)
 	return s;
 }
 
-Set* Set_Copy(Set* s)
-{
-	Set* c = Set_New(s->n);
-	memcpy(c->obj, s->obj, sizeof(bool) * s->n);
-	return c;
-}
-
 void Set_Append(Set* s, u32 a)
 {
 	s->obj[a] = true;
@@ -70,16 +70,22 @@ void Set_Append(Set* s, u32 a)
 
 Set* Set_Union(Set* a, Set* b)
 {
+	assert(a);
+	assert(b);
 	assert(a->n == b->n);
+	
 	Set* s = Set_New(a->n);
-	for (u32 i = 0; i < a->n; i ++)
+	for (u32 i = 0; i < a->n; i++)
 		s->obj[i] = a->obj[i] || b->obj[i];
 	return s;
 }
 
 Set* Set_Diff(Set* a, Set* b)
 {
+	assert(a);
+	assert(b);
 	assert(a->n == b->n);
+	
 	Set* s = Set_New(a->n);
 	for (u32 i = 0; i < a->n; i ++)
 		s->obj[i] = a->obj[i] && !b->obj[i];
@@ -90,12 +96,8 @@ bool Set_Cmp(Set* a, Set* b)
 {
 	if (a->n != b->n)
 		return false;
-	bool diff = false;
-	u32 i = 0;
-	while (!diff && i < a->n)
-	{
-		diff = (a->obj[i] != b->obj[i]);
-		i++;
-	}
-	return diff;
+	for (u32 i = 0; i < a->n; i++)
+		if (a->obj[i] != b->obj[i])
+			return true;
+	return false;
 }

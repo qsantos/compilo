@@ -33,10 +33,8 @@ typedef signed long    s32;
 typedef char*          string;
 typedef const char*    cstring;
 
-typedef enum
-{
-	false = 0,
-	true  = 1
-} bool;
+static const char false = 0;
+static const char true  = 1;
+typedef char bool;
 
 #endif

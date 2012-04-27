@@ -26,7 +26,6 @@
 #include <string.h>
 
 #define EDGE(G, U, V) ((G)->e[(V) * g->n + (U)])
-#include <stdio.h>
 IntGraph* IntGraph_New(u32 n)
 {
 	IntGraph* g = (IntGraph*) malloc(sizeof(IntGraph)); assert(g);
@@ -61,7 +60,7 @@ IntGraph* IntGraph_Copy(IntGraph* g)
 
 bool IntGraph_AddInterf(IntGraph* g, u32 i, u32 j)
 {
-	if (!EDGE(g, i, j).interf)
+	if (i != j && !EDGE(g, i, j).interf)
 	{
 		EDGE(g, i, j).interf = true;
 		EDGE(g, j, i).interf = true;
@@ -88,7 +87,7 @@ bool IntGraph_DelInterf(IntGraph* g, u32 i, u32 j)
 
 bool IntGraph_AddMove(IntGraph* g, u32 i, u32 j)
 {
-	if (!EDGE(g, i, j).pref)
+	if (i != j && !EDGE(g, i, j).pref)
 	{
 		EDGE(g, i, j).pref = true;
 		EDGE(g, j, i).pref = true;
@@ -107,12 +106,25 @@ bool IntGraph_DelMove(IntGraph* g, u32 i, u32 j)
 		EDGE(g, i, j).pref = false;
 		EDGE(g, j, i).pref = false;
 		g->move[i] = false;
+		g->move[j] = false;
 		for (u32 k = 0; k < g->n; k++)
-			g->move[i] |= EDGE(g, i, k).pref;
+			if (!g->dead[k])
+			{
+				if (k != j && EDGE(g, i, k).pref)
+				{
+					g->move[i] = true;
+				}
+				if (k != i && EDGE(g, j, k).pref)
+				{
+					g->move[j] = true;
+				}
+			}
 		return true;
 	}
 	else
+	{
 		return false;
+	}
 }
 
 void IntGraph_Simplify(IntGraph* g, u32 v)
@@ -121,7 +133,7 @@ void IntGraph_Simplify(IntGraph* g, u32 v)
 	g->move[v] = false;
 	g->d[v]    = 0;
 	for (u32 i = 0; i < g->n; i++)
-		if (!g->dead[i])
+		if (i != v && !g->dead[i])
 		{
 			IntGraph_DelInterf(g, i, v);
 			IntGraph_DelMove  (g, i, v);
@@ -133,10 +145,10 @@ void IntGraph_Coalesce(IntGraph* g, u32 v1, u32 v2)
 	for (u32 i = 0; i < g->n; i++)
 		if (!g->dead[i])
 		{
-			if (IntGraph_DelInterf(g, i, v2))
-				IntGraph_AddInterf(g, i, v1);
+			if (IntGraph_DelInterf(g, v2, i))
+				IntGraph_AddInterf(g, v1, i);
 			
-			if (IntGraph_DelMove(g, i, v2))
+			if (IntGraph_DelMove(g, v2, i))
 				IntGraph_AddMove(g, i, v1);
 		}
 	g->dead[v2] = true;
@@ -146,32 +158,26 @@ IntGraph* Salmon_Interference(ASM* a)
 {
 	IntGraph* g = IntGraph_New(a->n_regs);
 	
-	for (u32 i = 0; i < a->n_regs-1; i++)
+	for (u32 i = 0; i < a->n_code; i++)
 	{
 		switch (a->code[i].insn)
 		{
 		case INSN_MOV:
-			for (u32 j = 0; j < a->n_code; j++)
-			{
-				if (a->code[i].s.out->obj[j] || j != a->code[i].v.r.r1)
+			for (u32 j = 0; j < a->n_regs; j++)
+				if (a->code[i].s.out->obj[j])
 					IntGraph_AddMove(g, a->code[i].v.r.r0, j);
-			}
 			break;
 		case INSN_SET:
 		case INSN_NOT: case INSN_LNOT:
 		case INSN_AND: case INSN_OR:   case INSN_XOR: case INSN_LAND: case INSN_LOR:
 		case INSN_EQ:  case INSN_NEQ:  case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
 		case INSN_ADD: case INSN_SUB:  case INSN_MUL: case INSN_DIV:  case INSN_MOD:
-			for (u32 j = 0; j < a->n_code; j++)
-			{
+			for (u32 j = 0; j < a->n_regs; j++)
 				if (a->code[i].s.out->obj[j])
 					IntGraph_AddInterf(g, a->code[i].v.r.r0, j);
-			}
 			break;
-
 		default:
 			break;
-
 		}
 	}
 	
@@ -202,6 +208,7 @@ bool RA_DelVertex(IntGraph* g, IRC_Op* op, u32 k)
 			IntGraph_Simplify(g, v);
 			op->kind = SIMPLIFY;
 			op->v1   = v;
+			printf("+ Simplify(%lu)\n", v);
 			return true;
 		}
 	return false;
@@ -218,9 +225,9 @@ bool RA_DelEdge(IntGraph* g, IRC_Op* op, u32 k)
 					u32 count = 0;
 					for (u32 k = 0; k < g->n; k++)
 					{
-						bool n = g->dead[k];
-						n = n && EDGE(g, i, k).interf && (k != j);
-						n = n && EDGE(g, j, k).interf && (k != i);
+						bool n = !g->dead[k];
+						n = n && k != j && EDGE(g, i, k).interf;
+						n = n && k != i && EDGE(g, j, k).interf;
 						if (n)
 							count++;
 					}
@@ -231,6 +238,7 @@ bool RA_DelEdge(IntGraph* g, IRC_Op* op, u32 k)
 						op->kind = COALESCE;
 						op->v1   = i;
 						op->v2   = j;
+						printf("+ Coalesce(%lu, %lu)\n", i, j);
 						return true;
 					}
 				}
@@ -246,8 +254,10 @@ bool RA_DelPref(IntGraph* g, IRC_Op* op)
 			for (u32 i = 0; i < g->n; i++)
 				if (!g->dead[i])
 					IntGraph_DelMove(g, v, i);
+			assert(!g->move[v]);
 			op->kind = DELPREFS;
 			op->v1   = v;
+			printf("+ Delprefs(%lu)\n", v);
 			return true;
 		}
 	return false;
@@ -257,7 +267,7 @@ bool RA_DelPref(IntGraph* g, IRC_Op* op)
 bool RA_Spill(IntGraph* g, IRC_Op* op, RegAlloc* ra)
 {
 	for (u32 v = 0; v < g->n; v++)
-		if (!g->dead)
+		if (!g->dead[v])
 		{
 			IntGraph_Simplify(g, v);
 			ra[v].spilled = true;
@@ -270,31 +280,28 @@ bool RA_Spill(IntGraph* g, IRC_Op* op, RegAlloc* ra)
 
 RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 {
-	/* Allocation des registres */
 	RegAlloc* ra  = (RegAlloc*) calloc(g->n, sizeof(RegAlloc)); assert(ra);
 	bool* colored = (bool*)     calloc(g->n, sizeof(bool));     assert(colored);
 	
-	/* Suite des graphes obtenus en réduisant g de proche en proche */
-	u32 t   = 0;    // numéro du graphe actuel
-	u32 max = g->n; // nombre maxi de graphes actuellement alloués
-	IntGraph** s = (IntGraph**) malloc(sizeof(IntGraph*) * max); assert(s);
+	// graph serie
+	u32 t   = 0;
+	u32 a_s = g->n;
+	IntGraph** s = (IntGraph**) malloc(sizeof(IntGraph*) * a_s); assert(s);
 	s[0] = IntGraph_Copy(g);
 	
-	/* Suite des opérations effectuées */
-	IRC_Op* op = (IRC_Op*) malloc(sizeof(IRC_Op) * max); assert(op);
+	// operation serie
+	IRC_Op* op = (IRC_Op*) malloc(sizeof(IRC_Op) * a_s); assert(op);
 	
-	u32 rem = g->n; // nombre de sommets restant à traiter
+	u32 rem = g->n; // remaining vertices
 	while (rem)
 	{
-		/* Copie du graphe actuel */
 		t++;
-		if (t == max)
+		// copy from last graph
+		if (t == a_s)
 		{
-			max *= 2;
-			s  = (IntGraph**) realloc(s,  sizeof(IntGraph*) * max);
-			op = (IRC_Op*)    realloc(op, sizeof(IRC_Op*)   * max);
-			assert(s);
-			assert(op);
+			a_s *= 2;
+			s  = (IntGraph**) realloc(s,  sizeof(IntGraph*) * a_s); assert(s);
+			op = (IRC_Op*)    realloc(op, sizeof(IRC_Op)    * a_s); assert(op);
 		}
 		s[t] = IntGraph_Copy(s[t-1]);
 		
@@ -302,27 +309,30 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 		else if (RA_DelEdge  (s[t], &op[t], k))  rem--;
 		else if (RA_DelPref  (s[t], &op[t]))          ;
 		else if (RA_Spill    (s[t], &op[t], ra)) rem--;
+		printf("%lu\n", t);
 	}
 	
-	/* Tableau utilisé localement pour déterminer quelle couleur
-	 * peut être affectée à un sommet ou à une arête */
-	bool* col = (bool*) calloc(k, sizeof(bool)); assert(col);
+	// local use
+	bool* neighborColors = (bool*) calloc(k, sizeof(bool)); assert(neighborColors);
 	
 	for (u32 i = t; i > 0; i--)
 	{
-		memset(col, 0, sizeof(bool) * k);
+		memset(neighborColors, 0, sizeof(bool) * k);
 		
 		if (op[i].kind == SIMPLIFY)
 		{
 			u32 v1 = op[i].v1;
+			printf("- Simplify(%lu)\n", v1);
+			
 			for (u32 j = 0; j < g->n; j++)
-				if (!s[i]->dead[j] && EDGE(s[i], v1, j).interf && colored[j])
-					col[ra[j].color] = true;
+				if (!s[i]->dead[j] && j != v1 && EDGE(s[i], v1, j).interf && colored[j])
+					neighborColors[ra[j].color] = true;
 			
 			for (u32 r = 0; r < k; r++)
-				if (!col[r])
+				if (!neighborColors[r])
 				{
 					ra[v1].color = r;
+					printf("%lu got c%lu\n", v1, r);
 					break;
 				}
 			
@@ -332,20 +342,19 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 		{
 			u32 v1 = op[i].v1;
 			u32 v2 = op[i].v2;
+			printf("- Coalesce(%lu, %lu)\n", v1, v2);
+			
 			for (u32 j = 0; j < g->n; j++)
-				if (!s[i]->dead[j] && colored[j])
-				{
-					bool n = EDGE(s[i], v1, j).interf && (j != v2);
-					n = n && EDGE(s[i], v2, j).interf && (j != v1);
-					if (n)
-						col[ra[j].color] = true;
-				}
+				if (!s[i]->dead[j] && colored[j] && j != v1 && EDGE(s[i], v1, j).interf && j !=v2 && EDGE(s[i], v2, j).interf)
+					neighborColors[ra[j].color] = true;
 			
 			for (u32 r = 0; r < k; r++)
-				if (!col[r])
+				if (!neighborColors[r])
 				{
 					ra[v1].color = r;
 					ra[v2].color = r;
+					printf("%lu got c%lu\n", v1, r);
+					printf("%lu got c%lu\n", v2, r);
 					break;
 				}
 			
@@ -355,12 +364,16 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 	}
 	
 	/* Cleaning */
-	free(col);
+	free(neighborColors);
 	free(op);
 	for (u32 i = 0; i <= t; i++)
 		IntGraph_Delete(s[i]);
 	free(s);
 	free(colored);
 	
+	printf("=== Register Allocation ===\n");
+	for (u32 i = 0; i < g->n; i++)
+		printf("%lu -> %lu\n", i, ra[i].color);
+	printf("=========\n");
 	return ra;
 }
