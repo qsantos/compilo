@@ -74,7 +74,7 @@ bool IntGraph_AddInterf(IntGraph* g, u32 i, u32 j)
 
 bool IntGraph_DelInterf(IntGraph* g, u32 i, u32 j)
 {
-	if (!EDGE(g, i, j).interf)
+	if (EDGE(g, i, j).interf)
 	{
 		EDGE(g, i, j).interf = false;
 		EDGE(g, j, i).interf = false;
@@ -208,9 +208,11 @@ bool RA_DelVertex(IntGraph* g, IRC_Op* op, u32 k)
 			IntGraph_Simplify(g, v);
 			op->kind = SIMPLIFY;
 			op->v1   = v;
-			printf("+ Simplify(%lu)\n", v);
+//			printf("+ Simplify(%lu)\n", v);
 			return true;
 		}
+//		else
+//			printf("%lu -> %u, %lu, %u\n", v, g->dead[v], g->d[v], g->move[v]); // TODO
 	return false;
 }
 
@@ -238,7 +240,7 @@ bool RA_DelEdge(IntGraph* g, IRC_Op* op, u32 k)
 						op->kind = COALESCE;
 						op->v1   = i;
 						op->v2   = j;
-						printf("+ Coalesce(%lu, %lu)\n", i, j);
+//						printf("+ Coalesce(%lu, %lu)\n", i, j);
 						return true;
 					}
 				}
@@ -257,7 +259,7 @@ bool RA_DelPref(IntGraph* g, IRC_Op* op)
 			assert(!g->move[v]);
 			op->kind = DELPREFS;
 			op->v1   = v;
-			printf("+ Delprefs(%lu)\n", v);
+//			printf("+ Delprefs(%lu)\n", v);
 			return true;
 		}
 	return false;
@@ -295,6 +297,12 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 	u32 rem = g->n; // remaining vertices
 	while (rem)
 	{
+//		printf("================================\n");
+//		printf("%lu remaining\n", rem);
+//		for (u32 i = 0; i < s[t]->n; i++)
+//			printf("s[t]->d[%.2lu] = %lu\n", i, s[t]->d[i]);
+//		printf("\n");
+	
 		t++;
 		// copy from last graph
 		if (t == a_s)
@@ -309,41 +317,48 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 		else if (RA_DelEdge  (s[t], &op[t], k))  rem--;
 		else if (RA_DelPref  (s[t], &op[t]))          ;
 		else if (RA_Spill    (s[t], &op[t], ra)) rem--;
-		printf("%lu\n", t);
 	}
 	
 	// local use
 	bool* neighborColors = (bool*) calloc(k, sizeof(bool)); assert(neighborColors);
 	
-	for (u32 i = t; i > 0; i--)
+	u32 n_graphs = t;
+	while (t)
 	{
 		memset(neighborColors, 0, sizeof(bool) * k);
 		
-		if (op[i].kind == SIMPLIFY)
+//		printf("===== %lu ====\n", t);
+//		for (u32 i = 0; i < g->n; i++)
+//			for (u32 j = 0; j < g->n; j++)
+//				if (EDGE(s[t-1], i, j).interf)
+//					printf("I JUST FOUND ONE: %lu, %lu\n", i, j);
+			
+		if (op[t].kind == SIMPLIFY)
 		{
-			u32 v1 = op[i].v1;
-			printf("- Simplify(%lu)\n", v1);
+			u32 v1 = op[t].v1;
+//			printf("- Simplify(%lu)\n", v1);
 			
-			for (u32 j = 0; j < g->n; j++)
-				if (!s[i]->dead[j] && j != v1 && EDGE(s[i], v1, j).interf && colored[j])
-					neighborColors[ra[j].color] = true;
+			for (u32 i = 0; i < g->n; i++)
+				if (!s[t-1]->dead[i] && i != v1 && EDGE(s[t-1], v1, i).interf && colored[i])
+					neighborColors[ra[t].color] = true;
 			
-			for (u32 r = 0; r < k; r++)
-				if (!neighborColors[r])
+			for (u32 i = 0; i < k; i++)
+				if (!neighborColors[i])
 				{
-					ra[v1].color = r;
-					printf("%lu got c%lu\n", v1, r);
+					ra[v1].color = i;
+//					printf("%lu got c%lu\n", v1, i);
 					break;
 				}
 			
-			colored[i] = true;
+			colored[v1] = true;
 		}
-		else if (op[i].kind == COALESCE)
+		else if (op[t].kind == COALESCE)
 		{
-			u32 v1 = op[i].v1;
-			u32 v2 = op[i].v2;
-			printf("- Coalesce(%lu, %lu)\n", v1, v2);
+			u32 v1 = op[t].v1;
+			u32 v2 = op[t].v2;
+//			printf("- Coalesce(%lu, %lu)\n", v1, v2);
 			
+/*
 			for (u32 j = 0; j < g->n; j++)
 				if (!s[i]->dead[j] && colored[j] && j != v1 && EDGE(s[i], v1, j).interf && j !=v2 && EDGE(s[i], v2, j).interf)
 					neighborColors[ra[j].color] = true;
@@ -357,23 +372,29 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 					printf("%lu got c%lu\n", v2, r);
 					break;
 				}
+*/
 			
-			colored[v1] = true;
+//			colored[v1] = true;
+//			colored[v2] = true;
+			
+			ra[v2].color = ra[v1].color;
+//			printf("%lu got c%lu\n", v2, ra[v1].color);
 			colored[v2] = true;
 		}
+		t--;
 	}
 	
 	/* Cleaning */
 	free(neighborColors);
 	free(op);
-	for (u32 i = 0; i <= t; i++)
+	for (u32 i = 0; i <= n_graphs; i++)
 		IntGraph_Delete(s[i]);
 	free(s);
 	free(colored);
 	
-	printf("=== Register Allocation ===\n");
-	for (u32 i = 0; i < g->n; i++)
-		printf("%lu -> %lu\n", i, ra[i].color);
-	printf("=========\n");
+//	printf("=== Register Allocation ===\n");
+//	for (u32 i = 0; i < g->n; i++)
+//		printf("%lu -> %lu\n", i, ra[i].color);
+//	printf("=========\n");
 	return ra;
 }

@@ -24,8 +24,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-/* XXX: DEBUG */
-/*void Set_Display(Set* s)
+// TODO
+void Set_Display(Set* s)
 {
 	for (u32 i = 0; i < s->n; i++)
 		if (s->obj[i])
@@ -33,9 +33,9 @@
 	printf("\n");
 }
 
-void Salmon_VivacityDebug(u32 n, ASM* a)
+void Salmon_VivacityDebug(ASM* a)
 {
-	for (u32 i = 0; i < n; i ++)
+	for (u32 i = 0; i < a->n_code; i ++)
 	{
 		printf("-- %lu\n", i);
 		printf("in: ");
@@ -47,7 +47,7 @@ void Salmon_VivacityDebug(u32 n, ASM* a)
 		printf("use: ");
 		Set_Display(a->code[i].s.use);
 	}
-}*/
+}
 
 void Salmon_BuildFlow(ASM* a)
 {
@@ -142,6 +142,6 @@ void Salmon_Vivacity(ASM* a)
 		}
 	}
 	
-	//Salmon_VivacityDebug(n, a);
+	// Salmon_VivacityDebug(a); // TODO
 }
 
