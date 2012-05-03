@@ -135,13 +135,13 @@ void ASM_LabelPos(ASM* a, u32 label)
 }
 
 #define ASM_UNIOP(INSTR)                           \
-	r0 = ASM_NewReg(a, c);                        \
+	r0 = ASM_NewReg(a, c);                     \
 	r1 = ASM_GenExpr(a, c, e->v.uni_op);       \
 	ASM_Push(a, INSTR, r0, r1, 0);             \
 	break;                                     \
 
 #define ASM_BINOP(INSTR)                           \
-	r0 = ASM_NewReg(a, c);                        \
+	r0 = ASM_NewReg(a, c);                     \
 	r1 = ASM_GenExpr(a, c, e->v.bin_op.left);  \
 	r2 = ASM_GenExpr(a, c, e->v.bin_op.right); \
 	ASM_Push(a, INSTR, r0, r1, r2);            \
@@ -155,7 +155,7 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 	
 	u32stack* regs = NULL;
 	ExprList* es;
-	u32 r0        = 0;
+	u32 r0 = 0;
 	u32 r1;
 	u32 r2;
 	u32 r3;

@@ -154,18 +154,20 @@ void IntGraph_Coalesce(IntGraph* g, u32 v1, u32 v2)
 	g->dead[v2] = true;
 }
 
-IntGraph* Salmon_Interference(ASM* a)
+IntGraph* Salmon_Interference(ASM* a, u32 s, u32 e)
 {
 	IntGraph* g = IntGraph_New(a->n_regs);
+//	Print_ASM(a); // TODO
 	
-	for (u32 i = 0; i < a->n_code; i++)
+	for (u32 i = s; i <= e; i++)
 	{
 		switch (a->code[i].insn)
 		{
 		case INSN_MOV:
 			for (u32 j = 0; j < a->n_regs; j++)
-				if (a->code[i].s.out->obj[j])
-					IntGraph_AddMove(g, a->code[i].v.r.r0, j);
+				if (a->code[i].v.r.r1 != j && a->code[i].s.out->obj[j])
+					IntGraph_AddInterf(g, a->code[i].v.r.r0, j);
+			IntGraph_AddMove(g, a->code[i].v.r.r0, a->code[i].v.r.r1);
 			break;
 		case INSN_SET:
 		case INSN_NOT: case INSN_LNOT:
@@ -180,7 +182,12 @@ IntGraph* Salmon_Interference(ASM* a)
 			break;
 		}
 	}
-	
+//	for (u32 i = 0; i < a->n_regs; i++)
+//		for (u32 j = i; j < a->n_regs; j++)
+//			if (EDGE(g,i,j).interf)
+//				printf("interf: %lu -> %lu\n", i, j);
+//			else if (EDGE(g,i,j).pref)
+//				printf("pref: %lu -> %lu\n", i, j);
 	return g;
 }
 
@@ -330,8 +337,8 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 //		printf("===== %lu ====\n", t);
 //		for (u32 i = 0; i < g->n; i++)
 //			for (u32 j = 0; j < g->n; j++)
-//				if (EDGE(s[t-1], i, j).interf)
-//					printf("I JUST FOUND ONE: %lu, %lu\n", i, j);
+//				if (!s[t-1]->dead[i] && !s[t-1]->dead[j] && EDGE(s[t-1], i, j).interf)
+//					printf("I JUST FOUND ONE: %lu, %lu -> (%u, %lu), (%u, %lu)\n", i, j, colored[i], ra[i].color, colored[j], ra[j].color);
 			
 		if (op[t].kind == SIMPLIFY)
 		{
@@ -340,7 +347,7 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 			
 			for (u32 i = 0; i < g->n; i++)
 				if (!s[t-1]->dead[i] && i != v1 && EDGE(s[t-1], v1, i).interf && colored[i])
-					neighborColors[ra[t].color] = true;
+					neighborColors[ra[i].color] = true;
 			
 			for (u32 i = 0; i < k; i++)
 				if (!neighborColors[i])
@@ -358,24 +365,8 @@ RegAlloc* Salmon_RegAlloc(IntGraph* g, u32 k)
 			u32 v2 = op[t].v2;
 //			printf("- Coalesce(%lu, %lu)\n", v1, v2);
 			
-/*
-			for (u32 j = 0; j < g->n; j++)
-				if (!s[i]->dead[j] && colored[j] && j != v1 && EDGE(s[i], v1, j).interf && j !=v2 && EDGE(s[i], v2, j).interf)
-					neighborColors[ra[j].color] = true;
-			
-			for (u32 r = 0; r < k; r++)
-				if (!neighborColors[r])
-				{
-					ra[v1].color = r;
-					ra[v2].color = r;
-					printf("%lu got c%lu\n", v1, r);
-					printf("%lu got c%lu\n", v2, r);
-					break;
-				}
-*/
-			
-//			colored[v1] = true;
-//			colored[v2] = true;
+			colored[v1] = true;
+			colored[v2] = true;
 			
 			ra[v2].color = ra[v1].color;
 //			printf("%lu got c%lu\n", v2, ra[v1].color);

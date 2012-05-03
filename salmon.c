@@ -49,10 +49,10 @@ void Salmon_VivacityDebug(ASM* a)
 	}
 }
 
-void Salmon_BuildFlow(ASM* a)
+void Salmon_BuildFlow(ASM* a, u32 _s, u32 _e)
 {
 	u32stack* s;
-	for (u32 i = 0; i < a->n_code; i ++)
+	for (u32 i = _s; i <= _e; i ++)
 	{
 		a->code[i].s.jmp = -1;
 		a->code[i].s.use = Set_New(a->n_regs);
@@ -86,11 +86,7 @@ void Salmon_BuildFlow(ASM* a)
 				s = s->tail;
 			}
 			break;
-		case INSN_RET:
-			Set_Append(a->code[i].s.def, 0);
-			break;
-		case INSN_STOP:
-		case INSN_LBL:
+		default:
 			break;
 		}
 		
@@ -142,6 +138,6 @@ void Salmon_Vivacity(ASM* a)
 		}
 	}
 	
-	// Salmon_VivacityDebug(a); // TODO
+//	Salmon_VivacityDebug(a); // TODO
 }
 
