@@ -320,7 +320,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_RETURN:
 		assert(c->cur_fun);
 		r0 = ASM_GenExpr(a, c, s->v.expr);
-		ASM_Push(a, INSN_MOV, VREG_RETURN, r0, 0);
+		ASM_Push(a, INSN_MOV, 0, r0, 0);
 		break;
 	case STMT_BLOCK:
 		l = s->v.block;
@@ -333,7 +333,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	}
 }
 
-void ASM_GenFun (ASM* a, Context* c, FunDecl* f)
+void ASM_GenFun(ASM* a, Context* c, FunDecl* f)
 {
 	assert(a);
 	assert(c);

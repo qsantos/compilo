@@ -53,7 +53,7 @@ typedef struct
 	u32  color;
 } RegAlloc;
 
-IntGraph* Salmon_Interference(ASM*);
+IntGraph* Salmon_Interference(ASM*, u32, u32);
 RegAlloc* Salmon_RegAlloc    (IntGraph*, u32);
 
 #endif

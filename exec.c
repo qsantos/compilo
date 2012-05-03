@@ -186,110 +186,134 @@ void ASM_toMIPS(ASM* a, Context* c)
 	u32stack* args;
 	u32stack* params;
 	symbol    s;
-	
-	IntGraph* ig = Salmon_Interference(a);
-	RegAlloc* ra = Salmon_RegAlloc(ig, N_REGS);
-	
+
 	printf("main:\n");
 	
-	for (u32 ip = 0; ip < a->n_code; ip++)
+	u32 _s = 0;
+	u32 e;
+	while (_s < a->n_code)
 	{
-		Instr i  = a->code[ip];
-		
-		switch (i.insn)
-		{
-		case INSN_STOP:
-			ASM_toMIPS_Push(2);
-			printf("\tli $v0, 4\n");
-			printf("\tla, $a0, endMsgA\n");
-			printf("\tsyscall\n");
-			
-			printf("\tli $v0, 1\n");
-			ASM_toMIPS_Pop(4);
-			printf("\tsyscall\n");
-			
-			printf("\tli $v0, 4\n");
-			printf("\tla, $a0, endMsgB\n");
-			printf("\tsyscall\n");
-			
-			printf("\tli $v0, 10\n");
-			printf("\tsyscall\n");
-			
-			printf("\t.data\n");
-			printf("\tendMsgA: .asciiz \"The program returned \"\n");
-			printf("\tendMsgB: .asciiz \".\\n\"\n");
-			printf("\t.text\n");
+		if (a->code[_s].insn == INSN_LBL && a->code[_s].v.r.r1 == 1)
 			break;
-		case INSN_SET:  printf("\tli   $%.2lu,  %lu\n", REG(r0), i.v.r.r1); break;
-		case INSN_MOV:  printf("\tmove $%.2lu, $%.2lu\n", REG(r0), REG(r1));  break;
-		case INSN_NOT:  printf("\tnot  $%.2lu, $%.2lu\n", REG(r0), REG(r1));  break;
-		case INSN_AND:  MIPS_BINOP("and"); break;
-		case INSN_OR:   MIPS_BINOP("or "); break;
-		case INSN_XOR:  MIPS_BINOP("xor"); break;
-		case INSN_LNOT: break;
-		case INSN_LAND: break;
-		case INSN_LOR:  break;
-		case INSN_EQ:   break;
-		case INSN_NEQ:  break;
-		case INSN_LE:   break;
-		case INSN_LT:   MIPS_BINOP("slt"); break;
-		case INSN_GE:   break;
-		case INSN_GT:   printf("\tslt $%.2lu, $%.2lu, $%.2lu\n", REG(r0), REG(r2), REG(r1)); break;
-		case INSN_ADD:  MIPS_BINOP("add"); break;
-		case INSN_SUB:  MIPS_BINOP("sub"); break;
-		case INSN_MUL:  MIPS_BINOP("mul"); break;
-		case INSN_DIV:
-			printf("\tdiv  $%.2lu, $%.2lu\n", REG(r1), REG(r2));
-			printf("\tmflo $%.2lu\n",  REG(r0));
-			break;
-		case INSN_MOD:
-			printf("\tdiv  $%.2lu, $%.2lu\n", REG(r1), REG(r2));
-			printf("\tmfhi $%.2lu\n",  REG(r0));
-			break;
-		case INSN_JMP:
-			printf("\tj l%lu\n", i.v.r.r0);
-			break;
-		case INSN_JZ:
-			printf("\tbeqz $%.2lu, l%lu\n", REG(r0), i.v.r.r1);
-			break;
-		case INSN_JNZ:
-			printf("\tbnze $%.2lu, l%lu\n", REG(r0), i.v.r.r1);
-			break;
-		case INSN_CALL:
-			args = i.v.p;
-			v = args->head;
-			args = args->tail;
-			
-			// save regs
-			s = c->st[a->code[a->labels[v]].v.r.r2];
-			params = s.usedRegs;
-			while (params)
-			{
-				ASM_toMIPS_Push(preg(ra, params->head));
-				params = params->tail;
-			}
-			
-			// set params
-			params = s.params;
-			while (params && args)
-			{
-				printf("\tmove $%.2lu, $%.2lu\n", preg(ra, params->head), preg(ra, args->head));
-				args   = args->tail;
-				params = params->tail;
-			}
-			
-			printf("\tjal l%lu\n", v);
-			break;
-		case INSN_RET:
-			ASM_toMIPS_Pop(REG_RA);
-			ASM_toMIPS_PopRegs(ra, c->st[i.v.r.r0].usedRegs);
-			printf("\tjr $ra\n");
-			break;
-		case INSN_LBL:
-			printf("l%lu:\n", i.v.r.r0);
-			if (i.v.r.r1)
-				ASM_toMIPS_Push(REG_RA);
-			break;
-		}
+		_s++;
 	}
+	while (_s < a->n_code)
+	{
+		e = ++_s;
+		while (e < a->n_code)
+		{
+			if (a->code[e].insn == INSN_LBL && a->code[e].v.r.r1 == 1)
+				break;
+			e++;
+		}
+
+		Salmon_BuildFlow(a, _s, e-1);
+		Salmon_Vivacity(a,  _s, e-1);
+		IntGraph* ig = Salmon_Interference(a, _s, e-1);
+		RegAlloc* ra = Salmon_RegAlloc(ig, N_REGS);
+		
+		for (u32 ip = _s; ip < e; ip++)
+		{
+			Instr i = a->code[ip];
+			
+			switch (i.insn)
+			{
+			case INSN_STOP:
+				ASM_toMIPS_Push(2);
+				printf("\tli $v0, 4\n");
+				printf("\tla, $a0, endMsgA\n");
+				printf("\tsyscall\n");
+				
+				printf("\tli $v0, 1\n");
+				ASM_toMIPS_Pop(4);
+				printf("\tsyscall\n");
+				
+				printf("\tli $v0, 4\n");
+				printf("\tla, $a0, endMsgB\n");
+				printf("\tsyscall\n");
+				
+				printf("\tli $v0, 10\n");
+				printf("\tsyscall\n");
+				
+				printf("\t.data\n");
+				printf("\tendMsgA: .asciiz \"The program returned \"\n");
+				printf("\tendMsgB: .asciiz \".\\n\"\n");
+				printf("\t.text\n");
+				break;
+			case INSN_SET:  printf("\tli   $%.2lu,  %lu\n", REG(r0), i.v.r.r1); break;
+			case INSN_MOV:  printf("\tmove $%.2lu, $%.2lu\n", REG(r0), REG(r1));  break;
+			case INSN_NOT:  printf("\tnot  $%.2lu, $%.2lu\n", REG(r0), REG(r1));  break;
+			case INSN_AND:  MIPS_BINOP("and"); break;
+			case INSN_OR:   MIPS_BINOP("or "); break;
+			case INSN_XOR:  MIPS_BINOP("xor"); break;
+			case INSN_LNOT: break;
+			case INSN_LAND: break;
+			case INSN_LOR:  break;
+			case INSN_EQ:   break;
+			case INSN_NEQ:  break;
+			case INSN_LE:   break;
+			case INSN_LT:   MIPS_BINOP("slt"); break;
+			case INSN_GE:   break;
+			case INSN_GT:   printf("\tslt $%.2lu, $%.2lu, $%.2lu\n", REG(r0), REG(r2), REG(r1)); break;
+			case INSN_ADD:  MIPS_BINOP("add"); break;
+			case INSN_SUB:  MIPS_BINOP("sub"); break;
+			case INSN_MUL:  MIPS_BINOP("mul"); break;
+			case INSN_DIV:
+				printf("\tdiv  $%.2lu, $%.2lu\n", REG(r1), REG(r2));
+				printf("\tmflo $%.2lu\n",  REG(r0));
+				break;
+			case INSN_MOD:
+				printf("\tdiv  $%.2lu, $%.2lu\n", REG(r1), REG(r2));
+				printf("\tmfhi $%.2lu\n",  REG(r0));
+				break;
+			case INSN_JMP:
+				printf("\tj l%lu\n", i.v.r.r0);
+				break;
+			case INSN_JZ:
+				printf("\tbeqz $%.2lu, l%lu\n", REG(r0), i.v.r.r1);
+				break;
+			case INSN_JNZ:
+				printf("\tbnze $%.2lu, l%lu\n", REG(r0), i.v.r.r1);
+				break;
+			case INSN_CALL:
+				args = i.v.p;
+				v = args->head;
+				args = args->tail;
+				
+				// save regs
+				s = c->st[a->code[a->labels[v]].v.r.r2];
+				params = s.usedRegs;
+				while (params)
+				{
+					ASM_toMIPS_Push(preg(ra, params->head));
+					params = params->tail;
+				}
+				
+				// set params
+				params = s.params;
+				while (params && args)
+				{
+					printf("\tmove $%.2lu, $%.2lu\n", preg(ra, params->head), preg(ra, args->head));
+					args   = args->tail;
+					params = params->tail;
+				}
+				
+				printf("\tjal l%lu\n", v);
+				break;
+			case INSN_RET:
+				ASM_toMIPS_Pop(REG_RA);
+				ASM_toMIPS_PopRegs(ra, c->st[i.v.r.r0].usedRegs);
+				printf("\tjr $ra\n");
+				break;
+			case INSN_LBL:
+				printf("l%lu:\n", i.v.r.r0);
+				if (i.v.r.r1)
+					ASM_toMIPS_Push(REG_RA);
+				break;
+			}
+		}
+		
+		_s = e;
+	}
+	
 }

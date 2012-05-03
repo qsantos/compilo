@@ -63,8 +63,6 @@ int main(int argc, char** argv)
 //			Print_ASM(a);
 //			ASM_Simulate(a, c);
 			
-			Salmon_BuildFlow(a);
-			Salmon_Vivacity(a);
 			ASM_toMIPS(a, c);
 			
 			ASM_Delete(a);

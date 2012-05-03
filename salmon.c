@@ -94,14 +94,14 @@ void Salmon_BuildFlow(ASM* a, u32 _s, u32 _e)
 	}
 }
 
-void Salmon_Vivacity(ASM* a)
+void Salmon_Vivacity(ASM* a, u32 _s, u32 _e)
 {
 	bool changed = true;
 	while (changed)
 	{
 		changed = false;
-		u32 i = a->n_code;
-		while (i)
+		u32 i = _e + 1;
+		while (i > _s)
 		{
 			i--;
 			
@@ -116,7 +116,7 @@ void Salmon_Vivacity(ASM* a)
 			a->code[i].s.in = in;
 			
 			Set* out;
-			if (i < a->n_code - 1)
+			if (i < _e - 1)
 			{
 				if (a->code[i].s.jmp != -1)
 					out = Set_Union(a->code[i+1].s.in, a->code[a->code[i].s.jmp].s.in);

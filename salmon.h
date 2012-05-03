@@ -24,7 +24,7 @@
 
 #include "asm.h"
 
-void Salmon_BuildFlow(ASM*);
-void Salmon_Vivacity (ASM*);
+void Salmon_BuildFlow(ASM*, u32, u32);
+void Salmon_Vivacity (ASM*, u32, u32);
 
 #endif
