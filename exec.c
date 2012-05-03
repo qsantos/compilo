@@ -233,12 +233,6 @@ void ASM_toMIPS(ASM* a, Context* c)
 	u32 e;
 	while (_s < a->n_code)
 	{
-		if (a->code[_s].insn == INSN_LBL && a->code[_s].v.r.r1 == 1)
-			break;
-		_s++;
-	}
-	while (_s < a->n_code)
-	{
 		e = ++_s;
 		while (e < a->n_code)
 		{

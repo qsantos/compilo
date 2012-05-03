@@ -66,11 +66,12 @@ void Check_Expr(Expr* e, Context* c)
 	case EXPR_VAR:
 		name        = e->v.var.name;
 		symb        = Context_Get(c, name);
-		e->v.var.id = symb->id;
 		if (!symb)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
+		if (!c->err)
+			e->v.var.id = symb->id;
 		break;
 	case EXPR_NOT:
 	case EXPR_LNOT:
