@@ -347,6 +347,16 @@ void ASM_toMIPS(ASM* a, Context* c)
 				{
 					s = c->st[i.v.r.r2];
 					
+					// save regs
+					ASM_toMIPS_Push(REG_RA);
+					params = s.usedRegs;
+					while (params)
+					{
+						if (!ra[params->head].spilled)
+							ASM_toMIPS_Push(REG0_(params->head));
+						params = params->tail;
+					}
+					
 					// ingoing parameters
 					params = s.params;
 					if (params && params->tail)
@@ -359,17 +369,6 @@ void ASM_toMIPS(ASM* a, Context* c)
 					if (params) { printf("\tmove $%.2lu, $a2\n", REG0_(params->head)); params=params->tail; }
 					if (params) { printf("\tmove $%.2lu, $a3\n", REG0_(params->head)); params=params->tail; }
 					ASM_toMIPS_PopParams(ra, params);
-					
-					// save regs
-					params = s.usedRegs;
-					while (params)
-					{
-						if (!ra[params->head].spilled)
-							ASM_toMIPS_Push(REG0_(params->head));
-						params = params->tail;
-					}
-					
-					ASM_toMIPS_Push(REG_RA);
 					
 					// prepare the stack frame
 					depth = 0;
