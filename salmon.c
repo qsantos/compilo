@@ -49,7 +49,7 @@ void Salmon_VivacityDebug(ASM* a)
 	}
 }
 
-void Salmon_BuildFlow(ASM* a, u32 _s, u32 _e)
+void Salmon_BuildFlow(ASM* a, u32 _s, u32 _e, Context* c)
 {
 	u32stack* s;
 	for (u32 i = _s; i <= _e; i ++)
@@ -79,11 +79,23 @@ void Salmon_BuildFlow(ASM* a, u32 _s, u32 _e)
 			a->code[i].s.jmp = a->labels[a->code[i].v.r.r0];
 			break;
 		case INSN_CALL:
-			s = a->code[i].v.p->tail;
+			s = a->code[i].v.p->tail->tail;
 			while (s)
 			{
 				Set_Append(a->code[i].s.use, s->head);
 				s = s->tail;
+			}
+			break;
+		case INSN_LBL:
+			if (a->code[i].v.r.r1 == 1)
+			{
+				s = c->st[a->code[i].v.r.r2].params->tail->tail;
+				while (s)
+				{
+					Set_Append(a->code[i].s.def, s->head);
+					s = s->tail;
+				}
+
 			}
 			break;
 		default:
@@ -116,7 +128,7 @@ void Salmon_Vivacity(ASM* a, u32 _s, u32 _e)
 			a->code[i].s.in = in;
 			
 			Set* out;
-			if (i < _e - 1)
+			if (i < _e)
 			{
 				if (a->code[i].s.jmp != -1)
 					out = Set_Union(a->code[i+1].s.in, a->code[a->code[i].s.jmp].s.in);

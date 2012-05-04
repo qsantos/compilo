@@ -173,15 +173,14 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		while (es)
 		{
 			r0 = ASM_GenExpr(a, c, es->head);
-			r1 = ASM_NewReg(a, c);
-			ASM_Push(a, INSN_MOV, r1, r0, 0);
-			u32stack_push(&regs, r1);
+			u32stack_push(&regs, r0);
 			es = es->tail;
 		}
+		r0 = ASM_NewReg(a, c);
+		u32stack_push(&regs, r0);
 		u32stack_push(&(a->funCalls[e->v.call.id]), a->n_code);
 		ASM_PushList(a, INSN_CALL, regs);
 		regs = NULL;
-		r0 = c->st[e->v.call.id].reg;
 		break;
 	case EXPR_AFF:
 		r0 = c->st[e->v.aff.id].reg;
@@ -320,7 +319,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_RETURN:
 		assert(c->cur_fun);
 		r0 = ASM_GenExpr(a, c, s->v.expr);
-		ASM_Push(a, INSN_MOV, 0, r0, 0);
+		ASM_Push(a, INSN_RET, c->cur_fun->id, r0, 0);
 		break;
 	case STMT_BLOCK:
 		l = s->v.block;
@@ -357,7 +356,6 @@ void ASM_GenFun(ASM* a, Context* c, FunDecl* f)
 	a->code[a->n_code-1].v.r.r1 = 1;
 	a->code[a->n_code-1].v.r.r2 = f->id;
 	ASM_GenStmt(a, c, f->stmt);
-	ASM_Push(a, INSN_RET, f->id, 0, 0);
 	
 	c->cur_fun = oldfun;
 }
@@ -372,6 +370,7 @@ void ASM_GenProgram(ASM* a, Context* c, Program* p)
 		p = p->tail;
 	}
 	
+	u32stack_push(&(a->code[0].v.p), 0);
 	u32stack_push(&(a->code[0].v.p), c->st[c->main].label);
 	for (u32 i = 0; i < c->n_symbs; i++)
 	{

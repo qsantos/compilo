@@ -23,8 +23,9 @@
 #define SALMON_H
 
 #include "asm.h"
+#include "context.h"
 
-void Salmon_BuildFlow(ASM*, u32, u32);
+void Salmon_BuildFlow(ASM*, u32, u32, Context*);
 void Salmon_Vivacity (ASM*, u32, u32);
 
 #endif

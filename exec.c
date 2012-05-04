@@ -149,7 +149,7 @@ void ASM_Simulate(ASM* a, Context* c)
 
 u32 ra_wreg(u32 treg, RegAlloc ra)
 {
-	return ra.spilled ? treg : 2 + ra.color;
+	return ra.spilled ? treg : 8 + ra.color;
 }
 void ra_sreg(u32 treg, RegAlloc ra)
 {
@@ -171,7 +171,7 @@ u32 ra_rreg(u32 treg, RegAlloc ra)
 	}
 	else
 	{
-		return 2 + ra.color;
+		return 8 + ra.color;
 	}
 }
 #define REG0_(VREG) ra_wreg(24, ra[VREG])
@@ -222,6 +222,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 	assert(c);
 	
 	u32       v;
+	u32       w;
 	u32stack* args;
 	u32stack* params;
 	symbol    s;
@@ -233,7 +234,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 	u32 e;
 	while (_s < a->n_code)
 	{
-		e = ++_s;
+		e = _s + 1;
 		while (e < a->n_code)
 		{
 			if (a->code[e].insn == INSN_LBL && a->code[e].v.r.r1 == 1)
@@ -241,10 +242,10 @@ void ASM_toMIPS(ASM* a, Context* c)
 			e++;
 		}
 
-		Salmon_BuildFlow(a, _s, e-1);
+		Salmon_BuildFlow(a, _s, e-1, c);
 		Salmon_Vivacity(a,  _s, e-1);
 		IntGraph* ig = Salmon_Interference(a, _s, e-1);
-		RegAlloc* ra = Salmon_RegAlloc(ig, N_REGS);
+		RegAlloc* ra = Salmon_RegAlloc(ig, 16);
 		
 		for (u32 ip = _s; ip < e; ip++)
 		{
@@ -316,30 +317,25 @@ void ASM_toMIPS(ASM* a, Context* c)
 				v = args->head;
 				args = args->tail;
 				
-				// save regs
-				s = c->st[a->code[a->labels[v]].v.r.r2];
-				params = s.usedRegs;
-				while (params)
-				{
-					if (!ra[params->head].spilled)
-						ASM_toMIPS_Push(REG0_(params->head));
-					params = params->tail;
-				}
+				w = args->head;
+				args = args->tail;
 				
 				// set args
-				if (args){printf("\tmove $a0, $%.2lu\n", REG1_(params->head)); params = params->tail;}
-				if (args){printf("\tmove $a1, $%.2lu\n", REG1_(params->head)); params = params->tail;}
-				if (args){printf("\tmove $a2, $%.2lu\n", REG1_(params->head)); params = params->tail;}
-				if (args){printf("\tmove $a3, $%.2lu\n", REG1_(params->head)); params = params->tail;}
+				if (args){printf("\tmove $a0, $%.2lu\n", REG1_(args->head)); args = args->tail;}
+				if (args){printf("\tmove $a1, $%.2lu\n", REG1_(args->head)); args = args->tail;}
+				if (args){printf("\tmove $a2, $%.2lu\n", REG1_(args->head)); args = args->tail;}
+				if (args){printf("\tmove $a3, $%.2lu\n", REG1_(args->head)); args = args->tail;}
 				while (args)
 				{
 					ASM_toMIPS_Push(REG1_(args->head));
 					args = args->tail;
 				}
-				
+
 				printf("\tjal l%lu\n", v);
+				printf("\tmove $%.2lu, $v0\n", REG1_(w));
 				break;
 			case INSN_RET:
+				printf("\tmove $v0, $%.2lu\n", REG1(r1));
 				printf("\taddi $sp, $sp, %lu\n", 4 * depth);
 				ASM_toMIPS_Pop(REG_RA);
 				ASM_toMIPS_PopRegs(ra, c->st[i.v.r.r0].usedRegs);
@@ -353,11 +349,25 @@ void ASM_toMIPS(ASM* a, Context* c)
 					
 					// ingoing parameters
 					params = s.params;
-					if(params){printf("\tmove $%.2lu $a0\n",REG0_(params->head));params=params->tail;}
-					if(params){printf("\tmove $%.2lu $a1\n",REG0_(params->head));params=params->tail;}
-					if(params){printf("\tmove $%.2lu $a2\n",REG0_(params->head));params=params->tail;}
-					if(params){printf("\tmove $%.2lu $a3\n",REG0_(params->head));params=params->tail;}
+					if (params && params->tail)
+					{
+						printf("toto %lu tata %lu\n", params->head, params->tail->head);
+						printf("toto %lu tata %lu\n", REG0_(params->head), REG0_(params->tail->head));
+					}
+					if (params) { printf("\tmove $%.2lu, $a0\n", REG0_(params->head)); params=params->tail; }
+					if (params) { printf("\tmove $%.2lu, $a1\n", REG0_(params->head)); params=params->tail; }
+					if (params) { printf("\tmove $%.2lu, $a2\n", REG0_(params->head)); params=params->tail; }
+					if (params) { printf("\tmove $%.2lu, $a3\n", REG0_(params->head)); params=params->tail; }
 					ASM_toMIPS_PopParams(ra, params);
+					
+					// save regs
+					params = s.usedRegs;
+					while (params)
+					{
+						if (!ra[params->head].spilled)
+							ASM_toMIPS_Push(REG0_(params->head));
+						params = params->tail;
+					}
 					
 					ASM_toMIPS_Push(REG_RA);
 					

@@ -324,8 +324,8 @@ void Print_ASM(ASM* a)
 		case INSN_CALL:
 			regs = instr.v.p;
 			assert(regs);
-			printf("\tCall .%lu", regs->head);
-			regs = regs->tail;
+			printf("\tCall .%lu, %lu", regs->head, regs->tail->head);
+			regs = regs->tail->tail;
 			while (regs)
 			{
 				printf(", $%lu", regs->head);
@@ -334,7 +334,7 @@ void Print_ASM(ASM* a)
 			printf("\n");
 			break;
 		case INSN_RET:
-			printf("\tRet\n");
+			printf("\tRet %lu\n", instr.v.r.r1);
 			break;
 		case INSN_LBL:
 			if (instr.v.r.r1)

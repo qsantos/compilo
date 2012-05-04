@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 			ASM* a = ASM_New(c);
 			ASM_GenProgram(a, c, current_prog);
 			
-//			Print_ASM(a);
+			Print_ASM(a);
 //			ASM_Simulate(a, c);
 			
 			ASM_toMIPS(a, c);
