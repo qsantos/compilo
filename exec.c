@@ -351,8 +351,8 @@ void ASM_toMIPS(ASM* a, Context* c)
 					params = s.params;
 					if (params && params->tail)
 					{
-						printf("toto %lu tata %lu\n", params->head, params->tail->head);
-						printf("toto %lu tata %lu\n", REG0_(params->head), REG0_(params->tail->head));
+//						printf("toto %lu tata %lu\n", params->head, params->tail->head);
+//						printf("toto %lu tata %lu\n", REG0_(params->head), REG0_(params->tail->head));
 					}
 					if (params) { printf("\tmove $%.2lu, $a0\n", REG0_(params->head)); params=params->tail; }
 					if (params) { printf("\tmove $%.2lu, $a1\n", REG0_(params->head)); params=params->tail; }

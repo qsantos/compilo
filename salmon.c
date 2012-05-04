@@ -89,7 +89,8 @@ void Salmon_BuildFlow(ASM* a, u32 _s, u32 _e, Context* c)
 		case INSN_LBL:
 			if (a->code[i].v.r.r1 == 1)
 			{
-				s = c->st[a->code[i].v.r.r2].params->tail->tail;
+				s = c->st[a->code[i].v.r.r2].params;
+				s = s->tail;
 				while (s)
 				{
 					Set_Append(a->code[i].s.def, s->head);
