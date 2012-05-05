@@ -117,25 +117,18 @@ void IntGraph_Simplify(IntGraph* g, u32 v)
 	for (u32 i = 0; i < g->n; i++)
 		if (!g->dead[i] && EDGE(i, v).interf)
 			g->d[i]--;
-//	g->move[v] = false;
-//	g->d[v]    = 0;
-//	for (u32 i = 0; i < g->n; i++)
-//		if (!g->dead[i])
-//		{
-//			IntGraph_DelInterf(g, i, v);
-//			IntGraph_DelMove  (g, i, v);
-//		} TODO
 }
 
 void IntGraph_Coalesce(IntGraph* g, u32 v1, u32 v2)
 {
 	for (u32 i = 0; i < g->n; i++)
-	{
-		if (IntGraph_DelInterf(g, v2, i))
-			IntGraph_AddInterf(g, v1, i);
-		if (IntGraph_DelMove(g, v2, i))
-			IntGraph_AddMove(g, i, v1);
-	}
+		if (!g->dead[i])
+		{
+			if (IntGraph_DelInterf(g, v2, i))
+				IntGraph_AddInterf(g, v1, i);
+			if (IntGraph_DelMove(g, v2, i))
+				IntGraph_AddMove(g, v1, i);
+		}
 	g->dead[v2] = true;
 }
 

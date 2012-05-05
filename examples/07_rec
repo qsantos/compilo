@@ -8,5 +8,5 @@ int pgcd(int a, int b)
 
 int main(void)
 {
-	return pgcd(16, 12);
+	return pgcd(21, 28);
 }

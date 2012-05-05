@@ -155,7 +155,7 @@ void ra_sreg(u32 treg, RegAlloc ra)
 {
 	if (ra.spilled)
 	{
-		printf("\taddi $sp, $sp, -%lu\n", 4 * ra.color);
+		printf("\taddi $sp, $sp, -%lu\t#SAVE S%lu\n", 4 * ra.color, ra.color);
 		printf("\tsw   $%.2lu, 0($sp)\n", treg);
 		printf("\taddi $sp, $sp,  %lu\n", 4 * ra.color);
 	}
@@ -164,7 +164,7 @@ u32 ra_rreg(u32 treg, RegAlloc ra)
 {
 	if (ra.spilled)
 	{
-		printf("\taddi $sp, $sp, -%lu\n", 4 * ra.color);
+		printf("\taddi $sp, $sp, -%lu\t#LOAD S%lu\n", 4 * ra.color, ra.color);
 		printf("\tlw   $%.2lu, 0($sp)\n", treg);
 		printf("\taddi $sp, $sp,  %lu\n", 4 * ra.color);
 		return treg;
@@ -183,31 +183,42 @@ u32 ra_rreg(u32 treg, RegAlloc ra)
 #define RREG1(IREG)  RREG1_(i.v.r.IREG)
 #define RREG2(IREG)  RREG2_(i.v.r.IREG)
 
-void ASM_toMIPS_Push(u32 reg)
+static void DecSP(u32 v)
+{
+	if (v)
+		printf("\taddi $sp, $sp, -%lu\n", v);
+}
+static void IncSP(u32 v)
+{
+	if (v)
+		printf("\taddi $sp, $sp, %lu\n", v);
+}
+static void Push(u32 reg)
 {
 	printf("\taddi $sp, $sp, -4\t#PUSH $%.2lu\n", reg);
 	printf("\tsw   $%.2lu, 0($sp)\n", reg);
 }
-void ASM_toMIPS_Pop(u32 reg)
+static void Pop(u32 reg)
 {
 	printf("\tlw   $%.2lu, 0($sp)\t#POP $%.2lu\n", reg, reg);
 	printf("\taddi $sp, $sp, 4\n");
 }
-void ASM_toMIPS_PopRegs(RegAlloc* ra, u32stack* params)
+static void PopRegs(RegAlloc* ra, u32stack* params)
 {
 	if (params)
 	{
-		ASM_toMIPS_PopRegs(ra, params->tail);
+		PopRegs(ra, params->tail);
 		if (!ra[params->head].spilled)
-			ASM_toMIPS_Pop(WREG_(params->head));
+			Pop(WREG_(params->head));
 	}
 }
-void ASM_toMIPS_PopParams(RegAlloc* ra, u32stack* params)
+static void GetSpilledParams(RegAlloc* ra, u32stack* params)
 {
 	if (params)
 	{
-		ASM_toMIPS_PopParams(ra, params->tail);
-		ASM_toMIPS_Pop(WREG_(params->head));
+		GetSpilledParams(ra, params->tail);
+		printf("\tlw   $%.2lu, 0($%lu)\n", WREG_(params->head), REG_TMP1);
+		printf("\taddi $%.2lu, $%.2lu, 4\n", REG_TMP1, REG_TMP1);
 		SREG_(params->head);
 	}
 }
@@ -220,6 +231,8 @@ void ASM_toMIPS(ASM* a, Context* c)
 {
 	assert(a);
 	assert(c);
+	
+	u32 k = 16;
 	
 	u32       v;
 	u32       w;
@@ -243,7 +256,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 		}
 		e--;
 		
-		RegAlloc* ra = ASM_RegAlloc(a, s, e, c, 16);
+		RegAlloc* ra = ASM_RegAlloc(a, s, e, c, k);
 		
 		for (u32 ip = s; ip <= e; ip++)
 		{
@@ -252,13 +265,13 @@ void ASM_toMIPS(ASM* a, Context* c)
 			switch (i.insn)
 			{
 			case INSN_STOP:
-				ASM_toMIPS_Push(2);
+				Push(2);
 				printf("\tli $v0, 4\n");
 				printf("\tla, $a0, endMsgA\n");
 				printf("\tsyscall\n");
 				
 				printf("\tli $v0, 1\n");
-				ASM_toMIPS_Pop(4);
+				Pop(4);
 				printf("\tsyscall\n");
 				
 				printf("\tli $v0, 4\n");
@@ -325,7 +338,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 				if (args){printf("\tmove $a3, $%.2lu\n", RREG1_(args->head)); args=args->tail;}
 				while (args)
 				{
-					ASM_toMIPS_Push(RREG1_(args->head));
+					Push(RREG1_(args->head));
 					args = args->tail;
 				}
 				
@@ -340,17 +353,19 @@ void ASM_toMIPS(ASM* a, Context* c)
 				if (args) args = args->tail;
 				if (args) args = args->tail;
 				if (args) args = args->tail;
+				v = 0;
 				while (args)
 				{
-					ASM_toMIPS_Push(REG_TMP0);
+					v +=4;
 					args = args->tail;
 				}
+				IncSP(v);
 				break;
 			case INSN_RET:
 				printf("\tmove $v0, $%.2lu\n", RREG1(r1));
-				printf("\taddi $sp, $sp, %lu\n", 4 * depth);
-				ASM_toMIPS_PopRegs(ra, c->st[i.v.r.r0].usedRegs);
-				ASM_toMIPS_Pop(REG_RA);
+				IncSP(4 * depth);
+				PopRegs(ra, c->st[i.v.r.r0].usedRegs);
+				Pop(REG_RA);
 				printf("\tjr $ra\n");
 				break;
 			case INSN_LBL:
@@ -363,12 +378,12 @@ void ASM_toMIPS(ASM* a, Context* c)
 					printf("\tmove $%.2lu, $sp\n", REG_TMP1);
 					
 					// save regs
-					ASM_toMIPS_Push(REG_RA);
+					Push(REG_RA);
 					params = symb.usedRegs;
 					while (params)
 					{
 						if (!ra[params->head].spilled)
-							ASM_toMIPS_Push(RREG1_(params->head));
+							Push(RREG1_(params->head));
 						params = params->tail;
 					}
 					
@@ -381,7 +396,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 							ra[params->head].color = depth++;
 						params = params->tail;
 					}
-					printf("\taddi $sp, $sp, -%lu\n", 4 * depth);
+					DecSP(4 * depth);
 					
 					// ingoing parameters
 					params = symb.params;
@@ -393,13 +408,7 @@ void ASM_toMIPS(ASM* a, Context* c)
 						params = params->tail;
 						v++;
 					}
-					while (params)
-					{
-						printf("\tlw   $%.2lu, 0($sp)\n", WREG_(params->head));
-						printf("\taddi $%.2lu, $%.2lu, 4\n", REG_TMP1, REG_TMP1);
-						SREG_(params->head);
-						params = params->tail;
-					}
+					GetSpilledParams(ra, params);
 				}
 				break;				
 			}

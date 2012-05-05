@@ -41,7 +41,7 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
 		bool done = false;
 		/* 1. Tries to remove a vertex with degree lower than k */
 		for (u32 v = 0; !done && v < g->n; v++)
-			if (!g->dead[v] && g->d[v] < k /* && !g->move[v] */)
+			if (!g->dead[v] && g->d[v] < k && !g->move[v])
 			{
 				IntGraph_Simplify(g, v);
 				u32stack_push(&vertices, v);
@@ -78,7 +78,6 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
 */
 		
 		/* 3. Tries to remove a preference edge */
-/*
 		for (u32 v = 0; !done && v < g->n; v++)
 			if (!g->dead[v] && g->move[v])
 			{
@@ -87,7 +86,6 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
 						IntGraph_DelMove(g, v, i);
 				done = true;
 			}
-*/
 		
 		/* 4. Spilling */
 		for (u32 v = 0; !done && v < g->n; v++)
@@ -137,18 +135,9 @@ RegAlloc* ASM_RegAlloc(ASM* a, u32 s, u32 e, Context* c, u32 k)
 {
 	Flow* f = Flow_Build(a, s, e, c);
 	Flow_Vivacity(f);
-//	Flow_Print(f);
 	
 	IntGraph* g = IntGraph_FromFlow(f);
-//	for (u32 i = 0; i < g->n; i++)
-//		for (u32 j = i + 1; j < g->n; j++)
-//			if (EDGE(i, j).interf)
-//				printf("Interf %lu, %lu\n", i, j);
-	
 	RegAlloc* r = IntGraph_RegAlloc(g, k);
-//	printf("=== RegAlloc ===\n");
-//	for (u32 i = 0; i < g->n; i++)
-//		printf("$%lu <- c%lu (%u)\n", i, r[i].color, r[i].spilled);
 	
 	IntGraph_Delete(g);
 	Flow_Delete(f);
