@@ -23,6 +23,18 @@
 
 #include <stdlib.h>
 #include <assert.h> 
+#include <stdio.h>
+
+u32stack* u32stack_rcopy(u32stack* s)
+{
+	u32stack* r = NULL;
+	while (s)
+	{
+		u32stack_push(&r, s->head);
+		s = s->tail;
+	}
+	return r;
+}
 
 void u32stack_delete(u32stack** s)
 {
@@ -46,4 +58,13 @@ u32 u32stack_pop(u32stack** s)
 	free(*s);
 	*s = t;
 	return tos;
+}
+
+void u32stack_Print(u32stack* s)
+{
+	while (s)
+	{
+		printf("%lu, ", s->head);
+		s = s->tail;
+	}
 }

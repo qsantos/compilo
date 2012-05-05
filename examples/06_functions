@@ -1,12 +1,12 @@
-int pgcd(int a, int b)
+int g(int x)
 {
-	if (a < b)
-		return pgcd(b, a);
-	else
-		return b ? pgcd(b, a%b) : a;
+	return x + 1;
 }
-
+int f(int x)
+{
+	return x*g(x);
+}
 int main(void)
 {
-	return pgcd(16, 12);
+	return f(5);
 }

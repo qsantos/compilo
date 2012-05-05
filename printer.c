@@ -316,10 +316,10 @@ void Print_ASM(ASM* a)
 			printf("\tJmp  .%lu\n", instr.v.r.r0);
 			break;
 		case INSN_JZ:
-			printf("\tJz   $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
+			printf("\tJz   $%lu, .%lu\n", instr.v.r.r1, instr.v.r.r0);
 			break;
 		case INSN_JNZ:
-			printf("\tJnz  $%lu, .%lu\n", instr.v.r.r0, instr.v.r.r1);
+			printf("\tJnz  $%lu, .%lu\n", instr.v.r.r1, instr.v.r.r0);
 			break;
 		case INSN_CALL:
 			regs = instr.v.p;

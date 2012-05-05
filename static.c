@@ -42,11 +42,12 @@ void Check_Expr(Expr* e, Context* c)
 	case EXPR_FUN_CALL:
 		name         = e->v.call.name;
 		symb         = Context_Get(c, name);
-		e->v.call.id = symb->id;
 		if (!symb)
 		{
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
 		}
+		if (!c->err)
+			e->v.call.id = symb->id;
 		Check_ExprList(e->v.call.params, c);
 		if (!c->err)
 			Check_TypeParams(symb->v.f, e, c);
@@ -54,11 +55,12 @@ void Check_Expr(Expr* e, Context* c)
 	case EXPR_AFF:
 		name        = e->v.aff.name;
 		symb        = Context_Get(c, name);
-		e->v.aff.id = symb->id;
 		if (!symb)
 		{
 			Static_Error(c, &e->pos, "variable %s is undeclared", name);
 		}
+		if (!c->err)
+			e->v.aff.id = symb->id;
 		Check_Expr(e->v.aff.expr, c);
 		if (!c->err)
 			Check_TypeExpr(symb->v.t, e->v.aff.expr, c);
@@ -263,7 +265,7 @@ void Check_FunDecl(FunDecl* fd, Context* c)
 		fd->id = symb->id;
 		Context_BeginScope(c);
 		Check_ParamList(fd->params, c);
-		Check_Stmt(fd->stmt, !Type_Comp(fd->type, &TVoid), c);
+		Check_Stmt(fd->stmt, fd->type->type != TYPE_VOID, c);
 		Context_EndScope(c);
 	}
 }
@@ -381,6 +383,6 @@ void Check_TypeParams(FunDecl* fd, Expr* e, Context* c)
 	}
 	if (l)
 		Static_Error(c, &e->pos, "too many arguments to function %s", fd->name);
-	else if (p && !Type_Comp(p->head->type, &TVoid))
+	else if (p && p->head->type->type != TYPE_VOID)
 		Static_Error(c, &e->pos, "too few arguments to function %s", fd->name);
 }

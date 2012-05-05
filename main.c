@@ -26,7 +26,7 @@
 #include "printer.h"
 #include "latex.h"
 #include "static.h"
-#include "salmon.h"
+#include "flow.h"
 #include "exec.h"
 
 extern int yyparse(void);

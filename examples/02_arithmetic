@@ -4,5 +4,5 @@ int main(void)
 	int y = 9;
 	y = x + y;
 	x = (x - 3) + 2 * ((y - 7) % 2);
-	return 0;
+	return 17;
 }

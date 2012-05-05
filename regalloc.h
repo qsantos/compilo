@@ -22,30 +22,7 @@
 #ifndef REGALLOC_H
 #define REGALLOC_H
 
-#include "asm.h"
-
-typedef struct
-{
-	bool interf;
-	bool pref;
-} edge;
-
-typedef struct
-{
-	u32   n;
-	u32*  d;
-	bool* move;
-	bool* dead;
-	edge* e;
-} IntGraph;
-
-IntGraph* IntGraph_New      (u32);
-void      IntGraph_Delete   (IntGraph*);
-
-bool      IntGraph_AddInterf(IntGraph*, u32, u32);
-bool      IntGraph_DelInterf(IntGraph*, u32, u32);
-bool      IntGraph_AddMove  (IntGraph*, u32, u32);
-bool      IntGraph_DelMove  (IntGraph*, u32, u32);
+#include "intgraph.h"
 
 typedef struct
 {
@@ -53,7 +30,7 @@ typedef struct
 	u32  color;
 } RegAlloc;
 
-IntGraph* Salmon_Interference(ASM*, u32, u32);
-RegAlloc* Salmon_RegAlloc    (IntGraph*, u32);
+RegAlloc* IntGraph_RegAlloc(IntGraph*, u32);
+RegAlloc* ASM_RegAlloc     (ASM*, u32, u32, Context*, u32);
 
 #endif

@@ -23,21 +23,27 @@
 #define SET_H
 
 #include "types.h"
+#include "u32stack.h"
 
 typedef struct
 {
-	u32   n;
-	bool* obj;
+	u32  n;
+	u32  nw;
+	u32* obj;
 } Set;
 
 Set* Set_New      (u32);
 void Set_Delete   (Set*);
 Set* Set_Copy     (Set*);
-Set* Set_Singleton(u32, u32);
-Set* Set_Pair     (u32, u32, u32);
-Set* Set_Union    (Set*, Set*);
-Set* Set_Diff     (Set*, Set*);
-void Set_Append   (Set*, u32);
+bool Set_IsIn     (Set*, u32);
 bool Set_Cmp      (Set*, Set*);
+
+void Set_Add      (Set*, u32);
+void Set_Remove   (Set*, u32);
+Set* Set_Union    (Set*, Set*);
+Set* Set_UnionDiff(u32stack*, Set*, u32stack*);
+Set* Set_UnionNull(Set*, Set*, u32);
+
+void Set_Print    (Set*);
 
 #endif

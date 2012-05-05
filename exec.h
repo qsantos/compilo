@@ -24,8 +24,8 @@
 
 #include "asm.h"
 
-#define N_REGS   27
-#define REG_TMP0 ((u32)0)
+#define REG_TMP0 ((u32)24)
+#define REG_TMP1 ((u32)25)
 #define REG_RA   31
 
 void ASM_Simulate  (ASM*, Context*);

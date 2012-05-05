@@ -24,12 +24,18 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 Set* Set_New(u32 n)
 {
-	Set* s = (Set*) malloc(sizeof(Set));      assert(s);
+	Set* s = (Set*) malloc(sizeof(Set));
+	assert(s);
 	s->n = n;
-	s->obj = (bool*) calloc(n, sizeof(bool)); assert(s->obj);
+	s->nw = n / 32;
+	if (s->nw * 32 < n)
+		s->nw++;
+	s->obj = (u32*) calloc(s->nw, sizeof(u32));
+	assert(s->obj);
 	return s;
 }
 
@@ -44,28 +50,39 @@ Set* Set_Copy(Set* s)
 {
 	assert(s);
 	Set* c = Set_New(s->n);
-	memcpy(c->obj, s->obj, sizeof(bool) * s->n);
+	memcpy(c->obj, s->obj, sizeof(u32) * s->nw);
 	return c;
 }
 
-Set* Set_Singleton(u32 n, u32 a)
+bool Set_IsIn(Set* s, u32 a)
 {
-	Set* s = Set_New(n);
-	s->obj[a] = true;
-	return s;
+	assert(s);
+	return (s->obj[a / 32] & (1 << (a%32))) != 0;
 }
 
-Set* Set_Pair(u32 n, u32 a, u32 b)
+bool Set_Cmp(Set* a, Set* b)
 {
-	Set* s = Set_New(n);
-	s->obj[a] = true;
-	s->obj[b] = true;
-	return s;
+	assert(a);
+	assert(b);
+	
+	if (a->n != b->n)
+		return false;
+	for (u32 i = 0; i < a->nw; i++)
+		if (a->obj[i] != b->obj[i])
+			return true;
+	return false;
 }
 
-void Set_Append(Set* s, u32 a)
+void Set_Add(Set* s, u32 a)
 {
-	s->obj[a] = true;
+	assert(s);
+	s->obj[a / 32] |= 1 << (a % 32);
+}
+
+void Set_Remove(Set* s, u32 a)
+{
+	assert(s);
+	s->obj[a / 32] &= ~(1 << (a % 32));
 }
 
 Set* Set_Union(Set* a, Set* b)
@@ -74,30 +91,42 @@ Set* Set_Union(Set* a, Set* b)
 	assert(b);
 	assert(a->n == b->n);
 	
-	Set* s = Set_New(a->n);
-	for (u32 i = 0; i < a->n; i++)
-		s->obj[i] = a->obj[i] || b->obj[i];
+	Set* s = Set_Copy(a);
+	for (u32 i = 0; i < a->nw; i++)
+		s->obj[i] |= b->obj[i];
 	return s;
 }
 
-Set* Set_Diff(Set* a, Set* b)
+Set* Set_UnionDiff(u32stack* a, Set* b, u32stack* c)
 {
-	assert(a);
 	assert(b);
-	assert(a->n == b->n);
 	
-	Set* s = Set_New(a->n);
-	for (u32 i = 0; i < a->n; i ++)
-		s->obj[i] = a->obj[i] && !b->obj[i];
+	Set* s = Set_Copy(b);
+	while (c)
+	{
+		Set_Remove(s, c->head);
+		c = c->tail;
+	}
+	while (a)
+	{
+		Set_Add(s, a->head);
+		a = a->tail;
+	}
+	
 	return s;
 }
 
-bool Set_Cmp(Set* a, Set* b)
+Set* Set_UnionNull(Set* a, Set* b, u32 n)
 {
-	if (a->n != b->n)
-		return false;
-	for (u32 i = 0; i < a->n; i++)
-		if (a->obj[i] != b->obj[i])
-			return true;
-	return false;
+	if (a)
+		return b ? Set_Union(a, b) : Set_Copy(a);
+	else
+		return b ? Set_Copy(b)     : Set_New(n);
+}
+
+void Set_Print(Set* s)
+{
+	for (u32 i = 0; i < s->n; i++)
+		if (Set_IsIn(s, i))
+			printf("%lu, ", i);
 }

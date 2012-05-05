@@ -19,13 +19,34 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
-#ifndef SALMON_H
-#define SALMON_H
+#ifndef FLOW_H
+#define FLOW_H
 
 #include "asm.h"
 #include "context.h"
 
-void Salmon_BuildFlow(ASM*, u32, u32, Context*);
-void Salmon_Vivacity (ASM*, u32, u32);
+typedef struct
+{
+	u32stack* def;
+	u32stack* use;
+	
+	Set* in;
+	Set* out;
+	
+	s32  mov;
+	s32  jmp;
+} Salmon;
+
+typedef struct
+{
+	Salmon* s;
+	u32     ns;
+	u32     nr;
+} Flow;
+
+Flow* Flow_New     (u32, u32);
+void  Flow_Delete  (Flow*);
+Flow* Flow_Build   (ASM*, u32, u32, Context*);
+void  Flow_Vivacity(Flow*);
 
 #endif

@@ -52,15 +52,6 @@ ASM* ASM_New(Context* c)
 void ASM_Delete(ASM* a)
 {
 	assert(a);
-/*	
-	for (u32 i = 0; i < a->n_code; i++)
-	{
-		Set_Delete(a->code[i].s.use);
-		Set_Delete(a->code[i].s.def);
-		Set_Delete(a->code[i].s.in);
-		Set_Delete(a->code[i].s.out);
-	}
-*/	
 	free(a->code);
 	free(a);
 }
@@ -222,7 +213,7 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		l1 = ASM_NewLabel(a);
 		
 		r0 = ASM_GenExpr(a, c, e->v.tern_op.op1);
-		ASM_Push(a, INSN_JZ, r0, l0, 0);
+		ASM_Push(a, INSN_JZ, l0, r0, 0);
 		r1 = ASM_GenExpr(a, c, e->v.tern_op.op2);
 		ASM_Push(a, INSN_MOV, r3, r1, 0);
 		ASM_Push(a, INSN_JMP, l1, 0, 0);
@@ -275,7 +266,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		
 		ASM_LabelPos(a, l0);
 		r0 = ASM_GenExpr(a, c, s->v.whilez.cond);
-		ASM_Push(a, INSN_JZ, r0, l1, 0);
+		ASM_Push(a, INSN_JZ, l1, r0, 0);
 		ASM_GenStmt(a, c, s->v.whilez.stmt);
 		ASM_Push(a, INSN_JMP, l0, 0, 0);
 		ASM_LabelPos(a, l1);
@@ -287,7 +278,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		ASM_LabelPos(a, l0);
 		ASM_GenStmt(a, c, s->v.doz.stmt);
 		r0 = ASM_GenExpr(a, c, s->v.doz.cond);
-		ASM_Push(a, INSN_JZ, r0, l1, 0);
+		ASM_Push(a, INSN_JZ, l1, r0, 0);
 		ASM_Push(a, INSN_JMP, l0, 0, 0);
 		ASM_LabelPos(a, l1);
 		break;
@@ -298,7 +289,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		ASM_GenStmt(a, c, s->v.forz.a);
 		ASM_LabelPos(a, l0);
 		r0 = ASM_GenExpr(a, c, s->v.forz.b);
-		ASM_Push(a, INSN_JZ, r0, l1, 0);
+		ASM_Push(a, INSN_JZ, l1, r0, 0);
 		ASM_GenStmt(a, c, s->v.forz.stmt);
 		ASM_GenStmt(a, c, s->v.forz.c);
 		ASM_Push(a, INSN_JMP, l0, 0, 0);
@@ -309,7 +300,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		l1 = ASM_NewLabel(a);
 		
 		r0 = ASM_GenExpr(a, c, s->v.ifz.cond);
-		ASM_Push(a, INSN_JZ, r0, l0, 0);
+		ASM_Push(a, INSN_JZ, l0, r0, 0);
 		ASM_GenStmt(a, c, s->v.ifz.iftrue);
 		ASM_Push(a, INSN_JMP, l1, 0, 0);
 		ASM_LabelPos(a, l0);
@@ -346,9 +337,12 @@ void ASM_GenFun(ASM* a, Context* c, FunDecl* f)
 	ParamList* p = f->params;
 	while (p)
 	{
-		u32 r0 = ASM_NewReg(a, c);
-		c->st[p->head->id].reg = r0;
-		u32stack_push(&c->st[f->id].params, r0);
+		if (p->head->type->type != TYPE_VOID)
+		{
+			u32 r0 = ASM_NewReg(a, c);
+			c->st[p->head->id].reg = r0;
+			u32stack_push(&c->st[f->id].params, r0);
+		}
 		p = p->tail;
 	}
 	
