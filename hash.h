@@ -37,9 +37,9 @@ typedef struct
 	u32 n_elements;
 } HashTable;
 
-HashTable* HashTable_New(u32);
-void HashTable_Delete(HashTable*);
-bool HashTable_Exists(HashTable*, cstring);
-u32 HashTable_Find(HashTable*, cstring);
+HashTable* HashTable_New   (u32);
+void       HashTable_Delete(HashTable*);
+bool       HashTable_Exists(HashTable*, cstring);
+u32        HashTable_Find  (HashTable*, cstring);
 
 #endif

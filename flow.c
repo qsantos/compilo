@@ -65,8 +65,8 @@ void Flow_Delete(Flow* f)
 	
 	for (u32 i = 0; i < f->ns; i++)
 	{
-		u32stack_delete(&f->s[i].def);
-		u32stack_delete(&f->s[i].use);
+		u32stack_Delete(&f->s[i].def);
+		u32stack_Delete(&f->s[i].use);
 		Set_Delete(f->s[i].in);
 		Set_Delete(f->s[i].out);
 	}
@@ -89,20 +89,20 @@ Flow* Flow_Build(ASM* a, u32 s, u32 e, Context* c)
 		case INSN_AND:  case INSN_OR:  case INSN_XOR: case INSN_LAND: case INSN_LOR:
 		case INSN_EQ:   case INSN_NEQ: case INSN_LE:  case INSN_LT:   case INSN_GE:  case INSN_GT:
 		case INSN_ADD:  case INSN_SUB: case INSN_MUL: case INSN_DIV:  case INSN_MOD:
-			u32stack_push(&f->s[k].def, ins.v.r.r0);
-			u32stack_push(&f->s[k].use, ins.v.r.r1);
-			u32stack_push(&f->s[k].use, ins.v.r.r2);
+			u32stack_Push(&f->s[k].def, ins.v.r.r0);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
+			u32stack_Push(&f->s[k].use, ins.v.r.r2);
 			break;
 		case INSN_NOT: case INSN_LNOT:
-			u32stack_push(&f->s[k].def, ins.v.r.r0);
-			u32stack_push(&f->s[k].use, ins.v.r.r1);
+			u32stack_Push(&f->s[k].def, ins.v.r.r0);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
 			break;
 		case INSN_SET:
-			u32stack_push(&f->s[k].def, ins.v.r.r0);
+			u32stack_Push(&f->s[k].def, ins.v.r.r0);
 			break;
 		case INSN_MOV:
-			u32stack_push(&f->s[k].def, ins.v.r.r0);
-			u32stack_push(&f->s[k].use, ins.v.r.r1);
+			u32stack_Push(&f->s[k].def, ins.v.r.r0);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
 			f->s[k].mov = ins.v.r.r1;
 			break;
 		case INSN_JMP:  case INSN_JZ:  case INSN_JNZ:
@@ -112,15 +112,15 @@ Flow* Flow_Build(ASM* a, u32 s, u32 e, Context* c)
 			f->s[k].jmp -= s;
 			break;
 		case INSN_CALL:
-			f->s[k].use = u32stack_rcopy(ins.v.p->tail->tail);
-			u32stack_push(&f->s[k].def, ins.v.p->tail->head);
+			f->s[k].use = u32stack_RCopy(ins.v.p->tail->tail);
+			u32stack_Push(&f->s[k].def, ins.v.p->tail->head);
 			break;
 		case INSN_LBL:
 			if (ins.v.r.r1 == 1)
-				f->s[k].def = u32stack_rcopy(c->st[ins.v.r.r2].params);
+				f->s[k].def = u32stack_RCopy(c->st[ins.v.r.r2].params);
 			break;
 		case INSN_RET:
-			u32stack_push(&f->s[k].use, ins.v.r.r1);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
 			break;
 		case INSN_STOP:
 			break;

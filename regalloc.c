@@ -44,7 +44,7 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
 			if (!g->dead[v] && g->d[v] < k && !g->move[v])
 			{
 				IntGraph_Simplify(g, v);
-				u32stack_push(&vertices, v);
+				u32stack_Push(&vertices, v);
 				rem--;
 				done = true;
 			}
@@ -58,19 +58,14 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
 					{
 						u32 count = 0;
 						for (u32 k = 0; k < g->n; k++)
-						{
-							bool n = !g->dead[k];
-							n = n && k != j && EDGE(i, k).interf;
-							n = n && k != i && EDGE(j, k).interf;
-							if (n)
+							if (!g->dead[k] && ((k != j && EDGE(i, k).interf) || (k != i && EDGE(j, k).interf)))
 								count++;
-						}
 						
 						if (count < k)
 						{
 							IntGraph_Coalesce(g, i, j);
-							u32stack_push(&vertices, i);
-							u32stack_push(&vertices, j | MASK_COALESCE); 
+							u32stack_Push(&vertices, i);
+							u32stack_Push(&vertices, j | MASK_COALESCE); 
 							rem--;
 							done = true;
 						}
@@ -103,10 +98,10 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
 	bool* colored        = (bool*) calloc(g->n, sizeof(bool)); assert(colored);
 	while (vertices)
 	{
-		u32 v = u32stack_pop(&vertices);
+		u32 v = u32stack_Pop(&vertices);
 		if (v & MASK_COALESCE)
 		{
-			ra[v ^ MASK_COALESCE].color = ra[u32stack_pop(&vertices)].color;
+			ra[v ^ MASK_COALESCE].color = ra[u32stack_Pop(&vertices)].color;
 		}
 		else
 		{

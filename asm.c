@@ -94,7 +94,7 @@ u32 ASM_NewReg(ASM* a, Context* c)
 	assert(c);
 	
 	if (c->cur_fun)
-		u32stack_push(&c->st[c->cur_fun->id].usedRegs, a->n_regs);
+		u32stack_Push(&c->st[c->cur_fun->id].usedRegs, a->n_regs);
 	return a->n_regs++;
 }
 
@@ -164,12 +164,12 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		while (es)
 		{
 			r0 = ASM_GenExpr(a, c, es->head);
-			u32stack_push(&regs, r0);
+			u32stack_Push(&regs, r0);
 			es = es->tail;
 		}
 		r0 = ASM_NewReg(a, c);
-		u32stack_push(&regs, r0);
-		u32stack_push(&(a->funCalls[e->v.call.id]), a->n_code);
+		u32stack_Push(&regs, r0);
+		u32stack_Push(&(a->funCalls[e->v.call.id]), a->n_code);
 		ASM_PushList(a, INSN_CALL, regs);
 		regs = NULL;
 		break;
@@ -341,7 +341,7 @@ void ASM_GenFun(ASM* a, Context* c, FunDecl* f)
 		{
 			u32 r0 = ASM_NewReg(a, c);
 			c->st[p->head->id].reg = r0;
-			u32stack_push(&c->st[f->id].params, r0);
+			u32stack_Push(&c->st[f->id].params, r0);
 		}
 		p = p->tail;
 	}
@@ -364,14 +364,14 @@ void ASM_GenProgram(ASM* a, Context* c, Program* p)
 		p = p->tail;
 	}
 	
-	u32stack_push(&(a->code[0].v.p), 0);
-	u32stack_push(&(a->code[0].v.p), c->st[c->main].label);
+	u32stack_Push(&(a->code[0].v.p), 0);
+	u32stack_Push(&(a->code[0].v.p), c->st[c->main].label);
 	for (u32 i = 0; i < c->n_symbs; i++)
 	{
 		u32stack* calls = a->funCalls[i];
 		while (calls)
 		{
-			u32stack_push(&(a->code[calls->head].v.p), c->st[i].label);
+			u32stack_Push(&(a->code[calls->head].v.p), c->st[i].label);
 			calls = calls->tail;
 		}
 	}

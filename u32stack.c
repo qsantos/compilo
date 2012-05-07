@@ -25,24 +25,24 @@
 #include <assert.h> 
 #include <stdio.h>
 
-u32stack* u32stack_rcopy(u32stack* s)
+u32stack* u32stack_RCopy(u32stack* s)
 {
 	u32stack* r = NULL;
 	while (s)
 	{
-		u32stack_push(&r, s->head);
+		u32stack_Push(&r, s->head);
 		s = s->tail;
 	}
 	return r;
 }
 
-void u32stack_delete(u32stack** s)
+void u32stack_Delete(u32stack** s)
 {
 	while (*s)
-		u32stack_pop(s);
+		u32stack_Pop(s);
 }
 
-void u32stack_push(u32stack** s, u32 e)
+void u32stack_Push(u32stack** s, u32 e)
 {
 	u32stack* t = (u32stack*) malloc(sizeof(u32stack));
 	assert(t);
@@ -51,7 +51,7 @@ void u32stack_push(u32stack** s, u32 e)
 	*s = t;
 }
 
-u32 u32stack_pop(u32stack** s)
+u32 u32stack_Pop(u32stack** s)
 {
 	u32 tos     = (*s)->head;
 	u32stack* t = (*s)->tail;

@@ -32,7 +32,7 @@ void ASM_Simulate_PopRegs(u32* regs, u32stack** stack, u32stack* params)
 	if (params)
 	{
 		ASM_Simulate_PopRegs(regs, stack, params->tail);
-		regs[params->head] = u32stack_pop(stack);
+		regs[params->head] = u32stack_Pop(stack);
 	}
 }
 
@@ -107,7 +107,7 @@ void ASM_Simulate(ASM* a, Context* c)
 			}
 			break;
 		case INSN_CALL:
-			u32stack_push(&stack, ip);
+			u32stack_Push(&stack, ip);
 			
 			args = i.v.p;
 			printf("Call .%lu\n", args->head);
@@ -120,7 +120,7 @@ void ASM_Simulate(ASM* a, Context* c)
 			params = s.usedRegs;
 			while (params)
 			{
-				u32stack_push(&stack, regs[params->head]);
+				u32stack_Push(&stack, regs[params->head]);
 				params = params->tail;
 			}
 			
@@ -136,14 +136,14 @@ void ASM_Simulate(ASM* a, Context* c)
 			break;
 		case INSN_RET:
 			ASM_Simulate_PopRegs(regs, &stack, c->st[i.v.r.r0].usedRegs);
-			ip = u32stack_pop(&stack);
+			ip = u32stack_Pop(&stack);
 			break;
 		case INSN_LBL:
 			break;
 		}
 	}
 
-	u32stack_delete(&stack);
+	u32stack_Delete(&stack);
 	free(regs);
 }
 

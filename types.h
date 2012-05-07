@@ -22,6 +22,10 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+static const char false = 0;
+static const char true  = 1;
+typedef char bool;
+
 typedef unsigned char  u8;
 typedef unsigned short u16;
 typedef unsigned long  u32;
@@ -32,9 +36,5 @@ typedef signed long    s32;
 
 typedef char*          string;
 typedef const char*    cstring;
-
-static const char false = 0;
-static const char true  = 1;
-typedef char bool;
 
 #endif

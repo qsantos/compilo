@@ -28,7 +28,7 @@
 #define REG_TMP1 ((u32)25)
 #define REG_RA   31
 
-void ASM_Simulate  (ASM*, Context*);
-void ASM_toMIPS    (ASM*, Context*);
+void ASM_Simulate(ASM*, Context*);
+void ASM_toMIPS  (ASM*, Context*);
 
 #endif

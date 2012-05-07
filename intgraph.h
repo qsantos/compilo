@@ -29,6 +29,6 @@ bool      IntGraph_DelMove  (IntGraph*, u32, u32);
 void      IntGraph_Simplify (IntGraph*, u32);
 void      IntGraph_Coalesce (IntGraph*, u32, u32);
 
-IntGraph* IntGraph_FromFlow(Flow*);
+IntGraph* IntGraph_FromFlow (Flow*);
 
 #endif

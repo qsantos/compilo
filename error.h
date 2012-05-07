@@ -24,7 +24,7 @@
 
 #include "types.h"
 
-void Char_Move(s32);
+void Char_Move   (s32);
 void Char_Newline(void);
 
 extern s32 row;

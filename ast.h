@@ -71,36 +71,36 @@ struct Expr
 	position pos;
 };
 /* Constructors */
-Expr* Expr_Integer(s32, position*);
-Expr* Expr_Fun_Call(string, ExprList*, position*);
-Expr* Expr_Aff (string, Expr*, position*);
-Expr* Expr_Var (string, position*);
-Expr* Expr_Not (Expr*, position*);
-Expr* Expr_Lnot(Expr*, position*);
-Expr* Expr_And (Expr*, Expr*, position*);
-Expr* Expr_Or  (Expr*, Expr*, position*);
-Expr* Expr_Xor (Expr*, Expr*, position*);
-Expr* Expr_Land(Expr*, Expr*, position*);
-Expr* Expr_Lor (Expr*, Expr*, position*);
-Expr* Expr_Eq  (Expr*, Expr*, position*);
-Expr* Expr_Neq (Expr*, Expr*, position*);
-Expr* Expr_Le  (Expr*, Expr*, position*);
-Expr* Expr_Lt  (Expr*, Expr*, position*);
-Expr* Expr_Ge  (Expr*, Expr*, position*);
-Expr* Expr_Gt  (Expr*, Expr*, position*);
-Expr* Expr_Add (Expr*, Expr*, position*);
-Expr* Expr_Sub (Expr*, Expr*, position*);
-Expr* Expr_Mul (Expr*, Expr*, position*);
-Expr* Expr_Div (Expr*, Expr*, position*);
-Expr* Expr_Mod (Expr*, Expr*, position*);
-Expr* Expr_Minus(Expr*, position*);
-Expr* Expr_Deref(Expr*, position*);
-Expr* Expr_Addr(Expr*, position*);
-Expr* Expr_Ifte(Expr*, Expr*, Expr*, position*);
-ExprList* ExprList_New(Expr*, ExprList*);
+Expr*     Expr_Integer   (s32,    position*);
+Expr*     Expr_Fun_Call  (string, ExprList*, position*);
+Expr*     Expr_Aff       (string, Expr*,     position*);
+Expr*     Expr_Var       (string, position*);
+Expr*     Expr_Not       (Expr*,  position*);
+Expr*     Expr_Lnot      (Expr*,  position*);
+Expr*     Expr_And       (Expr*,  Expr*,     position*);
+Expr*     Expr_Or        (Expr*,  Expr*,     position*);
+Expr*     Expr_Xor       (Expr*,  Expr*,     position*);
+Expr*     Expr_Land      (Expr*,  Expr*,     position*);
+Expr*     Expr_Lor       (Expr*,  Expr*,     position*);
+Expr*     Expr_Eq        (Expr*,  Expr*,     position*);
+Expr*     Expr_Neq       (Expr*,  Expr*,     position*);
+Expr*     Expr_Le        (Expr*,  Expr*,     position*);
+Expr*     Expr_Lt        (Expr*,  Expr*,     position*);
+Expr*     Expr_Ge        (Expr*,  Expr*,     position*);
+Expr*     Expr_Gt        (Expr*,  Expr*,     position*);
+Expr*     Expr_Add       (Expr*,  Expr*,     position*);
+Expr*     Expr_Sub       (Expr*,  Expr*,     position*);
+Expr*     Expr_Mul       (Expr*,  Expr*,     position*);
+Expr*     Expr_Div       (Expr*,  Expr*,     position*);
+Expr*     Expr_Mod       (Expr*,  Expr*,     position*);
+Expr*     Expr_Minus     (Expr*,  position*);
+Expr*     Expr_Deref     (Expr*,  position*);
+Expr*     Expr_Addr      (Expr*,  position*);
+Expr*     Expr_Ifte      (Expr*,  Expr*,     Expr*, position*);
+ExprList* ExprList_New   (Expr*,  ExprList*);
 /* Destructors */
-void Expr_Delete(Expr*);
-void ExprList_Delete(ExprList*);
+void      Expr_Delete    (Expr*);
+void      ExprList_Delete(ExprList*);
 
 
 
@@ -123,15 +123,15 @@ extern Type TVoid;
 extern Type TChar;
 extern Type TInt;
 /* Contructors */
-Type* Type_Void(void);
-Type* Type_Char(void);
-Type* Type_Int(void);
-Type* Type_Ptr(Type*);
+Type* Type_Void  (void);
+Type* Type_Char  (void);
+Type* Type_Int   (void);
+Type* Type_Ptr   (Type*);
 /* Destructors */
-void Type_Delete(Type*);
+void  Type_Delete(Type*);
 /* Utils */
-bool Type_Comp(Type*, Type*);
-void Print_Type(FILE*, Type*);
+bool  Type_Comp  (Type*, Type*);
+void  Print_Type (FILE*, Type*);
 
 
 
@@ -169,19 +169,19 @@ struct Stmt
 	position pos;
 };
 /* Constructors */
-Stmt* Stmt_Nothing(void);
-Stmt* Stmt_Decl(Type*, string, Expr*, position* pos);
-Stmt* Stmt_Expr(Expr*);
-Stmt* Stmt_While(Expr*, Stmt*);
-Stmt* Stmt_Do(Stmt*, Expr*);
-Stmt* Stmt_For(Stmt*, Expr*, Stmt*, Stmt*);
-Stmt* Stmt_If(Expr*, Stmt*, Stmt*);
-Stmt* Stmt_Return(Expr*);
-Stmt* Stmt_Block(StmtList*);
-StmtList* StmtList_New(Stmt*, StmtList*);
+Stmt* Stmt_Nothing    (void);
+Stmt* Stmt_Decl       (Type*,     string, Expr*, position* pos);
+Stmt* Stmt_Expr       (Expr*);
+Stmt* Stmt_While      (Expr*,     Stmt*);
+Stmt* Stmt_Do         (Stmt*,     Expr*);
+Stmt* Stmt_For        (Stmt*,     Expr*,  Stmt*, Stmt*);
+Stmt* Stmt_If         (Expr*,     Stmt*,  Stmt*);
+Stmt* Stmt_Return     (Expr*);
+Stmt* Stmt_Block      (StmtList*);
+StmtList* StmtList_New(Stmt*,     StmtList*);
 /* Destructors */
-void Stmt_Delete(Stmt*);
-void StmtList_Delete(StmtList*);
+void  Stmt_Delete     (Stmt*);
+void  StmtList_Delete (StmtList*);
 
 
 
@@ -213,15 +213,15 @@ typedef struct Program
 	struct Program* tail;
 } Program;
 /* Constructors */
-Param* Param_New(Type*, string, position*);
-ParamList* ParamList_New(Param*, ParamList*);
+Param*     Param_New     (Type*,      string,     position*);
+ParamList* ParamList_New (Param*,     ParamList*);
 ParamList* ParamList_Void(void);
-FunDecl* FunDecl_New(Type*, string, ParamList*, Stmt*, position*);
-Program* Program_New(FunDecl*, Program*);
+FunDecl*   FunDecl_New   (Type*,      string,     ParamList*, Stmt*, position*);
+Program*   Program_New   (FunDecl*,   Program*);
 /* Destructors */
-void Param_Delete(Param*);
-void ParamList_Delete(ParamList*);
-void FunDecl_Delete(FunDecl*);
-void Program_Delete(Program*);
+void     Param_Delete    (Param*);
+void     ParamList_Delete(ParamList*);
+void     FunDecl_Delete  (FunDecl*);
+void     Program_Delete  (Program*);
 
 #endif

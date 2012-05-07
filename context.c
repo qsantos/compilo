@@ -46,11 +46,11 @@ Context* Context_New(u32 size)
 
 void Context_Delete(Context* c)
 {
-	u32stack_delete(&c->forget);
-	u32stack_delete(&c->defined);
+	u32stack_Delete(&c->forget);
+	u32stack_Delete(&c->defined);
 	
 	for (u32 i = 0; i < c->ht->size; i++)
-		u32stack_delete(&c->l2g[i]);
+		u32stack_Delete(&c->l2g[i]);
 	free(c->l2g);
 	
 //	HashTable_Delete(c->ht); TODO
@@ -60,17 +60,17 @@ void Context_Delete(Context* c)
 
 void Context_BeginScope(Context* c)
 {
-	u32stack_push(&c->forget, 0);
+	u32stack_Push(&c->forget, 0);
 	c->depth++;
 }
 
 void Context_EndScope(Context* c)
 {
-	u32 k = u32stack_pop(&c->forget);
+	u32 k = u32stack_Pop(&c->forget);
 	while (k)
 	{
-		u32 localId  = u32stack_pop(&c->defined);
-		u32 globalId = u32stack_pop(&c->l2g[localId]);
+		u32 localId  = u32stack_Pop(&c->defined);
+		u32 globalId = u32stack_Pop(&c->l2g[localId]);
 		c->st[globalId].isDefined  = false;
 		k--;
 	}
@@ -82,8 +82,8 @@ symbol* Context_Declare(Context* c, cstring name)
 	static u32 globalId = 0; // TODO
 	
 	u32 localId = HashTable_Find(c->ht, name);
-	u32stack_push(&c->l2g[localId], c->n_symbs);
-	u32stack_push(&c->defined,      localId);
+	u32stack_Push(&c->l2g[localId], c->n_symbs);
+	u32stack_Push(&c->defined,      localId);
 	c->forget->head++;
 	
 	symbol* symb = &c->st[c->n_symbs];
