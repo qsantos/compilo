@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 static unsigned int HashFun(const char* str, unsigned int len);
 
@@ -38,6 +39,8 @@ HashTable* HashTable_New(u32 size)
 
 void HashTable_Delete(HashTable* ht)
 {
+	assert(ht);
+	
 	for (u32 i = 0; i < ht->size; i++)
 		free(ht->t[i].k);
 	free(ht->t);
@@ -46,6 +49,8 @@ void HashTable_Delete(HashTable* ht)
 
 bool HashTable_Exists(HashTable* ht, cstring key)
 {
+	assert(ht);
+	
 	u32 cur = HashFun(key, strlen(key)) % ht->size;
 	while (ht->t[cur].k && strcmp(ht->t[cur].k, key))
 		if (++cur >= ht->size)
@@ -55,6 +60,8 @@ bool HashTable_Exists(HashTable* ht, cstring key)
 
 u32 HashTable_Find(HashTable* ht, cstring key)
 {
+	assert(ht);
+	
 	u32 l = strlen(key);
 	u32 cur = HashFun(key, l) % ht->size;
 	while (ht->t[cur].k && strcmp(ht->t[cur].k, key))

@@ -109,8 +109,3 @@ void free(void* ap)
 	
 	freep = p;
 }
-
-
-	        
-	    
-			 
