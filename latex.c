@@ -112,17 +112,24 @@ static void printExpr(Expr* e)
 		printName(e->v.var.name);
 		endNode();
 		break;
-		PRINT_BINOP(EQ,  Eq );
-		PRINT_BINOP(NEQ, Neq);
-		PRINT_BINOP(LE,  Le );
-		PRINT_BINOP(LT,  Lt );
-		PRINT_BINOP(GE,  Ge );
-		PRINT_BINOP(GT,  Gt );
-		PRINT_BINOP(ADD, Add);
-		PRINT_BINOP(SUB, Sub);
-		PRINT_BINOP(MUL, Mul);
-		PRINT_BINOP(DIV, Div);
-		PRINT_BINOP(MOD, Mod);
+		PRINT_BINOP(EQ,   Eq  );
+		PRINT_BINOP(NEQ,  Neq );
+		PRINT_BINOP(LE,   Le  );
+		PRINT_BINOP(LT,   Lt  );
+		PRINT_BINOP(GE,   Ge  );
+		PRINT_BINOP(GT,   Gt  );
+		PRINT_BINOP(ADD,  Add );
+		PRINT_BINOP(SUB,  Sub );
+		PRINT_BINOP(MUL,  Mul );
+		PRINT_BINOP(DIV,  Div );
+		PRINT_BINOP(MOD,  Mod );
+		PRINT_BINOP(NOT,  Not );
+		PRINT_BINOP(AND,  And );
+		PRINT_BINOP(OR,   Or  );
+		PRINT_BINOP(XOR,  Xor );
+		PRINT_BINOP(LNOT, LNot);
+		PRINT_BINOP(LAND, LAnd);
+		PRINT_BINOP(LOR,  LOr );
 	case EXPR_MINUS:
 		beginNode("Minus");
 		printExpr(e->v.uni_op);
@@ -144,8 +151,6 @@ static void printExpr(Expr* e)
 		printExpr(e->v.tern_op.op2);
 		printExpr(e->v.tern_op.op3);
 		endNode();
-	default:
-		break;
 	}
 }
 
@@ -166,8 +171,6 @@ static void printType(Type* t)
 	case TYPE_PTR:
 		printType(t->v.ptr);
 		printName("*");
-		break;
-	default:
 		break;
 	}
 }
@@ -235,9 +238,6 @@ static void printStmt(Stmt* s)
 		beginNode("Block");
 		printStmtList(s->v.block);
 		endNode();
-		break;
-
-	default:
 		break;
 	}
 }

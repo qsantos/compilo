@@ -66,6 +66,7 @@ void Check_Expr(Expr* e, Context* c)
 			Check_TypeExpr(symb->v.t, e->v.aff.expr, c);
 		break;
 	case EXPR_VAR:
+	case EXPR_ADDR:
 		name        = e->v.var.name;
 		symb        = Context_Get(c, name);
 		if (!symb)
@@ -93,7 +94,6 @@ void Check_Expr(Expr* e, Context* c)
 		Check_Expr(e->v.tern_op.op3, c);
 		break;
 	case EXPR_DEREF:
-	case EXPR_ADDR:
 		Type_Expr(e->v.uni_op, c);
 		Check_Expr(e, c);
 		break;
@@ -305,6 +305,7 @@ Type* Type_Expr(Expr* e, Context* c)
 		Check_Types(t, Type_Expr(e->v.aff.expr, c), &e->pos, c);
 		return t;
 	case EXPR_VAR:
+	case EXPR_ADDR:
 		symb = Context_Get(c, e->v.var.name);
 		return symb->v.t;
 	case EXPR_NOT:
@@ -332,8 +333,6 @@ Type* Type_Expr(Expr* e, Context* c)
 		}
 		else
 			return &TInt;
-	case EXPR_ADDR:
-		return Type_Ptr(Type_Expr(e->v.uni_op, c));
 	}
 	
 	assert(false);

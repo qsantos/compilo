@@ -73,17 +73,24 @@ void Print_Expr(Expr* e)
 	case EXPR_VAR:
 		printf("Var(%s)", e->v.var.name);
 		break;
-	case EXPR_EQ:  EXPR_BINOP(Eq );
-	case EXPR_NEQ: EXPR_BINOP(Neq);
-	case EXPR_LE:  EXPR_BINOP(Le );
-	case EXPR_LT:  EXPR_BINOP(Lt );
-	case EXPR_GE:  EXPR_BINOP(Ge );
-	case EXPR_GT:  EXPR_BINOP(Gt );
-	case EXPR_ADD: EXPR_BINOP(Add);
-	case EXPR_SUB: EXPR_BINOP(Sub);
-	case EXPR_MUL: EXPR_BINOP(Mul);
-	case EXPR_DIV: EXPR_BINOP(Div);
-	case EXPR_MOD: EXPR_BINOP(Mod);
+	case EXPR_EQ:   EXPR_BINOP(Eq );
+	case EXPR_NEQ:  EXPR_BINOP(Neq);
+	case EXPR_LE:   EXPR_BINOP(Le );
+	case EXPR_LT:   EXPR_BINOP(Lt );
+	case EXPR_GE:   EXPR_BINOP(Ge );
+	case EXPR_GT:   EXPR_BINOP(Gt );
+	case EXPR_ADD:  EXPR_BINOP(Add);
+	case EXPR_SUB:  EXPR_BINOP(Sub);
+	case EXPR_MUL:  EXPR_BINOP(Mul);
+	case EXPR_DIV:  EXPR_BINOP(Div);
+	case EXPR_MOD:  EXPR_BINOP(Mod);
+	case EXPR_NOT:  EXPR_BINOP(Not);
+	case EXPR_AND:  EXPR_BINOP(And);
+	case EXPR_OR:   EXPR_BINOP(Or);
+	case EXPR_XOR:  EXPR_BINOP(Xor);
+	case EXPR_LNOT: EXPR_BINOP(LNot);
+	case EXPR_LAND: EXPR_BINOP(LAnd);
+	case EXPR_LOR:  EXPR_BINOP(LOr);
 	case EXPR_MINUS:
 		printf("Minus(");
 		Print_Expr(e->v.uni_op);
@@ -95,9 +102,7 @@ void Print_Expr(Expr* e)
 		printf(")");
 		break;
 	case EXPR_ADDR:
-		printf("Addr(");
-		Print_Expr(e->v.uni_op);
-		printf(")");
+		printf("Addr(%s)", e->v.var.name);
 		break;
 	case EXPR_IFTE:
 		printf("Ifte(");
@@ -107,8 +112,6 @@ void Print_Expr(Expr* e)
 		printf(", ");
 		Print_Expr(e->v.tern_op.op3);
 		printf(")");
-		break;
-	default:
 		break;
 	}
 }
@@ -201,8 +204,6 @@ void Print_Stmt(Stmt* s)
 		printf("Block(");
 		Print_StmtList(s->v.block);
 		printf(")");
-	default:
-		break;
 	}
 }
 

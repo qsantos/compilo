@@ -102,8 +102,6 @@ static Expr* Expr_binop(int type, Expr* l, Expr* r, position* pos)
 #define BINOP(CODE, NAME) Expr* Expr_##NAME (Expr* l, Expr* r, position* pos) { return Expr_binop(EXPR_##CODE,  l, r, pos); }
 
 UNIOP(MINUS, Minus)
-UNIOP(DEREF, Deref)
-UNIOP(ADDR,  Addr )
 UNIOP(NOT,   Not  )
 UNIOP(LNOT,  Lnot )
 
@@ -123,6 +121,17 @@ BINOP(SUB,   Sub )
 BINOP(MUL,   Mul )
 BINOP(DIV,   Div )
 BINOP(MOD,   Mod )
+
+UNIOP(DEREF, Deref)
+Expr* Expr_Addr (string name, position* pos)
+{
+	Expr* expr = (Expr*) malloc(sizeof(Expr));
+	assert(expr);
+	expr->type = EXPR_ADDR;
+	expr->v.var.name = name;
+	Pos_Copy(&expr->pos, pos);
+	return expr;
+}
 
 Expr* Expr_Ifte(Expr* c, Expr* a, Expr* b, position* pos)
 {
@@ -152,6 +161,12 @@ void Expr_Delete(Expr* e)
 	{
 		switch (e->type)
 		{
+		case EXPR_INTEGER:
+			break;
+		case EXPR_AFF:
+			free(e->v.aff.name);
+			Expr_Delete(e->v.aff.expr);
+			break;
 		case EXPR_FUN_CALL:
 			free(e->v.call.name);
 			ExprList_Delete(e->v.call.params);
@@ -163,15 +178,34 @@ void Expr_Delete(Expr* e)
 		case EXPR_SUB:
 		case EXPR_MUL:
 		case EXPR_DIV:
+		case EXPR_MOD:
+		case EXPR_EQ:
+		case EXPR_NEQ:
+		case EXPR_LE:
+		case EXPR_LT:
+		case EXPR_GE:
+		case EXPR_GT:
+		case EXPR_NOT:
+		case EXPR_AND:
+		case EXPR_OR:
+		case EXPR_XOR:
+		case EXPR_LNOT:
+		case EXPR_LAND:
+		case EXPR_LOR:
 			Expr_Delete(e->v.bin_op.left);
 			Expr_Delete(e->v.bin_op.right);
 			break;
+		case EXPR_IFTE:
+			Expr_Delete(e->v.tern_op.op1);
+			Expr_Delete(e->v.tern_op.op2);
+			Expr_Delete(e->v.tern_op.op3);
+			break;
 		case EXPR_MINUS:
 		case EXPR_DEREF:
-		case EXPR_ADDR:
 			Expr_Delete(e->v.uni_op);
 			break;
-		default:
+		case EXPR_ADDR:
+			free(e->v.var.name);
 			break;
 		}
 		free(e);
@@ -233,9 +267,8 @@ bool Type_Comp(Type* t1, Type* t2)
 		return t2->type == t1->type;
 	case TYPE_PTR:
 		return t2->type == TYPE_PTR && Type_Comp(t1->v.ptr, t2->v.ptr);
-	default:
-		return false;
 	}
+	return false;
 }
 
 void Print_Type(FILE* f, Type* t)
@@ -254,8 +287,6 @@ void Print_Type(FILE* f, Type* t)
 	case TYPE_PTR:
 		Print_Type(f, t->v.ptr);
 		fprintf(f, "*");
-		break;
-	default:
 		break;
 	}
 }
@@ -365,6 +396,8 @@ void Stmt_Delete(Stmt* s)
 	{
 		switch (s->type)
 		{
+		case STMT_NOTHING:
+			break;
 		case STMT_DECL:
 			Type_Delete(s->v.decl.t);
 			free(s->v.decl.name);
@@ -378,6 +411,16 @@ void Stmt_Delete(Stmt* s)
 			Expr_Delete(s->v.whilez.cond);
 			Stmt_Delete(s->v.whilez.stmt);
 			break;
+		case STMT_DO:
+			Stmt_Delete(s->v.doz.stmt);
+			Expr_Delete(s->v.doz.cond);
+			break;
+		case STMT_FOR:
+			Stmt_Delete(s->v.forz.a);
+			Expr_Delete(s->v.forz.b);
+			Stmt_Delete(s->v.forz.c);
+			Stmt_Delete(s->v.forz.stmt);
+			break;
 		case STMT_IF:
 			Expr_Delete(s->v.ifz.cond);
 			Stmt_Delete(s->v.ifz.iftrue);
@@ -385,8 +428,6 @@ void Stmt_Delete(Stmt* s)
 			break;
 		case STMT_BLOCK:
 			StmtList_Delete(s->v.block);
-			break;
-		default:
 			break;
 		}
 		if (s->type != STMT_NOTHING)

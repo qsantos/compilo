@@ -95,7 +95,7 @@ Expr*     Expr_Div       (Expr*,  Expr*,     position*);
 Expr*     Expr_Mod       (Expr*,  Expr*,     position*);
 Expr*     Expr_Minus     (Expr*,  position*);
 Expr*     Expr_Deref     (Expr*,  position*);
-Expr*     Expr_Addr      (Expr*,  position*);
+Expr*     Expr_Addr      (string, position*);
 Expr*     Expr_Ifte      (Expr*,  Expr*,     Expr*, position*);
 ExprList* ExprList_New   (Expr*,  ExprList*);
 /* Destructors */
