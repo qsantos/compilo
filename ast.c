@@ -27,10 +27,15 @@
 
 static inline void Pos_Copy(position* p1, position* p2)
 {
-	p1->first_line   = p2->first_line;
-	p1->first_column = p2->first_column;
-	p1->last_line    = p2->last_line;
-	p1->last_column  = p2->last_column;
+	assert(p1);
+//	assert(p2);
+	if (p2)
+	{
+		p1->first_line   = p2->first_line;
+		p1->first_column = p2->first_column;
+		p1->last_line    = p2->last_line;
+		p1->last_column  = p2->last_column;
+	}
 }
 
 /* EXPRESSIONS */

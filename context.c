@@ -41,6 +41,7 @@ Context* Context_New(u32 size)
 	c->err = false;
 	c->defined = NULL;
 	c->forget  = NULL;
+	
 	return c;
 }
 

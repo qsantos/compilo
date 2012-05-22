@@ -356,6 +356,9 @@ void ASM_GenFun(ASM* a, Context* c, FunDecl* f)
 
 void ASM_GenProgram(ASM* a, Context* c, Program* p)
 {
+	symbol* symb = Context_Get(c, "malloc");
+	symb->label = ASM_NewLabel(a);
+	
 	ASM_PushList(a, INSN_CALL, NULL);
 	ASM_Push(a, INSN_STOP, 0, 0, 0);
 	while (p)

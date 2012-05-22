@@ -241,6 +241,15 @@ void ASM_toMIPS(ASM* a, Context* c)
 	symbol    symb;
 	u32       depth = 0;
 
+	char buffer[1024];
+	FILE* f = fopen("malloc/malloc.s", "r");
+	while (!feof(f))
+	{
+		u32 n = fread(buffer, 1, 1024, f);
+		fwrite(buffer, 1, n, stdout);
+	}
+	fclose(f);
+	
 	printf("main:\n");
 	
 	u32 s = 0;
