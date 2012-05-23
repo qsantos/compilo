@@ -18,42 +18,59 @@ void    free(void*);
 
 void* malloc(unsigned int nbytes)
 {
+	asm("# nunits = ...");
 	unsigned int nunits = (nbytes + sizeof(header) - 1) / sizeof(header) + 1;
 	
+	asm("# prevp = freep");
 	header* prevp = freep;
+	asm("# if (!prevp)");
 	if (!prevp)
 	{
+		asm("# if inside");
 		base.ptr  = &base;
 		freep     = &base;
 		prevp     = &base;
 		base.size = 0;
 	}
 	
+	asm("# p = prevp->ptr");
 	header* p = prevp->ptr;
+	asm("# while (42)");
 	while (42)
 	{
+		asm("# if (p->size >= nunits)");
 		if (p->size >= nunits)
 		{
+			asm("# if (p->size == nunits)");
 			if (p->size == nunits)
+			{
+				asm("# prevp->ptr = p->ptr");
 				prevp->ptr = p->ptr;
+			}
 			else
 			{
+				asm("# p->size -= nunits, ...");
 				p->size -= nunits;
 				p       += p->size;
 				p->size  = nunits;
 			}
 			
+			asm("# freep = prevp & return p+1");
 			freep = prevp;
 			return (void*) (p + 1);
 		}
 		
+		asm("# if (p == freep)");
 		if (p == freep)
 		{
+			asm("# morecore call");
 			p = morecore(nunits);
+			asm("# if (!p) return 0");
 			if (!p)
 				return NULL;
 		}
 		
+		asm("# prevp = p, p = p->ptr");
 		prevp = p;
 		p = p->ptr;
 	}
@@ -61,10 +78,15 @@ void* malloc(unsigned int nbytes)
 
 header* morecore(unsigned int nu)
 {
+	asm("# if (nu < NALLOC)");
 	if (nu < NALLOC)
+	{
+		asm("# nu = NALLOC");
 		nu = NALLOC;
+	}
 	
 	register header* up;
+	asm("# n = nu * 8");
 	register int n = nu * sizeof(header);
 	asm("\tmove    $4, %1\n"
 	    "\tsyscall 9\n"
@@ -74,11 +96,15 @@ header* morecore(unsigned int nu)
 	    : "$2", "$4"
 	);
 	
+	asm("# if (!up) return 0");
 	if (!up)
 		return NULL;
 	
+	asm("# up->size = nu");
 	up->size = nu;
+	asm("# free(up+1)");
 	free((void*) (up + 1));
+	asm("# return freep");
 	return freep;
 }
 
