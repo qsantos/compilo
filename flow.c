@@ -122,6 +122,14 @@ Flow* Flow_Build(ASM* a, u32 s, u32 e, Context* c)
 		case INSN_RET:
 			u32stack_Push(&f->s[k].use, ins.v.r.r1);
 			break;
+		case INSN_MWR:
+			u32stack_Push(&f->s[k].use, ins.v.r.r0);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
+			break;
+		case INSN_MRD:
+			u32stack_Push(&f->s[k].def, ins.v.r.r0);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
+			break;
 		case INSN_STOP:
 			break;
 		}
