@@ -1,0 +1,16 @@
+int main(void)
+{
+	int* t = malloc(5 * 4);
+	int acc = 1;
+	int i;
+		
+	for (i = 0; i < 5; i++)
+		t[i] = i;
+
+	for (i = 0; i < 5; i++)
+		acc *= t[i];
+	
+	free(t);
+	
+	return acc;
+}
