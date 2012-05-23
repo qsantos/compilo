@@ -297,6 +297,8 @@ void ASM_toMIPS(ASM* a, Context* c)
 				break;
 			case INSN_SET:  printf("\tli   $%.2lu,  %lu\n",   WREG(r0), i.v.r.r1);  SREG(r0); break;
 			case INSN_MOV:  printf("\tmove $%.2lu, $%.2lu\n", WREG(r0), RREG1(r1)); SREG(r0); break;
+			case INSN_MRD:  printf("\tlw   $%.2lu, $%.2lu\n", RREG1(r0), RREG2(r1)); break;
+			case INSN_MWR:  printf("\trs   $%.2lu, $%.2lu\n", RREG1(r0), RREG2(r1)); break;
 			case INSN_NOT:  printf("\tnot  $%.2lu, $%.2lu\n", WREG(r0), RREG1(r1)); SREG(r0); break;
 			case INSN_AND:  MIPS_BINOP("and"); break;
 			case INSN_OR:   MIPS_BINOP("or "); break;

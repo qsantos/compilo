@@ -34,23 +34,24 @@ typedef struct
 	int last_column;
 } position;
 
+typedef struct Expr Expr;
+
 /* LValues */
 typedef struct LValue
 {
 	bool var;
 	union
 	{
-		string  s;
-		struct LValue* l;
+		string s;
+		Expr*  e;
 	} v;
 	position pos;
 } LValue;
-LValue* LValue_Var   (string,  position*);
-LValue* LValue_Ref   (LValue*, position*);
+LValue* LValue_Var   (string, position*);
+LValue* LValue_Ref   (Expr*,  position*);
 void    LValue_Delete(LValue*);
 
 /* Expressions */
-typedef struct Expr Expr;
 typedef struct ExprList
 {
 	Expr*            head;

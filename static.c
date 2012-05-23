@@ -290,7 +290,7 @@ Type* Type_LValue(LValue* lv, Context* c)
 	}
 	else
 	{
-		Type* t = Type_LValue(lv->v.l, c);
+		Type* t = Type_Expr(lv->v.e, c);
 		if (t->type == TYPE_PTR)
 			return t->v.ptr;
 		else

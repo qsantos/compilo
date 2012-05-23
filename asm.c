@@ -152,6 +152,7 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 	u32 r3;
 	u32 l0;
 	u32 l1;
+	symbol* symb; // ignoble
 	
 	switch (e->type)
 	{
@@ -174,14 +175,22 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		regs = NULL;
 		break;
 	case EXPR_AFF:
-		r0 = c->st[e->v.aff.id].reg;
-		r1 = ASM_GenExpr(a, c, e->v.aff.expr);
-		ASM_Push(a, INSN_MOV, r0, r1, 0);
+		r0 = ASM_GenExpr(a, c, e->v.aff.expr);
+		if (e->v.aff.lv->var)
+		{
+			symb = Context_Get(c, e->v.aff.lv->v.s);
+			r1 = symb->reg;
+			ASM_Push(a, INSN_MOV, r1, r0, 0);
+		}
+		else
+		{
+			r1 = ASM_GenExpr(a, c, e->v.aff.lv->v.e);
+			ASM_Push(a, INSN_MWR, r1, r0, 0);
+		}
 		break;
 	case EXPR_VAR:
 		r0 = c->st[e->v.aff.id].reg;
 		break;
-	
 	case EXPR_NOT:  ASM_UNIOP(INSN_NOT);
 	case EXPR_AND:  ASM_BINOP(INSN_AND);
 	case EXPR_OR:   ASM_BINOP(INSN_OR);
@@ -239,7 +248,6 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	assert(s);
 	
 	u32 r0;
-	u32 r1;
 	u32 l0;
 	u32 l1;
 	StmtList* l;
@@ -251,11 +259,6 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_DECL:
 		r0 = ASM_NewReg(a, c);
 		c->st[s->v.decl.id].reg = r0;
-		if (s->v.decl.val)
-		{
-			r1 = ASM_GenExpr(a, c, s->v.decl.val);
-			ASM_Push(a, INSN_MOV, r0, r1, 0);
-		}
 		break;
 	case STMT_EXPR:
 		ASM_GenExpr(a, c, s->v.expr);

@@ -72,7 +72,7 @@ static void printLValue(LValue* l)
 	else
 	{
 		printf("*");
-		printLValue(l->v.l);
+		printExpr(l->v.e);
 	}
 }
 
