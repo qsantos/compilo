@@ -1,99 +1,64 @@
+	.align	2
+	.globl	free
 free:
-	addiu	$sp,$sp,-24
-	sw	$fp,20($sp)
-	move	$fp,$sp
-	sw	$4,24($fp)
-	lw	$2,24($fp)
-	addiu	$2,$2,-8
-	sw	$2,12($fp)
 	lw	$2,freep
-	sw	$2,8($fp)
-	b	malloc_l14
-malloc_l17:
-	lw	$2,8($fp)
+	addiu	$5,$4,-8
+	sltu	$3,$2,$5
+	bne	$3,$0,malloc_l69
+malloc_l59:
 	lw	$3,0($2)
-	lw	$2,8($fp)
-	sltu	$2,$2,$3
-	bne	$2,$0,malloc_l15
-	lw	$3,12($fp)
-	lw	$2,8($fp)
-	sltu	$2,$2,$3
-	bne	$2,$0,malloc_l16
-	lw	$2,8($fp)
+	#nop
+	sltu	$7,$2,$3
+	bne	$7,$0,malloc_l68
+	sltu	$6,$5,$3
+
+	bne	$6,$0,malloc_l58
+malloc_l68:
+	move	$2,$3
+	sltu	$3,$2,$5
+	beq	$3,$0,malloc_l59
+malloc_l69:
 	lw	$3,0($2)
-	lw	$2,12($fp)
-	sltu	$2,$2,$3
-	bne	$2,$0,malloc_l16
-malloc_l15:
-	lw	$2,8($fp)
-	lw	$2,0($2)
-	sw	$2,8($fp)
-malloc_l14:
-	lw	$3,12($fp)
-	lw	$2,8($fp)
-	sltu	$2,$2,$3
-	beq	$2,$0,malloc_l17
-	lw	$2,8($fp)
-	lw	$3,0($2)
-	lw	$2,12($fp)
-	sltu	$2,$2,$3
-	beq	$2,$0,malloc_l17
-malloc_l16:
-	lw	$2,12($fp)
-	lw	$2,4($2)
-	sll	$2,$2,3
-	lw	$3,12($fp)
-	addu	$3,$3,$2
-	lw	$2,8($fp)
-	lw	$2,0($2)
-	bne	$3,$2,malloc_l18
-	lw	$2,12($fp)
-	lw	$3,4($2)
-	lw	$2,8($fp)
-	lw	$2,0($2)
-	lw	$2,4($2)
-	addu	$3,$3,$2
-	lw	$2,12($fp)
-	sw	$3,4($2)
-	lw	$2,8($fp)
-	lw	$2,0($2)
-	lw	$3,0($2)
-	lw	$2,12($fp)
-	sw	$3,0($2)
-	b	malloc_l19
-malloc_l18:
-	lw	$2,8($fp)
-	lw	$3,0($2)
-	lw	$2,12($fp)
-	sw	$3,0($2)
-malloc_l19:
-	lw	$2,8($fp)
-	lw	$2,4($2)
-	sll	$2,$2,3
-	lw	$3,8($fp)
-	addu	$3,$3,$2
-	lw	$2,12($fp)
-	bne	$3,$2,malloc_l20
-	lw	$2,8($fp)
-	lw	$3,4($2)
-	lw	$2,12($fp)
-	lw	$2,4($2)
-	addu	$3,$3,$2
-	lw	$2,8($fp)
-	sw	$3,4($2)
-	lw	$2,12($fp)
-	lw	$3,0($2)
-	lw	$2,8($fp)
-	sw	$3,0($2)
-	b	malloc_l21
-malloc_l20:
-	lw	$2,8($fp)
-	lw	$3,12($fp)
-	sw	$3,0($2)
-malloc_l21:
-	lw	$2,8($fp)
+	#nop
+	sltu	$6,$5,$3
+	bne	$6,$0,malloc_l58
+	sltu	$7,$2,$3
+
+	bne	$7,$0,malloc_l68
+malloc_l58:
+	lw	$6,-4($4)
+	#nop
+	sll	$7,$6,3
+	addu	$7,$5,$7
+	beq	$7,$3,malloc_l70
+	lw	$6,4($2)
+	#nop
+	sll	$7,$6,3
+	addu	$7,$2,$7
+	beq	$5,$7,malloc_l71
+	sw	$3,-8($4)
+
+malloc_l62:
+	sw	$5,0($2)
 	sw	$2,freep
-	move	$sp,$fp
-	lw	$fp,20($sp)
-	addiu	$sp,$sp,24
+	j	$31
+malloc_l70:
+	lw	$7,4($3)
+	lw	$3,0($3)
+	addu	$6,$7,$6
+	sw	$6,-4($4)
+	lw	$6,4($2)
+	#nop
+	sll	$7,$6,3
+	addu	$7,$2,$7
+	bne	$5,$7,malloc_l62
+	sw	$3,-8($4)
+
+malloc_l71:
+	lw	$4,-4($4)
+	move	$5,$3
+	addu	$6,$4,$6
+	sw	$6,4($2)
+	sw	$5,0($2)
+	sw	$2,freep
 	j	$31

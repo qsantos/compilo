@@ -68,7 +68,7 @@ header* morecore(unsigned int nu)
 	register int n = nu * sizeof(header);
 	asm("\tmove    $4, %1\n"
 	    "\tsyscall 9\n"
-	    "\tmove    %1, $2\n"
+	    "\tmove    %0, $2\n"
 	    : "=r"(up)
 	    : "r"(n)
 	    : "$2", "$4"
