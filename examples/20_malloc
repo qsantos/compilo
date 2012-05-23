@@ -1,7 +1,7 @@
 int main(void)
 {
 	int* a = malloc(4);
-	*a = 2;
+	$a = 2;
 	int b = *a;
 	free(a);
 	return b;

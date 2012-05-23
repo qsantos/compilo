@@ -331,7 +331,7 @@ void Check_Program(Program* l, Context* c)
 	
 	symb = Context_Declare(c, "malloc");
 	symb->isFun  = true;
-	symb->v.f    = FunDecl_New(Type_Int(), "malloc", ParamList_New(Param_New(Type_Int(), "size", NULL), NULL), NULL, NULL);
+	symb->v.f    = FunDecl_New(Type_Ptr(Type_Int()), "malloc", ParamList_New(Param_New(Type_Int(), "size", NULL), NULL), NULL, NULL);
 	
 	symb = Context_Declare(c, "free");
 	symb->isFun  = true;
