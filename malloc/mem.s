@@ -14,34 +14,30 @@ morecore:
 	move	$fp,$sp
 	sw	$4,40($fp)
 	lw	$2,40($fp)
-
 	sltu	$2,$2,1024
 	beq	$2,$0,malloc_l10
 	li	$2,1024			# 0x400
 	sw	$2,40($fp)
 malloc_l10:
 	lw	$2,40($fp)
-	#nop
 	sll	$2,$2,3
 	move	$16,$2
 
-# syscall: brk
 	move    $4, $16
 	li      $v0, 9
 	syscall
 	move    $16, $2
-	
+
 	bne	$16,$0,malloc_l11
 	move	$2,$0
-	j	malloc_l12
+	b	malloc_l12
 malloc_l11:
 	lw	$2,40($fp)
 	sw	$2,4($16)
 	addiu	$2,$16,8
 	move	$4,$2
 	jal	free
-	lui	$2,%hi(freep)
-	lw	$2,%lo(freep)($2)
+	lw	$2,freep
 malloc_l12:
 	move	$sp,$fp
 	lw	$31,36($sp)
