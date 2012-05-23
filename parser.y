@@ -136,7 +136,8 @@ params:
 
 lvalue:
        SYMBOL                                              { $$ = LValue_Var($1, (position*) &@$);              }
-     | '*' expression                                      { $$ = LValue_Ref($2, (position*) &@$);              }
+     | STAR expression                                     { $$ = LValue_Ref($2, (position*) &@$);              }
+     | '(' lvalue ')'                                      { $$ = $2;                                           }
 ;
 
 expression:

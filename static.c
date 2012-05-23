@@ -269,7 +269,7 @@ void Check_Program(Program* l, Context* c)
 		Check_FunDecl(l->head, c);
 		l = l->tail;
 	}
-	//Context_EndScope(c);
+	//Context_EndScope(c); // TODO
 }
 
 /* Typage */
