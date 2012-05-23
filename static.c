@@ -26,77 +26,144 @@
 #include <assert.h>
 #include <string.h>
 
-/* Static analysis */
+static void Check_Types(Type* t1, Type* t2, position* pos, Context* c)
+{
+	assert(t1);
+	assert(t2);
+	assert(pos);
+	assert(c);
+	
+	if (!Type_Comp(t1, t2))
+	{
+		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
+		Print_Type(stderr, t1);
+		fprintf(stderr, "' and '");
+		Print_Type(stderr, t2);
+		fprintf(stderr, "' mismatch.\n");
+		c->err = true;
+	}
+}
 
-void Check_Expr(Expr* e, Context* c)
+static Type* Type_LValue(LValue* lv, Context* c)
+{
+	assert(lv);
+	assert(c);
+	if (lv->var)
+	{
+		symbol* symb = Context_Get(c, lv->v.var.s);
+		if (!symb)
+		{
+			Static_Error(c, &lv->pos, "variable %s is undeclared", lv->v.var.s);
+			return NULL;
+		}
+		return symb->v.t;
+	}
+	else
+	{
+		Type* t = Check_Expr(lv->v.e, c);
+		if (t->type == TYPE_PTR)
+			return t->v.ptr;
+		else
+		{
+			Static_Error(c, &lv->pos, "not a reference");
+			return NULL;
+		}
+	}
+}
+
+Type* Check_Expr(Expr* e, Context* c)
 {
 	assert(e);
 	assert(c);
 	
 	symbol* symb;
-	string  name;
+	Type*   t1;
+	Type*   t2;
+	Type*   t3;
+	
 	switch (e->type)
 	{
 	case EXPR_INTEGER:
-		break;
+		return &TInt;
 	case EXPR_FUN_CALL:
-		name = e->v.call.name;
-		symb = Context_Get(c, name);
-		if (!symb)
-			Static_Error(c, &e->pos, "function %s is undeclared", name);
-		if (!c->err)
+		symb = Context_Get(c, e->v.call.name);
+		if (symb)
+		{
 			e->v.call.id = symb->id;
-		Check_ExprList(e->v.call.params, c);
-		if (!c->err)
-			Check_TypeParams(symb->v.f, e, c);
-		break;
+			Check_ExprList(e->v.call.params, symb->v.f, c);
+			return symb->v.f->type;
+		}
+		else
+			Static_Error(c, &e->pos, "function %s is undeclared", e->v.call.name);
 	case EXPR_AFF:
-		Check_Expr(e->v.aff.expr, c);
-		if (!c->err)
-			Check_TypeExpr(Type_LValue(e->v.aff.lv, c), e->v.aff.expr, c);
-		break;
+		t1 = Check_Expr(e->v.aff.expr, c);
+		t2 = Type_LValue(e->v.aff.lv, c);
+		Check_Types(t1, t2, &e->pos, c);
+		if (e->v.aff.lv->var)
+		{
+			symb = Context_Get(c, e->v.aff.lv->v.var.s);
+			if (symb)
+				e->v.aff.lv->v.var.id = symb->id;
+			else
+				Static_Error(c, &e->v.aff.lv->pos, "variable %s is undeclared", e->v.aff.lv->v.var.s);
+		}
+		return t1;
 	case EXPR_VAR:
 	case EXPR_ADDR:
-		name        = e->v.var.name;
-		symb        = Context_Get(c, name);
-		if (!symb)
+		symb = Context_Get(c, e->v.var.name);
+		if (symb)
 		{
-			Static_Error(c, &e->pos, "variable %s is undeclared", name);
-		}
-		if (!c->err)
 			e->v.var.id = symb->id;
-		break;
+			return symb->v.t;
+		}
+		else
+			Static_Error(c, &e->pos, "variable %s is undeclared", e->v.var.name);
 	case EXPR_NOT:
 	case EXPR_LNOT:
 	case EXPR_MINUS:
-		Check_Expr(e->v.uni_op, c);
-		break;
+		return Check_Expr(e->v.uni_op, c);
 	case EXPR_AND:  case EXPR_OR:  case EXPR_XOR:
 	case EXPR_LAND: case EXPR_LOR:
 	case EXPR_EQ:   case EXPR_NEQ: case EXPR_LE:  case EXPR_LT:  case EXPR_GE:  case EXPR_GT:
 	case EXPR_ADD:  case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_MOD:
-		Check_Expr(e->v.bin_op.left,  c);
-		Check_Expr(e->v.bin_op.right, c);
-		break;
+		t1 = Check_Expr(e->v.bin_op.left, c);
+		t2 = Check_Expr(e->v.bin_op.right, c);
+		Check_Types(t1, t2, &e->pos, c);
+		return t1;
 	case EXPR_IFTE:
-		Check_Expr(e->v.tern_op.op1, c);
-		Check_Expr(e->v.tern_op.op2, c);
-		Check_Expr(e->v.tern_op.op3, c);
-		break;
+		t1 = Check_Expr(e->v.tern_op.op1, c);
+		t2 = Check_Expr(e->v.tern_op.op2, c);
+		t3 = Check_Expr(e->v.tern_op.op3, c);
+		Check_Types(t1, t2, &e->pos, c);
+		Check_Types(t1, t3, &e->pos, c);
+		return t1;
 	case EXPR_DEREF:
-		Type_Expr(e->v.uni_op, c);
-		Check_Expr(e, c);
-		break;
+		t1 = Check_Expr(e->v.uni_op, c);
+		if (t1->type == TYPE_PTR)
+			return t1->v.ptr;
+		else
+			Static_Error(c, &e->pos, "dereferencing non pointer value");
 	}
+	
+	return NULL;
 }
 
-void Check_ExprList(ExprList* l, Context* c)
+void Check_ExprList(ExprList* l, FunDecl* fd, Context* c)
 {
-	while (l)
+	assert(c);
+	
+	ParamList* p = fd->params;
+	while (l && p)
 	{
-		Check_Expr(l->head, c);
+		Type* t = Check_Expr(l->head, c);
+		Check_Types(p->head->type, t, &p->head->pos, c);
+		p = p->tail;
 		l = l->tail;
 	}
+	if (l)
+		Static_Error(c, &fd->pos, "too many arguments to function %s", fd->name);
+	if (p && p->head->type->type != TYPE_VOID)
+		Static_Error(c, &fd->pos, "too few arguments to function %s", fd->name);
 }
 
 void Check_Stmt(Stmt* s, bool needRet, Context* c)
@@ -106,13 +173,14 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 	
 	symbol* symb;
 	string  name;
+	Type*   t;
 	switch (s->type)
 	{
 	case STMT_NOTHING:
 		break;
 	case STMT_DECL:
-		name         = s->v.decl.name;
-		symb         = Context_Get(c, name);
+		name = s->v.decl.name;
+		symb = Context_Get(c, name);
 		if (!Context_CanDeclare(c, name))
 		{
 			Static_Error(c, &s->pos, "redeclaration of %s", name);
@@ -122,9 +190,9 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 		{
 			symb = Context_Declare(c, name);
 			symb->isFun      = false;
+			symb->isDefined  = false;
 			symb->pos        = &s->pos;
 			symb->v.t        = s->v.decl.t;
-			symb->isDefined  = false;
 			
 			s->v.decl.id = symb->id;
 		}
@@ -133,9 +201,8 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 		Check_Expr(s->v.expr, c);
 		break;
 	case STMT_RETURN:
-		Check_Expr(s->v.expr, c);
-		if (!c->err)
-			Check_TypeExpr(c->cur_fun->type, s->v.expr, c);
+		t = Check_Expr(s->v.expr, c);
+		Check_Types(c->cur_fun->type, t, &s->pos, c);
 		break;
 	case STMT_WHILE:
 		Check_Expr(s->v.whilez.cond, c);
@@ -270,134 +337,4 @@ void Check_Program(Program* l, Context* c)
 		l = l->tail;
 	}
 	//Context_EndScope(c); // TODO
-}
-
-/* Typage */
-
-Type* Type_LValue(LValue* lv, Context* c)
-{
-	assert(lv);
-	assert(c);
-	if (lv->var)
-	{
-		symbol* symb = Context_Get(c, lv->v.s);
-		if (!symb)
-		{
-			Static_Error(c, &lv->pos, "variable %s is undeclared", lv->v.s);
-			return NULL;
-		}
-		return symb->v.t;
-	}
-	else
-	{
-		Type* t = Type_Expr(lv->v.e, c);
-		if (t->type == TYPE_PTR)
-			return t->v.ptr;
-		else
-		{
-			Static_Error(c, &lv->pos, "not a reference");
-			return NULL;
-		}
-	}
-}
-
-Type* Type_Expr(Expr* e, Context* c)
-{
-	assert(e);
-	assert(c);
-	
-	symbol* symb;
-	Type*   t;
-	switch (e->type)
-	{
-	case EXPR_INTEGER:
-		return &TInt;
-	case EXPR_FUN_CALL:
-		symb = Context_Get(c, e->v.call.name);
-		return symb->v.f->type;
-	case EXPR_AFF:
-		t = Type_LValue(e->v.aff.lv, c);
-		if (!c->err)
-			Check_Types(t, Type_Expr(e->v.aff.expr, c), &e->pos, c);
-		return t;
-	case EXPR_VAR:
-	case EXPR_ADDR:
-		symb = Context_Get(c, e->v.var.name);
-		return symb->v.t;
-	case EXPR_NOT:
-	case EXPR_LNOT:
-	case EXPR_MINUS:
-		return Type_Expr(e->v.uni_op, c);
-	case EXPR_AND:  case EXPR_OR:  case EXPR_XOR:
-	case EXPR_LAND: case EXPR_LOR:
-	case EXPR_EQ:   case EXPR_NEQ: case EXPR_LE:  case EXPR_LT:  case EXPR_GE:  case EXPR_GT:
-	case EXPR_ADD:  case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_MOD:
-		t = Type_Expr(e->v.bin_op.left, c);
-		Check_Types(t, Type_Expr(e->v.bin_op.right, c), &e->pos, c);
-		return t;
-	case EXPR_IFTE:
-		t = Type_Expr(e->v.tern_op.op1, c);
-		t = Type_Expr(e->v.tern_op.op2, c);
-		Check_Types(t, Type_Expr(e->v.tern_op.op3, c), &e->pos, c);
-		return t;
-	case EXPR_DEREF:
-		t = Type_Expr(e->v.uni_op, c);
-		if (t->type != TYPE_PTR)
-		{
-			Static_Error(c, &e->pos, "dereferencing a non-pointer variable");
-			return t->v.ptr;
-		}
-		else
-			return &TInt;
-	}
-	
-	assert(false);
-	return NULL;
-}
-
-void Check_Types(Type* t1, Type* t2, position* pos, Context* c)
-{
-	assert(t1);
-	assert(t2);
-	assert(pos);
-	assert(c);
-	
-	if (!Type_Comp(t1, t2))
-	{
-		fprintf(stderr, "Line %d, character %d: types '", pos->first_line, pos->first_column);
-		Print_Type(stderr, t1);
-		fprintf(stderr, "' and '");
-		Print_Type(stderr, t2);
-		fprintf(stderr, "' mismatch.\n");
-		c->err = true;
-	}
-}
-
-void Check_TypeExpr(Type* t, Expr* e, Context* c)
-{
-	assert(t);
-	assert(e);
-	assert(c);
-	
-	Check_Types(t, Type_Expr(e, c), &e->pos, c);
-}
-
-void Check_TypeParams(FunDecl* fd, Expr* e, Context* c)
-{
-	assert(fd);
-	assert(e);
-	assert(c);
-	
-	ParamList* p = fd->params;
-	ExprList*  l = e->v.call.params;
-	while (l && p)
-	{
-		Check_TypeExpr(p->head->type, l->head, c);
-		p = p->tail;
-		l = l->tail;
-	}
-	if (l)
-		Static_Error(c, &e->pos, "too many arguments to function %s", fd->name);
-	else if (p && p->head->type->type != TYPE_VOID)
-		Static_Error(c, &e->pos, "too few arguments to function %s", fd->name);
 }

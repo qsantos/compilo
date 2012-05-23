@@ -42,7 +42,7 @@ typedef struct LValue
 	bool var;
 	union
 	{
-		string s;
+		struct {string s; u32 id;} var;
 		Expr*  e;
 	} v;
 	position pos;

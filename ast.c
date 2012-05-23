@@ -44,8 +44,8 @@ LValue* LValue_Var(string var, position* pos)
 {
 	LValue* lv = (LValue*) malloc(sizeof(LValue));
 	assert(lv);
-	lv->var = true;
-	lv->v.s = var;
+	lv->var     = true;
+	lv->v.var.s = var;
 	Pos_Copy(&lv->pos, pos);
 	return lv;
 }
@@ -65,7 +65,7 @@ void LValue_Delete(LValue* lv)
 	return;
 	assert(lv);
 	if (lv->var)
-		free(lv->v.s);
+		free(lv->v.var.s);
 	else
 		Expr_Delete(lv->v.e);
 	free(lv);

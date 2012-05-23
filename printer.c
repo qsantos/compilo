@@ -27,7 +27,7 @@
 void Print_LValue(LValue* lv)
 {
 	if (lv->var)
-		printf("%s", lv->v.s);
+		printf("%s", lv->v.var.s);
 	else
 	{
 		printf("*");

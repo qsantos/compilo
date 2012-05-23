@@ -68,7 +68,7 @@ static void printName(const char* str)
 static void printLValue(LValue* l)
 {
 	if (l->var)
-		printName(l->v.s);
+		printName(l->v.var.s);
 	else
 	{
 		printf("*");

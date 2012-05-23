@@ -152,7 +152,6 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 	u32 r3;
 	u32 l0;
 	u32 l1;
-	symbol* symb; // ignoble
 	
 	switch (e->type)
 	{
@@ -178,8 +177,7 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		r0 = ASM_GenExpr(a, c, e->v.aff.expr);
 		if (e->v.aff.lv->var)
 		{
-			symb = Context_Get(c, e->v.aff.lv->v.s);
-			r1 = symb->reg;
+			r1 = c->st[e->v.aff.lv->v.var.id].reg;
 			ASM_Push(a, INSN_MOV, r1, r0, 0);
 		}
 		else
