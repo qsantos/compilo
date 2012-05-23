@@ -227,6 +227,18 @@ static void GetSpilledParams(RegAlloc* ra, u32stack* params)
 	printf("\t%s $%.2lu, $%.2lu, $%.2lu\n", OP, WREG(r0), RREG1(r1), RREG2(r2)); \
 	SREG(r0);                                                                  \
 
+void OutputFile(const char* name)
+{
+	char buffer[1024];
+	FILE* f = fopen(name, "r");
+	while (!feof(f))
+	{
+		u32 n = fread(buffer, 1, 1024, f);
+		fwrite(buffer, 1, n, stdout);
+	}
+	fclose(f);
+}
+
 void ASM_toMIPS(ASM* a, Context* c)
 {
 	assert(a);
@@ -241,16 +253,14 @@ void ASM_toMIPS(ASM* a, Context* c)
 	symbol    symb;
 	u32       depth = 0;
 	
-/*
-	char buffer[1024];
-	FILE* f = fopen("malloc/malloc.s", "r");
-	while (!feof(f))
-	{
-		u32 n = fread(buffer, 1, 1024, f);
-		fwrite(buffer, 1, n, stdout);
-	}
-	fclose(f);
-*/
+	printf("# memory allocation misc\n");
+	OutputFile("malloc/mem.s");
+	
+	printf("#malloc\nl%lu:\n", Context_Get(c, "malloc")->label);
+	OutputFile("malloc/malloc.s");
+	
+	printf("#free\nl%lu:\n", Context_Get(c, "free")->label);
+	OutputFile("malloc/free.s");
 	
 	printf("main:\n");
 	
