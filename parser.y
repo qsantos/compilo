@@ -60,7 +60,9 @@ extern int yyerror(const char*);
 %left '+' '-'
 %left '*' '/' '%'
 %nonassoc MINUS_ALONE
-%nonassoc STAR ESP_ALONE
+%nonassoc LSTAR
+%nonassoc RSTAR
+%nonassoc ESP_ALONE
 
 %type <stmt> instr
 %type <stmt> statement
@@ -136,7 +138,7 @@ params:
 
 lvalue:
        SYMBOL                                              { $$ = LValue_Var($1, (position*) &@$);              }
-     | STAR SYMBOL                                         { $$ = LValue_Ref(Expr_Var($2, (position*) &@$), (position*) &@$);    }
+     | LSTAR SYMBOL                                        { $$ = LValue_Ref(Expr_Var($2, (position*) &@$), (position*) &@$);    }
      | '(' lvalue ')'                                      { $$ = $2;                                           }
 ;
 
@@ -165,7 +167,7 @@ expression:
      | expression '/'  expression                          { $$ = Expr_Div     ($1, $3,   (position*) &@$);     }
      | expression '%'  expression                          { $$ = Expr_Mod     ($1, $3,   (position*) &@$);     }
      | '-' expression %prec MINUS_ALONE                    { $$ = Expr_Minus   ($2,       (position*) &@$);     }
-     | '*' expression %prec STAR                           { $$ = Expr_Deref   ($2,       (position*) &@$);     }
+     | '*' expression %prec RSTAR                          { $$ = Expr_Deref   ($2,       (position*) &@$);     }
      | '&' SYMBOL     %prec ESP_ALONE                      { $$ = Expr_Addr    ($2,       (position*) &@$);     }
      | expression '?' expression ':' expression            { $$ = Expr_Ifte    ($1,$3,$5, (position*) &@$);     }
      | '(' expression ')'                                  { $$ = $2;                                           }
