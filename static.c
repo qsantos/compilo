@@ -334,7 +334,7 @@ void Check_Program(Program* l, Context* c)
 	
 	symb = Context_Declare(c, "free");
 	symb->isFun  = true;
-	symb->v.f    = FunDecl_New(Type_Void(), "free", ParamList_New(Param_New(Type_Ptr(Type_Void()), "ptr", NULL), NULL), NULL, NULL);
+	symb->v.f    = FunDecl_New(Type_Void(), "free", ParamList_New(Param_New(Type_Ptr(Type_Int()), "ptr", NULL), NULL), NULL, NULL);
 
 	while (l)
 	{

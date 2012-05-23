@@ -27,7 +27,8 @@ malloc_l10:
 
 # syscall: brk
 	move    $4, $16
-	syscall 9
+	li      $v0, 9
+	syscall
 	move    $16, $2
 	
 	bne	$16,$0,malloc_l11
