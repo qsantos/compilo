@@ -28,10 +28,11 @@
 
 static void Check_Types(Type* t1, Type* t2, position* pos, Context* c)
 {
-	assert(t1);
-	assert(t2);
 	assert(pos);
 	assert(c);
+	
+	if (!t1 || !t2)
+		return;
 	
 	if (!Type_Comp(t1, t2))
 	{
