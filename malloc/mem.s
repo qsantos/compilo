@@ -5,6 +5,7 @@ freep:
 	.word 0
 
 	.text
+	.globl free
 	.globl	morecore
 morecore:
 	addiu	$sp,$sp,-40

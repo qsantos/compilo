@@ -1,3 +1,4 @@
+free:
 	addiu	$sp,$sp,-24
 	sw	$fp,20($sp)
 	move	$fp,$sp
