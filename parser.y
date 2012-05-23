@@ -102,7 +102,6 @@ type:
 
 instr:
                                                            { $$ = Stmt_Nothing();                               }
-     | type SYMBOL '=' expression                          { $$ = Stmt_Block(StmtList_New(Stmt_Decl($1, $2, (position*) &@$), StmtList_New(Stmt_Expr(Expr_Aff(LValue_Var($2, (position*) &@$), $4, (position*) &@$)), NULL))); }
      | type SYMBOL                                         { $$ = Stmt_Decl($1, $2, (position*) &@$);           }
      | expression                                          { $$ = Stmt_Expr($1);                                }
 
@@ -120,6 +119,7 @@ statement:
 statement_list:
        statement statement_list                            { $$ = StmtList_New($1, $2);                         }
      |                                                     { $$ = NULL;                                         }
+     | type SYMBOL '=' expression ';' statement_list       { $$ = StmtList_New(Stmt_Decl($1, $2, (position*) &@$), StmtList_New(Stmt_Expr(Expr_Aff(LValue_Var($2, (position*) &@$), $4, (position*) &@$)), $6)); }
 ;
 
 parameter: type SYMBOL                                     { $$ = Param_New($1, $2, (position*) &@$);           }
