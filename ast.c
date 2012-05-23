@@ -38,6 +38,40 @@ static inline void Pos_Copy(position* p1, position* p2)
 	}
 }
 
+/* LVALUES */
+
+LValue* LValue_Var(string var, position* pos)
+{
+	LValue* lv = (LValue*) malloc(sizeof(LValue));
+	assert(lv);
+	lv->var = true;
+	lv->v.s = var;
+	Pos_Copy(&lv->pos, pos);
+	return lv;
+}
+
+LValue* LValue_Ref(LValue* lv, position* pos)
+{
+	LValue* ret = (LValue*) malloc(sizeof(LValue));
+	assert(ret);
+	ret->var = false;
+	ret->v.l = lv;
+	Pos_Copy(&ret->pos, pos);
+	return ret;
+}
+
+void LValue_Delete(LValue* lv)
+{
+	return;
+	assert(lv);
+	if (lv->var)
+		free(lv->v.s);
+	else
+		LValue_Delete(lv->v.l);
+	free(lv);
+}
+
+
 /* EXPRESSIONS */
 
 Expr* Expr_Integer(s32 i, position* pos)
@@ -61,12 +95,12 @@ Expr* Expr_Fun_Call(string name, ExprList* params, position* pos)
 	return expr;
 }
 
-Expr* Expr_Aff(string name, Expr* e, position* pos)
+Expr* Expr_Aff(LValue* lv, Expr* e, position* pos)
 {
 	Expr* expr = (Expr*) malloc(sizeof(Expr));
 	assert(expr);
-	expr->type = EXPR_AFF;
-	expr->v.aff.name = name;
+	expr->type       = EXPR_AFF;
+	expr->v.aff.lv   = lv;
 	expr->v.aff.expr = e;
 	Pos_Copy(&expr->pos, pos);
 	return expr;
@@ -169,7 +203,7 @@ void Expr_Delete(Expr* e)
 		case EXPR_INTEGER:
 			break;
 		case EXPR_AFF:
-			free(e->v.aff.name);
+			LValue_Delete(e->v.aff.lv);
 			Expr_Delete(e->v.aff.expr);
 			break;
 		case EXPR_FUN_CALL:
@@ -305,15 +339,14 @@ Stmt* Stmt_Nothing(void)
 	return &SNothing;
 }
 
-Stmt* Stmt_Decl(Type* t, string name, Expr* init, position* pos)
+Stmt* Stmt_Decl(Type* t, string name, position* pos)
 {
 	Stmt* s = (Stmt*) malloc(sizeof(Stmt));
 	assert(s);
 	s->type = STMT_DECL;
 	s->v.decl.t    = t;
 	s->v.decl.name = name;
-	s->v.decl.val  = init;
-	Pos_Copy(&s->v.decl.pos, pos);
+	Pos_Copy(&s->pos, pos);
 	return s;
 }
 
@@ -406,7 +439,6 @@ void Stmt_Delete(Stmt* s)
 		case STMT_DECL:
 			Type_Delete(s->v.decl.t);
 			free(s->v.decl.name);
-			Expr_Delete(s->v.decl.val);
 			break;
 		case STMT_EXPR:
 		case STMT_RETURN:

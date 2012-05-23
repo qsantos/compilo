@@ -65,6 +65,17 @@ static void printName(const char* str)
 	endNode();
 }
 
+static void printLValue(LValue* l)
+{
+	if (l->var)
+		printName(l->v.s);
+	else
+	{
+		printf("*");
+		printLValue(l->v.l);
+	}
+}
+
 static void printExprList(ExprList* l)
 {
 	if (!l)
@@ -103,7 +114,7 @@ static void printExpr(Expr* e)
 		break;
 	case EXPR_AFF:
 		beginNode("Aff");
-		printName(e->v.aff.name);
+		printLValue(e->v.aff.lv);
 		printExpr(e->v.aff.expr);
 		endNode();
 		break;
@@ -196,7 +207,6 @@ static void printStmt(Stmt* s)
 		beginNode("Decl");
 		printType(s->v.decl.t);
 		printName(s->v.decl.name);
-		printExpr(s->v.decl.val);
 		endNode();
 		break;
 	case STMT_EXPR:

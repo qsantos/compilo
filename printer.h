@@ -25,6 +25,7 @@
 #include "ast.h"
 #include "asm.h"
 
+void Print_LValue   (LValue*);
 void Print_ExprList (ExprList*);
 void Print_Expr     (Expr*);
 void Print_StmtList (StmtList*);

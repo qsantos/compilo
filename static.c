@@ -40,12 +40,10 @@ void Check_Expr(Expr* e, Context* c)
 	case EXPR_INTEGER:
 		break;
 	case EXPR_FUN_CALL:
-		name         = e->v.call.name;
-		symb         = Context_Get(c, name);
+		name = e->v.call.name;
+		symb = Context_Get(c, name);
 		if (!symb)
-		{
 			Static_Error(c, &e->pos, "function %s is undeclared", name);
-		}
 		if (!c->err)
 			e->v.call.id = symb->id;
 		Check_ExprList(e->v.call.params, c);
@@ -53,17 +51,9 @@ void Check_Expr(Expr* e, Context* c)
 			Check_TypeParams(symb->v.f, e, c);
 		break;
 	case EXPR_AFF:
-		name        = e->v.aff.name;
-		symb        = Context_Get(c, name);
-		if (!symb)
-		{
-			Static_Error(c, &e->pos, "variable %s is undeclared", name);
-		}
-		if (!c->err)
-			e->v.aff.id = symb->id;
 		Check_Expr(e->v.aff.expr, c);
 		if (!c->err)
-			Check_TypeExpr(symb->v.t, e->v.aff.expr, c);
+			Check_TypeExpr(Type_LValue(e->v.aff.lv, c), e->v.aff.expr, c);
 		break;
 	case EXPR_VAR:
 	case EXPR_ADDR:
@@ -125,25 +115,18 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 		symb         = Context_Get(c, name);
 		if (!Context_CanDeclare(c, name))
 		{
-			Static_Error(c, &s->v.decl.pos, "redeclaration of %s", name);
-			Static_Error(c, &s->v.decl.pos, "previous declaration was here: Line %d, character %d", symb->pos->first_line, symb->pos->first_column);
+			Static_Error(c, &s->pos, "redeclaration of %s", name);
+			Static_Error(c, &s->pos, "previous declaration was here: Line %d, character %d", symb->pos->first_line, symb->pos->first_column);
 		}
 		else
 		{
 			symb = Context_Declare(c, name);
 			symb->isFun      = false;
-			symb->pos        = &s->v.decl.pos;
+			symb->pos        = &s->pos;
 			symb->v.t        = s->v.decl.t;
+			symb->isDefined  = false;
 			
 			s->v.decl.id = symb->id;
-			if (s->v.decl.val)
-			{
-				Check_Expr(s->v.decl.val, c);
-				symb->isDefined = true;
-				Check_TypeExpr(s->v.decl.t, s->v.decl.val, c);
-			}
-			else
-				symb->isDefined = false;
 		}
 		break;
 	case STMT_EXPR:
@@ -291,6 +274,33 @@ void Check_Program(Program* l, Context* c)
 
 /* Typage */
 
+Type* Type_LValue(LValue* lv, Context* c)
+{
+	assert(lv);
+	assert(c);
+	if (lv->var)
+	{
+		symbol* symb = Context_Get(c, lv->v.s);
+		if (!symb)
+		{
+			Static_Error(c, &lv->pos, "variable %s is undeclared", lv->v.s);
+			return NULL;
+		}
+		return symb->v.t;
+	}
+	else
+	{
+		Type* t = Type_LValue(lv->v.l, c);
+		if (t->type == TYPE_PTR)
+			return t->v.ptr;
+		else
+		{
+			Static_Error(c, &lv->pos, "not a reference");
+			return NULL;
+		}
+	}
+}
+
 Type* Type_Expr(Expr* e, Context* c)
 {
 	assert(e);
@@ -306,9 +316,9 @@ Type* Type_Expr(Expr* e, Context* c)
 		symb = Context_Get(c, e->v.call.name);
 		return symb->v.f->type;
 	case EXPR_AFF:
-		symb = Context_Get(c, e->v.aff.name);
-		t = symb->v.t;
-		Check_Types(t, Type_Expr(e->v.aff.expr, c), &e->pos, c);
+		t = Type_LValue(e->v.aff.lv, c);
+		if (!c->err)
+			Check_Types(t, Type_Expr(e->v.aff.expr, c), &e->pos, c);
 		return t;
 	case EXPR_VAR:
 	case EXPR_ADDR:

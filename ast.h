@@ -34,6 +34,21 @@ typedef struct
 	int last_column;
 } position;
 
+/* LValues */
+typedef struct LValue
+{
+	bool var;
+	union
+	{
+		string  s;
+		struct LValue* l;
+	} v;
+	position pos;
+} LValue;
+LValue* LValue_Var   (string,  position*);
+LValue* LValue_Ref   (LValue*, position*);
+void    LValue_Delete(LValue*);
+
 /* Expressions */
 typedef struct Expr Expr;
 typedef struct ExprList
@@ -61,43 +76,43 @@ struct Expr
 	union
 	{
 		s32 i;
-		struct { string name; u32 id; ExprList* params; } call;
-		struct { string name; u32 id; Expr* expr; } aff;
-		struct { string name; u32 id; } var;
-		struct { struct Expr* left, * right; } bin_op;
-		struct { struct Expr* op1, * op2, * op3; } tern_op;
+		struct { string  name; u32 id; ExprList* params; } call;
+		struct { LValue* lv;   u32 id; Expr* expr;       } aff;
+		struct { string  name; u32 id;                   } var;
+		struct { struct  Expr* left, * right;            } bin_op;
+		struct { struct  Expr* op1, * op2, * op3;        } tern_op;
 		struct Expr* uni_op;
 	} v;
 	position pos;
 };
 /* Constructors */
-Expr*     Expr_Integer   (s32,    position*);
-Expr*     Expr_Fun_Call  (string, ExprList*, position*);
-Expr*     Expr_Aff       (string, Expr*,     position*);
-Expr*     Expr_Var       (string, position*);
-Expr*     Expr_Not       (Expr*,  position*);
-Expr*     Expr_Lnot      (Expr*,  position*);
-Expr*     Expr_And       (Expr*,  Expr*,     position*);
-Expr*     Expr_Or        (Expr*,  Expr*,     position*);
-Expr*     Expr_Xor       (Expr*,  Expr*,     position*);
-Expr*     Expr_Land      (Expr*,  Expr*,     position*);
-Expr*     Expr_Lor       (Expr*,  Expr*,     position*);
-Expr*     Expr_Eq        (Expr*,  Expr*,     position*);
-Expr*     Expr_Neq       (Expr*,  Expr*,     position*);
-Expr*     Expr_Le        (Expr*,  Expr*,     position*);
-Expr*     Expr_Lt        (Expr*,  Expr*,     position*);
-Expr*     Expr_Ge        (Expr*,  Expr*,     position*);
-Expr*     Expr_Gt        (Expr*,  Expr*,     position*);
-Expr*     Expr_Add       (Expr*,  Expr*,     position*);
-Expr*     Expr_Sub       (Expr*,  Expr*,     position*);
-Expr*     Expr_Mul       (Expr*,  Expr*,     position*);
-Expr*     Expr_Div       (Expr*,  Expr*,     position*);
-Expr*     Expr_Mod       (Expr*,  Expr*,     position*);
-Expr*     Expr_Minus     (Expr*,  position*);
-Expr*     Expr_Deref     (Expr*,  position*);
-Expr*     Expr_Addr      (string, position*);
-Expr*     Expr_Ifte      (Expr*,  Expr*,     Expr*, position*);
-ExprList* ExprList_New   (Expr*,  ExprList*);
+Expr*     Expr_Integer   (s32,     position*);
+Expr*     Expr_Fun_Call  (string,  ExprList*, position*);
+Expr*     Expr_Aff       (LValue*, Expr*,     position*);
+Expr*     Expr_Var       (string,  position*);
+Expr*     Expr_Not       (Expr*,   position*);
+Expr*     Expr_Lnot      (Expr*,   position*);
+Expr*     Expr_And       (Expr*,   Expr*,     position*);
+Expr*     Expr_Or        (Expr*,   Expr*,     position*);
+Expr*     Expr_Xor       (Expr*,   Expr*,     position*);
+Expr*     Expr_Land      (Expr*,   Expr*,     position*);
+Expr*     Expr_Lor       (Expr*,   Expr*,     position*);
+Expr*     Expr_Eq        (Expr*,   Expr*,     position*);
+Expr*     Expr_Neq       (Expr*,   Expr*,     position*);
+Expr*     Expr_Le        (Expr*,   Expr*,     position*);
+Expr*     Expr_Lt        (Expr*,   Expr*,     position*);
+Expr*     Expr_Ge        (Expr*,   Expr*,     position*);
+Expr*     Expr_Gt        (Expr*,   Expr*,     position*);
+Expr*     Expr_Add       (Expr*,   Expr*,     position*);
+Expr*     Expr_Sub       (Expr*,   Expr*,     position*);
+Expr*     Expr_Mul       (Expr*,   Expr*,     position*);
+Expr*     Expr_Div       (Expr*,   Expr*,     position*);
+Expr*     Expr_Mod       (Expr*,   Expr*,     position*);
+Expr*     Expr_Minus     (Expr*,   position*);
+Expr*     Expr_Deref     (Expr*,   position*);
+Expr*     Expr_Addr      (string,  position*);
+Expr*     Expr_Ifte      (Expr*,   Expr*,     Expr*, position*);
+ExprList* ExprList_New   (Expr*,   ExprList*);
 /* Destructors */
 void      Expr_Delete    (Expr*);
 void      ExprList_Delete(ExprList*);
@@ -158,11 +173,11 @@ struct Stmt
 	} type;
 	union
 	{
-		struct { Type* t; string name; u32 id; Expr* val; position pos; } decl;
+		struct { Type* t; string name; u32 id;            } decl;
 		Expr* expr;
-		struct { Expr* cond; Stmt* stmt; } whilez;
-		struct { Stmt* stmt; Expr* cond; } doz;
-		struct { Stmt* a; Expr* b; Stmt* c; Stmt* stmt; } forz;
+		struct { Expr* cond; Stmt* stmt;                  } whilez;
+		struct { Stmt* stmt; Expr* cond;                  } doz;
+		struct { Stmt* a; Expr* b; Stmt* c; Stmt* stmt;   } forz;
 		struct { Expr* cond; Stmt* iftrue; Stmt* iffalse; } ifz;
 		StmtList* block;
 	} v;
@@ -170,15 +185,15 @@ struct Stmt
 };
 /* Constructors */
 Stmt* Stmt_Nothing    (void);
-Stmt* Stmt_Decl       (Type*,     string, Expr*, position* pos);
+Stmt* Stmt_Decl       (Type*, string, position*);
 Stmt* Stmt_Expr       (Expr*);
-Stmt* Stmt_While      (Expr*,     Stmt*);
-Stmt* Stmt_Do         (Stmt*,     Expr*);
-Stmt* Stmt_For        (Stmt*,     Expr*,  Stmt*, Stmt*);
-Stmt* Stmt_If         (Expr*,     Stmt*,  Stmt*);
+Stmt* Stmt_While      (Expr*, Stmt*);
+Stmt* Stmt_Do         (Stmt*, Expr*);
+Stmt* Stmt_For        (Stmt*, Expr*, Stmt*, Stmt*);
+Stmt* Stmt_If         (Expr*, Stmt*, Stmt*);
 Stmt* Stmt_Return     (Expr*);
 Stmt* Stmt_Block      (StmtList*);
-StmtList* StmtList_New(Stmt*,     StmtList*);
+StmtList* StmtList_New(Stmt*, StmtList*);
 /* Destructors */
 void  Stmt_Delete     (Stmt*);
 void  StmtList_Delete (StmtList*);

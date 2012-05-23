@@ -24,6 +24,17 @@
 #include <stdio.h>
 #include <assert.h>
 
+void Print_LValue(LValue* lv)
+{
+	if (lv->var)
+		printf("%s", lv->v.s);
+	else
+	{
+		printf("*");
+		Print_LValue(lv->v.l);
+	}
+}
+
 void Print_ExprList(ExprList* l)
 {
 	if (l)
@@ -66,7 +77,9 @@ void Print_Expr(Expr* e)
 		printf(")");
 		break;
 	case EXPR_AFF:
-		printf("Aff(%s, ", e->v.aff.name);
+		printf("Aff(");
+		Print_LValue(e->v.aff.lv);
+		printf(", ");
 		Print_Expr(e->v.aff.expr);
 		printf(")");
 		break;
@@ -151,9 +164,7 @@ void Print_Stmt(Stmt* s)
 	case STMT_DECL:
 		printf("Decl(");
 		Print_Type(stdout, s->v.decl.t);
-		printf(", %s, ", s->v.decl.name);
-		Print_Expr(s->v.decl.val);
-		printf(")");
+		printf(", %s)", s->v.decl.name);
 		break;
 	case STMT_EXPR:
 		Print_Expr(s->v.expr);

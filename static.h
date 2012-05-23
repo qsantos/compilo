@@ -33,9 +33,11 @@ void Check_ParamList (ParamList*,       Context*);
 void Check_FunDecl   (FunDecl*,         Context*);
 void Check_Program   (Program*,         Context*);
 
-Type* Type_Expr      (Expr*,    Context*);
-void Check_Types     (Type*,    Type*, position*, Context*);
-void Check_TypeExpr  (Type*,    Expr*, Context*);
-void Check_TypeParams(FunDecl*, Expr*, Context*);
+Type* Type_LValue(LValue*, Context*);
+Type* Type_Expr  (Expr*,   Context*);
+
+void  Check_Types     (Type*,    Type*, position*, Context*);
+void  Check_TypeExpr  (Type*,    Expr*, Context*);
+void  Check_TypeParams(FunDecl*, Expr*, Context*);
 
 #endif

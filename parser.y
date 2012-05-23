@@ -32,6 +32,7 @@ extern int yyerror(const char*);
   long       integer;
   char*      symbol;
 
+  LValue*    lvalue;
   Expr*      expr;
   ExprList*  exprlist;
   Type*      type;
@@ -64,6 +65,7 @@ extern int yyerror(const char*);
 %type <stmt> instr
 %type <stmt> statement
 %type <stmtlist> statement_list
+%type <lvalue> lvalue
 %type <expr> expression
 %type <exprlist> expr_list
 %type <type> type
@@ -100,8 +102,8 @@ type:
 
 instr:
                                                            { $$ = Stmt_Nothing();                               }
-     | type SYMBOL '=' expression                          { $$ = Stmt_Decl($1, $2, $4, (position*) &@$);       }
-     | type SYMBOL                                         { $$ = Stmt_Decl($1, $2, NULL, (position*) &@$);     }
+     | type SYMBOL '=' expression                          { $$ = Stmt_Block(StmtList_New(Stmt_Decl($1, $2, (position*) &@$), StmtList_New(Stmt_Expr(Expr_Aff(LValue_Var($2, (position*) &@$), $4, (position*) &@$)), NULL))); }
+     | type SYMBOL                                         { $$ = Stmt_Decl($1, $2, (position*) &@$);           }
      | expression                                          { $$ = Stmt_Expr($1);                                }
 
 statement:
@@ -132,11 +134,17 @@ params:
        VOID                                                { $$ = ParamList_Void();                             }
      | param_list                                          { $$ = $1;                                           }
 
+lvalue:
+       SYMBOL                                              { $$ = LValue_Var($1, (position*) &@$);              }
+     | '*' lvalue                                          { $$ = LValue_Ref($2, (position*) &@$);              }
+;
+	
+
 expression:
        INTEGER                                             { $$ = Expr_Integer ($1,       (position*) &@$);     }
      | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3,   (position*) &@$);     }
      | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL, (position*) &@$);     }
-     | SYMBOL '=' expression                               { $$ = Expr_Aff     ($1, $3,   (position*) &@$);     }
+     | lvalue '=' expression                               { $$ = Expr_Aff     ($1, $3,   (position*) &@$);     }
      | SYMBOL                                              { $$ = Expr_Var     ($1,       (position*) &@$);     }
      | '!' expression                                      { $$ = Expr_Not     ($2,       (position*) &@$);     }
      | '~' expression                                      { $$ = Expr_Lnot    ($2,       (position*) &@$);     }
