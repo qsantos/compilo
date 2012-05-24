@@ -1,5 +1,5 @@
 /*\
- *       \\          A Tiny C to SPIM Compiler                     //
+ *       \\          A Tiny C to MIPS Compiler                     //
  *        \\_        Copyright (C) 2012 Thomas  GREGOIRE         _//
  *     .---(')                          Quentin SANTOS          (')---. 
  *   o( )_-\_        Logos by jgs                                _/-_( )o
