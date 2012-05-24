@@ -1,64 +1,147 @@
-	.align	2
 	.globl	free
+	.set	nomips16
+	.ent	free
 free:
+	.frame	$fp,24,$31		# vars= 8, regs= 1/0, args= 0, gp= 8
+	.mask	0x40000000,-4
+	.fmask	0x00000000,0
+	.set	noreorder
+	.set	reorder
+	addiu	$sp,$sp,-24
+	sw	$fp,20($sp)
+	move	$fp,$sp
+	sw	$4,24($fp)
+	lw	$2,24($fp)
+	#nop
+	addiu	$2,$2,-8
+	sw	$2,12($fp)
 	lw	$2,freep
-	addiu	$5,$4,-8
-	sltu	$3,$2,$5
-	bne	$3,$0,mem_l47
-mem_l37:
+	#nop
+	sw	$2,8($fp)
+	b	free_l14
+free_l17:
+	lw	$2,8($fp)
+	#nop
 	lw	$3,0($2)
+	lw	$2,8($fp)
 	#nop
-	sltu	$7,$2,$3
-	bne	$7,$0,mem_l46
-	sltu	$6,$5,$3
-
-	bne	$6,$0,mem_l36
-mem_l46:
-	move	$2,$3
-	sltu	$3,$2,$5
-	beq	$3,$0,mem_l37
-mem_l47:
+	sltu	$2,$2,$3
+	bne	$2,$0,free_l15
+	lw	$3,12($fp)
+	lw	$2,8($fp)
+	#nop
+	sltu	$2,$2,$3
+	bne	$2,$0,free_l16
+	lw	$2,8($fp)
+	#nop
 	lw	$3,0($2)
+	lw	$2,12($fp)
 	#nop
-	sltu	$6,$5,$3
-	bne	$6,$0,mem_l36
-	sltu	$7,$2,$3
-
-	bne	$7,$0,mem_l46
-mem_l36:
-	lw	$6,-4($4)
+	sltu	$2,$2,$3
+	bne	$2,$0,free_l16
+free_l15:
+	lw	$2,8($fp)
 	#nop
-	sll	$7,$6,3
-	addu	$7,$5,$7
-	beq	$7,$3,mem_l48
-	lw	$6,4($2)
+	lw	$2,0($2)
 	#nop
-	sll	$7,$6,3
-	addu	$7,$2,$7
-	beq	$5,$7,mem_l49
-	sw	$3,-8($4)
-
-mem_l40:
-	sw	$5,0($2)
+	sw	$2,8($fp)
+free_l14:
+	lw	$3,12($fp)
+	lw	$2,8($fp)
+	#nop
+	sltu	$2,$2,$3
+	beq	$2,$0,free_l17
+	lw	$2,8($fp)
+	#nop
+	lw	$3,0($2)
+	lw	$2,12($fp)
+	#nop
+	sltu	$2,$2,$3
+	beq	$2,$0,free_l17
+free_l16:
+	lw	$2,12($fp)
+	#nop
+	lw	$2,4($2)
+	#nop
+	sll	$2,$2,3
+	lw	$3,12($fp)
+	#nop
+	addu	$3,$3,$2
+	lw	$2,8($fp)
+	#nop
+	lw	$2,0($2)
+	#nop
+	bne	$3,$2,free_l18
+	lw	$2,12($fp)
+	#nop
+	lw	$3,4($2)
+	lw	$2,8($fp)
+	#nop
+	lw	$2,0($2)
+	#nop
+	lw	$2,4($2)
+	#nop
+	addu	$3,$3,$2
+	lw	$2,12($fp)
+	#nop
+	sw	$3,4($2)
+	lw	$2,8($fp)
+	#nop
+	lw	$2,0($2)
+	#nop
+	lw	$3,0($2)
+	lw	$2,12($fp)
+	#nop
+	sw	$3,0($2)
+	b	free_l19
+free_l18:
+	lw	$2,8($fp)
+	#nop
+	lw	$3,0($2)
+	lw	$2,12($fp)
+	#nop
+	sw	$3,0($2)
+free_l19:
+	lw	$2,8($fp)
+	#nop
+	lw	$2,4($2)
+	#nop
+	sll	$2,$2,3
+	lw	$3,8($fp)
+	#nop
+	addu	$3,$3,$2
+	lw	$2,12($fp)
+	#nop
+	bne	$3,$2,free_l20
+	lw	$2,8($fp)
+	#nop
+	lw	$3,4($2)
+	lw	$2,12($fp)
+	#nop
+	lw	$2,4($2)
+	#nop
+	addu	$3,$3,$2
+	lw	$2,8($fp)
+	#nop
+	sw	$3,4($2)
+	lw	$2,12($fp)
+	#nop
+	lw	$3,0($2)
+	lw	$2,8($fp)
+	#nop
+	sw	$3,0($2)
+	b	free_l21
+free_l20:
+	lw	$2,8($fp)
+	lw	$3,12($fp)
+	#nop
+	sw	$3,0($2)
+free_l21:
+	lw	$2,8($fp)
+	#nop
 	sw	$2,freep
+	move	$sp,$fp
+	lw	$fp,20($sp)
+	addiu	$sp,$sp,24
 	j	$31
-mem_l48:
-	lw	$7,4($3)
-	lw	$3,0($3)
-	addu	$6,$7,$6
-	sw	$6,-4($4)
-	lw	$6,4($2)
-	#nop
-	sll	$7,$6,3
-	addu	$7,$2,$7
-	bne	$5,$7,mem_l40
-	sw	$3,-8($4)
-
-mem_l49:
-	lw	$4,-4($4)
-	move	$5,$3
-	addu	$6,$4,$6
-	sw	$6,4($2)
-	sw	$5,0($2)
-	sw	$2,freep
-	j	$31
+	.end	free

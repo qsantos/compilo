@@ -231,8 +231,9 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		r0 = r3;
 		break;
 	case EXPR_DEREF:
-		r0 = ASM_GenExpr(a, c, e->v.uni_op);
-		ASM_Push(a, INSN_MRD, r0, r0, 0);
+		r0 = ASM_NewReg(a, c);
+		r1 = ASM_GenExpr(a, c, e->v.uni_op);
+		ASM_Push(a, INSN_MRD, r0, r1, 0);
 		break;
 	case EXPR_ADDR: // TODO
 		break;
