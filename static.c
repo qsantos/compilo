@@ -124,9 +124,12 @@ Type* Check_Expr(Expr* e, Context* c)
 	case EXPR_ADD:  case EXPR_SUB:
 		t1 = Check_Expr(e->v.bin_op.left, c);
 		t2 = Check_Expr(e->v.bin_op.right, c);
-		if (t1->type == TYPE_PTR && t1->v.ptr->type == TYPE_INT && t2->type == TYPE_INT);
-		else
-			Check_Types(t1, t2, &e->pos, c);
+		if (t1 && t2)
+		{
+			if (t1->type == TYPE_PTR && t1->v.ptr->type == TYPE_INT && t2->type == TYPE_INT);
+			else
+				Check_Types(t1, t2, &e->pos, c);
+		}
 		return t1;
 	case EXPR_AND:  case EXPR_OR:  case EXPR_XOR:
 	case EXPR_LAND: case EXPR_LOR:

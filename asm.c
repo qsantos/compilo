@@ -304,16 +304,28 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 		ASM_LabelPos(a, l1);
 		break;
 	case STMT_IF:
-		l0 = ASM_NewLabel(a);
-		l1 = ASM_NewLabel(a);
-		
-		r0 = ASM_GenExpr(a, c, s->v.ifz.cond);
-		ASM_Push(a, INSN_JZ, l0, r0, 0);
-		ASM_GenStmt(a, c, s->v.ifz.iftrue);
-		ASM_Push(a, INSN_JMP, l1, 0, 0);
-		ASM_LabelPos(a, l0);
-		ASM_GenStmt(a, c, s->v.ifz.iffalse);
-		ASM_LabelPos(a, l1);
+		if (s->v.ifz.iffalse)
+		{
+			l0 = ASM_NewLabel(a);
+			l1 = ASM_NewLabel(a);
+			
+			r0 = ASM_GenExpr(a, c, s->v.ifz.cond);
+			ASM_Push(a, INSN_JZ, l0, r0, 0);
+			ASM_GenStmt(a, c, s->v.ifz.iftrue);
+			ASM_Push(a, INSN_JMP, l1, 0, 0);
+			ASM_LabelPos(a, l0);
+			ASM_GenStmt(a, c, s->v.ifz.iffalse);
+			ASM_LabelPos(a, l1);
+		}
+		else
+		{
+			l0 = ASM_NewLabel(a);
+			
+			r0 = ASM_GenExpr(a, c, s->v.ifz.cond);
+			ASM_Push(a, INSN_JZ, l0, r0, 0);
+			ASM_GenStmt(a, c, s->v.ifz.iftrue);
+			ASM_LabelPos(a, l0);
+		}
 		break;
 	case STMT_RETURN:
 		assert(c->cur_fun);
