@@ -31,7 +31,7 @@ IntGraph* IntGraph_New(u32 n)
 	
 	g->n    = n;
 	g->d    = (u32*)  calloc(n,     sizeof(u32));  assert(g->d);
-	g->move = (bool*) calloc(n,     sizeof(bool)); assert(g->move);
+	g->move = (u32*)  calloc(n,     sizeof(u32));  assert(g->move);
 	g->e    = (edge*) calloc(n * n, sizeof(edge)); assert(g->e);
 	g->dead = (bool*) calloc(n,     sizeof(bool)); assert(g->dead);
 	
@@ -81,8 +81,8 @@ bool IntGraph_AddMove(IntGraph* g, u32 i, u32 j)
 	{
 		EDGE(i, j).pref = true;
 		EDGE(j, i).pref = true;
-		g->move[i] = true;
-		g->move[j] = true;
+		g->move[i]++;
+		g->move[j]++;
 		return true;
 	}
 	else
@@ -95,16 +95,8 @@ bool IntGraph_DelMove(IntGraph* g, u32 i, u32 j)
 	{
 		EDGE(i, j).pref = false;
 		EDGE(j, i).pref = false;
-		g->move[i] = false;
-		g->move[j] = false;
-		for (u32 k = 0; k < g->n; k++)
-			if (!g->dead[k])
-			{
-				if (EDGE(i, k).pref)
-					g->move[i] = true;
-				if (EDGE(j, k).pref)
-					g->move[j] = true;
-			}
+		g->move[i]--;
+		g->move[j]--;
 		return true;
 	}
 	else
@@ -115,8 +107,13 @@ void IntGraph_Simplify(IntGraph* g, u32 v)
 {
 	g->dead[v] = true;
 	for (u32 i = 0; i < g->n; i++)
-		if (!g->dead[i] && EDGE(i, v).interf)
-			g->d[i]--;
+		if (!g->dead[i])
+		{
+			if (EDGE(i, v).interf)
+				g->d[i]--;
+			else if (EDGE(i, v).pref)
+				g->move[i]--;
+		}
 }
 
 void IntGraph_Coalesce(IntGraph* g, u32 v1, u32 v2)

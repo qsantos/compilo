@@ -27,8 +27,8 @@
 
 /* Confer https://en.wikipedia.org/wiki/Register_allocation#Iterated_Register_Coalescing */ 
 
-#define MASK_COALESCE (0xF000000000000000)
 #define EDGE(U, V) (g->e[(V) * g->n + (U)])
+#define MASK_COALESCE (0xF000000000000000)
 RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k, u32stack* spilled)
 {
 	RegAlloc* ra  = (RegAlloc*) calloc(g->n, sizeof(RegAlloc)); assert(ra);
@@ -40,11 +40,12 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k, u32stack* spilled)
 		if (!ra[spilled->head].spilled)
 		{
 			ra[spilled->head].spilled = true;
-//			IntGraph_Simplify(g, spilled->head); // TODO
-//			rem--;
+			IntGraph_Simplify(g, spilled->head);
+			rem--;
 		}
 		spilled = spilled->tail;
 	}
+	
 	
 	/* Stack vertices which will be colored */
 	while (rem)
