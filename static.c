@@ -123,10 +123,17 @@ Type* Check_Expr(Expr* e, Context* c)
 	case EXPR_LNOT:
 	case EXPR_MINUS:
 		return Check_Expr(e->v.uni_op, c);
+	case EXPR_ADD:  case EXPR_SUB:
+		t1 = Check_Expr(e->v.bin_op.left, c);
+		t2 = Check_Expr(e->v.bin_op.right, c);
+		if (t1->type == TYPE_PTR && t1->v.ptr->type == TYPE_INT && t2->type == TYPE_INT);
+		else
+			Check_Types(t1, t2, &e->pos, c);
+		return t1;
 	case EXPR_AND:  case EXPR_OR:  case EXPR_XOR:
 	case EXPR_LAND: case EXPR_LOR:
 	case EXPR_EQ:   case EXPR_NEQ: case EXPR_LE:  case EXPR_LT:  case EXPR_GE:  case EXPR_GT:
-	case EXPR_ADD:  case EXPR_SUB: case EXPR_MUL: case EXPR_DIV: case EXPR_MOD:
+	case EXPR_MUL: case EXPR_DIV: case EXPR_MOD:
 		t1 = Check_Expr(e->v.bin_op.left, c);
 		t2 = Check_Expr(e->v.bin_op.right, c);
 		Check_Types(t1, t2, &e->pos, c);
