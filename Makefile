@@ -32,4 +32,4 @@ ltest: $(TARGET)
 	@./ltest
 
 tgz: $(TARGET)
-	tar zcvf GregoireSantos.tgz *.h *.c lexer.lex parser.y examples report $(TARGET) LICENCE LOGO ltest Makefile README test
+	tar zcvf GregoireSantos.tgz *.h *.c lexer.lex parser.y examples/[0-9]* report/report.tex report/report.pdf $(TARGET) LICENCE LOGO ltest Makefile README test

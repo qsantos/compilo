@@ -43,7 +43,7 @@
 			\item les abbréviations unaires (\verb#++,--#) et binaires (\verb#+=,-=,*=,/=,%=,&=,|=,^=#);
 			\item les tableaux ($t[i] \equiv *(t + 4*i)$).
 		\end{itemize}
-		\par Pour ne pas alourdir inutilement l'analyse syntaxique, nous avons différencié les opérateur de déréférencement à gauche et à droite. Autrement dit, \verb#$# pour écrire (\verb#$x = 5;#) et \verb#*# pour lire (\verb#x = *y;#).
+		\par Suite à des problèmes d'analyse syntaxique, nous avons différencié les opérateur de déréférencement à gauche et à droite. Autrement dit, \verb#$# pour écrire (\verb#$x = 5;#) et \verb#*# pour lire (\verb#x = *y;#).
 	\section{Analyse statique}
 		\par Fichiers: \verb#hash.c, context.c, static.c#
 		\par L'analyse statique se fait en un parcours de l'arbre de syntaxe abstraite. Lors du parcours d'une expression, son type est retourné, pour les vérifications de typage. Au fur et à mesure de la rencontre de la déclaration de symboles (variables ou fonctions), une table des symboles est remplie, avec l'aide d'une fonction de hachage. Les différents identifiants associés à un symbole peuvent prêter à confusion:
@@ -56,7 +56,7 @@
 		\par Lors de l'analyse statique, on marque également les variables qui apparaissent dans une expression de la forme \verb#&x# comme devant être spillés, afin de pouvoir effectivement récupérer une adresse mémoire.
 	\section{Code intermédiaire}
 		\par Fichiers: \verb#asm.c#
-		\par Le code intermédiaire est formé d'instructions prenant trois registres comme paramètres (sauf exceptions). Les instructions sont:
+		\par Le code intermédiaire est formé d'instructions prenant trois registres comme paramètres (sauf exception), sauf \verb#CALL#. Les instructions sont:
 		\begin{itemize}
 			\item \verb#STOP#: fin du programme (affichage de la valeur de retour);
 			\item \verb#SET#: le deuxième registre est en fait une valeur immédiate (\verb#r0 <- imm1#);
@@ -82,10 +82,10 @@
 			\text{out}[n] = \bigcup_{s \in \text{succ(n)}} \text{in}[s]
 		\]
 		\par On construit ensuite le graphe d'interférence composé d'autant de sommets que de registres virtuels. Pour $n$ donné, on place des arrêtes d'interférence entre les éléments de \verb#def[n]# et \verb#out[n]# (dans le cas du \verb#MOV# l'arrête entre l'unique élément de \verb#def[n]# et l'unique élément \verb#use[n]# est remplacée par une arrête de préférence).
-		\par L'allocation de registres consiste à colorier le graphe avec les $k$ registres réels. Par ordre de priorité, on:
+		\par L'allocation de registres consiste à colorer le graphe avec les $k$ registres réels. Par ordre de priorité, on:
 		\begin{itemize}
-			\item retire les sommets de degré inférieur à $k$ (le registre correspondant est ajouté à la liste de ceux qu'on pourra facilement colorier);
-			\item contracte une arrête de préférence dont le degré combiné est inférieur à $k$ (on ajoute un des registres dans la liste pour le colorier comme l'autre);
+			\item retire les sommets de degré inférieur à $k$ (le registre correspondant est ajouté à la liste de ceux qu'on pourra facilement colorer);
+			\item contracte une arrête de préférence dont le degré combiné est inférieur à $k$ (on ajoute un des registres dans la liste pour le colorer comme l'autre);
 			\item retire une arrête de préférence;
 			\item spill un sommet (on marque le registre virtuel comme devant être stocké en mémoire et on retire le sommet).
 		\end{itemize}
@@ -98,5 +98,4 @@
 		\par L'allocation dynamique de mémoire fonctionne en manipulant des blocs (une en-tête contient un pointeur vers le bloc suivant dans la liste de \verb#malloc#, ainsi que sa taille).
 		\par \verb#malloc# maintient une liste de blocs libres attribués par le système. Lors de la demande d'un bloc, elle cherche dans la liste un bloc de taille suffisante, le découpe si nécessaire, le retire de la liste et retourne l'espace mémoire de ce bloc (après l'en-tête) à l'utilisateur).
 		\par \verb#free# remonte dans l'en-tête et rajoute le bloc dans la liste (en le fusionnant éventuellement avec des blocs contigüs).
-		\par Notre implémentation de \verb#malloc# et \verb#free# est très largement inspirée de celle proposée à titre d'exemple dans le K\&R.
 \end{document}
