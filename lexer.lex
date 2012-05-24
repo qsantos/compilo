@@ -51,36 +51,36 @@ INTEGER         [0-9]+
 
 %%
 
-"/*"                      { BEGIN(COMMENT);               }
-<COMMENT>"*/"             { BEGIN(INITIAL);               }
-<COMMENT>.                {                               }
+"/*"                          { BEGIN(COMMENT);               }
+<COMMENT>"*/"                 { BEGIN(INITIAL);               }
+<COMMENT>.                    {                               }
 
-"while"                   { Char_Move(5); return WHILE;   }
-"do"                      { Char_Move(2); return DO;      }
-"for"                     { Char_Move(3); return FOR;     }
-"if"                      { Char_Move(2); return IF;      }
-"else"                    { Char_Move(4); return ELSE;    }
-"return"                  { Char_Move(6); return RETURN;  }
+"while"                       { Char_Move(5); return WHILE;   }
+"do"                          { Char_Move(2); return DO;      }
+"for"                         { Char_Move(3); return FOR;     }
+"if"                          { Char_Move(2); return IF;      }
+"else"                        { Char_Move(4); return ELSE;    }
+"return"                      { Char_Move(6); return RETURN;  }
 
-"void"                    { Char_Move(4); return VOID;    }
-"char"                    { Char_Move(4); return CHAR;    }
-"int"                     { Char_Move(3); return INT;     }
+"void"                        { Char_Move(4); return VOID;    }
+"char"                        { Char_Move(4); return CHAR;    }
+"int"                         { Char_Move(3); return INT;     }
 
-"&&"                      { Char_Move(2); return LAND;    }
-"||"                      { Char_Move(2); return LOR;     }
-"=="                      { Char_Move(2); return EQ ;     }
-"!="                      { Char_Move(2); return NEQ;     }
-"<="                      { Char_Move(2); return LE ;     }
-">="                      { Char_Move(2); return GE ;     }
+"&&"                          { Char_Move(2); return LAND;    }
+"||"                          { Char_Move(2); return LOR;     }
+"=="                          { Char_Move(2); return EQ ;     }
+"!="                          { Char_Move(2); return NEQ;     }
+"<="                          { Char_Move(2); return LE ;     }
+">="                          { Char_Move(2); return GE ;     }
 
-[-(){},;+*=/%<>!?:~&|\^$] { Char_Move(1); return *yytext; }
+[-(){},;+*=/%<>!?:~&|\^$\[\]] { Char_Move(1); return *yytext; }
 
-{INTEGER}                 { Char_Move(strlen(yytext)); yylval.integer = atol(yytext);       return INTEGER; }
-{SYMBOL}                  { Char_Move(strlen(yytext)); yylval.symbol = String_Copy(yytext); return SYMBOL;  }
+{INTEGER}                     { Char_Move(strlen(yytext)); yylval.integer = atol(yytext);       return INTEGER; }
+{SYMBOL}                      { Char_Move(strlen(yytext)); yylval.symbol = String_Copy(yytext); return SYMBOL;  }
 
-[ \r\t]+                  { Char_Move(strlen(yytext));    }
-\n                        { Char_Newline();               }
-.                         { yyerror("Unknown character"); }
+[ \r\t]+                      { Char_Move(strlen(yytext));    }
+\n                            { Char_Newline();               }
+.                             { yyerror("Unknown character"); }
 
 %%
 
