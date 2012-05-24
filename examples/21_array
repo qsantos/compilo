@@ -4,10 +4,10 @@ int main(void)
 	int acc = 1;
 	int i;
 		
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 5; i = i + 1)
 		t[i] = i;
 
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 5; i = i + 1)
 		acc = t[i] * acc;
 	
 	free(t);
