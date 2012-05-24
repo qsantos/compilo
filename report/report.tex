@@ -45,6 +45,14 @@
 		\end{itemize}
 	\section{Analyse statique}
 		\par Fichiers: \verb#hash.c, context.c, static.c#
+		\par L'analyse statique se fait en un parcours de l'arbre de syntaxe abstraite. Lors du parcours d'une expression, son type est retourné, pour les vérifications de typage. Au fur et à mesure de la rencontre de la déclaration de symboles (variables ou fonctions), une table des symboles est remplie, avec l'aide d'une fonction de hachage. Les différents identifiants associés à un symbole peuvent prêter à confusion:
+		\begin{itemize}
+			\item l'identifiant local (\verb#localId#) est la valeur retournée par la table de hachage pour un nom donné, et peut en fait correspondre à plusieurs symboles différents dans le programme (avec le même nom);
+			\item l'identifiant global (\verb#id#) est un identifiant qui permet d'accéder au symbole sans tenir compte des scopes;
+			\item le registre virtuel représente un espace mémoire où la valeur du registre (ou le retour de la fonction) sera stockée;
+			\item le registre réel correspond au registre machine qui sera utilisé pour manipuler effectivement la variable (plusieurs registres virtuels peuvent correspondre à un même registre réel).
+		\end{itemize}
+		\par Lors de l'analyse statique, on marque également les variables qui apparaissent dans une expression de la forme \verb#&x# comme devant être spillés, afin de pouvoir effectivement récupérer une adresse mémoire.
 	\section{Code intermédiaire}
 		\par Fichiers: \verb#asm.c#
 		\par Le code intermédiaire est formé d'instructions prenant trois registres comme paramètres (sauf exception), sauf \verb#CALL#. Les instructions sont:
