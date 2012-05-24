@@ -35,14 +35,15 @@
 		\begin{itemize}
 			\item les types void, char et int, ainsi que les pointeurs;
 			\item la déclaration et l'appel de fonctions;
-			\item les opérateurs logiques unaire (\verb#!#), binaires (\verb#&,|,^,&&,||,==,!=,<=,>,>=,>#);
+			\item les opérateurs logiques unaire (\verb#!#) et binaires (\verb#&,|,^,&&,||,==,!=,<=,>,>=,>#);
 			\item les opérateurs arithmétiques unaire (\verb#-#), binaires (\verb#+,-,*,/,%#) et trinaire (\verb#_ ? : _#);
-			\item les opérateurs sur les pointeurs (\verb#+,-#);
+			\item les opérateurs sur les pointeurs unaires (\verb#&,$,*#) et binaires(\verb#+,-#);
 			\item les structures conditionnelles (if, if \dots else);
 			\item les structures de boucle (while, do \dots while, for);
 			\item les abbréviations unaires (\verb#++,--#) et binaires (\verb#+=,-=,*=,/=,%=,&=,|=,^=#);
 			\item les tableaux ($t[i] \equiv *(t + 4*i)$).
 		\end{itemize}
+		\par Suite à des problèmes d'analyse syntaxique, nous avons différencié les opérateur de déréférencement à gauche et à droite. Autrement dit, \verb#$# pour écrire (\verb#$x = 5;#) et \verb#*# pour lire (\verb#x = *y;#).
 	\section{Analyse statique}
 		\par Fichiers: \verb#hash.c, context.c, static.c#
 		\par L'analyse statique se fait en un parcours de l'arbre de syntaxe abstraite. Lors du parcours d'une expression, son type est retourné, pour les vérifications de typage. Au fur et à mesure de la rencontre de la déclaration de symboles (variables ou fonctions), une table des symboles est remplie, avec l'aide d'une fonction de hachage. Les différents identifiants associés à un symbole peuvent prêter à confusion:
