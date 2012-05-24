@@ -54,7 +54,7 @@ void Context_Delete(Context* c)
 		u32stack_Delete(&c->l2g[i]);
 	free(c->l2g);
 	
-//	HashTable_Delete(c->ht); TODO
+	HashTable_Delete(c->ht);
 	free(c->st);
 	free(c);
 }
@@ -80,19 +80,16 @@ void Context_EndScope(Context* c)
 
 symbol* Context_Declare(Context* c, cstring name)
 {
-	static u32 globalId = 0; // TODO
-	
 	u32 localId = HashTable_Find(c->ht, name);
 	u32stack_Push(&c->l2g[localId], c->n_symbs);
 	u32stack_Push(&c->defined,      localId);
 	c->forget->head++;
 	
 	symbol* symb = &c->st[c->n_symbs];
-	symb->id     = globalId;
+	symb->id     = c->n_symbs;
 	symb->depth  = c->depth;
 	c->n_symbs++;
 	
-	globalId++;
 	return symb;
 }
 

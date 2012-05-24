@@ -29,13 +29,24 @@
 
 #define MASK_COALESCE (0xF000000000000000)
 #define EDGE(U, V) (g->e[(V) * g->n + (U)])
-RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
+RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k, u32stack* spilled)
 {
 	RegAlloc* ra  = (RegAlloc*) calloc(g->n, sizeof(RegAlloc)); assert(ra);
 	u32stack* vertices = NULL;
 	
-	/* Stack vertices which will be colored */
 	u32 rem = g->n;
+	while (spilled)
+	{
+		if (!ra[spilled->head].spilled)
+		{
+			ra[spilled->head].spilled = true;
+//			IntGraph_Simplify(g, spilled->head); // TODO
+//			rem--;
+		}
+		spilled = spilled->tail;
+	}
+	
+	/* Stack vertices which will be colored */
 	while (rem)
 	{
 		bool done = false;
@@ -124,18 +135,4 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k)
 	free(colored);
 	
 	return ra;
-}
-
-RegAlloc* ASM_RegAlloc(ASM* a, u32 s, u32 e, Context* c, u32 k)
-{
-	Flow* f = Flow_Build(a, s, e, c);
-	Flow_Vivacity(f);
-	
-	IntGraph* g = IntGraph_FromFlow(f);
-	RegAlloc* r = IntGraph_RegAlloc(g, k);
-	
-	IntGraph_Delete(g);
-	Flow_Delete(f);
-	
-	return r;
 }

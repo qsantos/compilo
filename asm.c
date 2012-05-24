@@ -235,7 +235,11 @@ u32 ASM_GenExpr(ASM* a, Context* c, Expr* e)
 		r1 = ASM_GenExpr(a, c, e->v.uni_op);
 		ASM_Push(a, INSN_MRD, r0, r1, 0);
 		break;
-	case EXPR_ADDR: // TODO
+	case EXPR_ADDR:
+		r0 = ASM_NewReg(a, c);
+		r1 = c->st[e->v.aff.id].reg;
+		ASM_Push(a, INSN_RGA, r0, r1, 0);
+		u32stack_Push(&a->spilled, r1);
 		break;
 	}
 	

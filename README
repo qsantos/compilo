@@ -1,13 +1,19 @@
 Source files:
+* asm.[hc]      intermediate code
 * ast.[hc]      Abstract Syntax Tree
 * context.[hc]  context definition and using (includes the table of symbols)
 * error.[hc]    error handling
+* mips.[hc]     output code
+* flow.[hc]     flow building
 * hash.[hc]     hash table
+* intgraph.[hc] interference graph manipulation
 * latex.[hc]    LaTeX output of the AST (alpha version)
 * lexer.lex
 * main.c
 * parser.y
 * printer.[hc]  basic printing of the AST
+* regalloc.[hc] register allocation
+* set.[hc]      set manipulation
 * static.[hc]   static analysis
 * types.h       intuitive renaming of the C types
 * u32stack.[hc] basic integer stack
@@ -25,4 +31,8 @@ Currently implemented:
 * function declarations and calls;
 * unary (!,-), binary (+,-,*,/,%,==,!=,<=,<,>=,>) and trinary (_ ? _ : _) operators;
 * conditional structures (if, if..else);
-* loop structures (while, do..while, for).
+* loop structures (while, do..while, for);
+* unary (++, --) and binary (+=, -=, *=, /=, %=, &=, |=, ^=) abbreviations;
+* pointer arithmetic;
+* malloc / free;
+* basic array syntax (t[i]).

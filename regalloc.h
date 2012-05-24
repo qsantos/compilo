@@ -30,7 +30,6 @@ typedef struct
 	u32  color;
 } RegAlloc;
 
-RegAlloc* IntGraph_RegAlloc(IntGraph*, u32);
-RegAlloc* ASM_RegAlloc     (ASM*, u32, u32, Context*, u32);
+RegAlloc* IntGraph_RegAlloc(IntGraph*, u32, u32stack* spilled);
 
 #endif

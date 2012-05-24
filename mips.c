@@ -19,7 +19,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
-#include "exec.h"
+#include "mips.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -27,125 +27,9 @@
 #include "flow.h"
 #include "regalloc.h"
 
-void ASM_Simulate_PopRegs(u32* regs, u32stack** stack, u32stack* params)
-{
-	if (params)
-	{
-		ASM_Simulate_PopRegs(regs, stack, params->tail);
-		regs[params->head] = u32stack_Pop(stack);
-	}
-}
-
-#define rr0 regs[i.v.r.r0]
-#define rr1 regs[i.v.r.r1]
-#define rr2 regs[i.v.r.r2]
-void ASM_Simulate(ASM* a, Context* c)
-{
-	assert(a);
-	
-	u32* regs = (u32*) malloc(sizeof(u32) * a->n_regs);
-	assert(regs);
-	
-	bool stop = false;
-	u32 ip = 0;
-	u32 v;
-	u32stack* stack = NULL;
-	u32stack* args;
-	u32stack* params;
-	symbol s;
-	
-	while (!stop && ip < a->n_code)
-	{
-		Instr i  = a->code[ip++];
-		u32 res = i.v.r.r0;
-		
-		switch (i.insn)
-		{
-		case INSN_STOP:
-			stop = true;
-			break;
-		case INSN_SET:
-			v = i.v.r.r1;
-			rr0 = v;
-			printf("$%.2lu <- %lu\n", res, v);
-			break;
-		case INSN_MOV:  rr0 = rr1;           printf("$%.2lu <- $%.2lu (%lu)\n", res, i.v.r.r1, rr0); break;
-		case INSN_NOT:  rr0 = ~rr1;          printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_AND:  rr0 = rr1 & rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_OR:   rr0 = rr1 | rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_XOR:  rr0 = rr1 ^ rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_LNOT: rr0 = !rr1;          printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_LAND: rr0 = (rr1 && rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_LOR:  rr0 = (rr1 || rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_EQ:   rr0 = (rr1 == rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_NEQ:  rr0 = (rr1 != rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_LE:   rr0 = (rr1 <= rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_LT:   rr0 = (rr1 <  rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_GE:   rr0 = (rr1 >= rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_GT:   rr0 = (rr1 >  rr2);  printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_ADD:  rr0 = rr1 + rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_SUB:  rr0 = rr1 - rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_MUL:  rr0 = rr1 * rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_DIV:  rr0 = rr1 / rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_MOD:  rr0 = rr1 % rr2;     printf("$%.2lu <- %lu\n", res, rr0); break;
-		case INSN_JMP:
-			ip = a->labels[i.v.r.r0];
-			printf("goto .%lu\n", i.v.r.r0);
-			break;
-		case INSN_JZ:
-			if (!rr1)
-			{
-				ip = a->labels[i.v.r.r0];
-				printf("goto .%lu\n", i.v.r.r0);
-			}
-			break;
-		case INSN_JNZ:
-			if (rr1)
-			{
-				ip = a->labels[rr0];
-				printf("goto .%lu\n", i.v.r.r0);
-			}
-			break;
-		case INSN_CALL:
-			u32stack_Push(&stack, ip);
-			
-			args = i.v.p;
-			printf("Call .%lu\n", args->head);
-			v = a->labels[args->head];
-			args = args->tail;
-			ip = v;
-			
-			// save regs
-			s = c->st[a->code[v].v.r.r2];
-			params = s.usedRegs;
-			while (params)
-			{
-				u32stack_Push(&stack, regs[params->head]);
-				params = params->tail;
-			}
-			
-			// set params
-			params = s.params;
-			while (params && args)
-			{
-				printf("# $%.2lu < $%.2lu (%lu)\n", params->head, args->head, regs[args->head]);
-				regs[params->head] = regs[args->head];
-				args   = args->tail;
-				params = params->tail;
-			}
-			break;
-		case INSN_RET:
-			ASM_Simulate_PopRegs(regs, &stack, c->st[i.v.r.r0].usedRegs);
-			ip = u32stack_Pop(&stack);
-			break;
-		case INSN_LBL:
-			break;
-		}
-	}
-
-	u32stack_Delete(&stack);
-	free(regs);
-}
+#define REG_TMP0 ((u32)24)
+#define REG_TMP1 ((u32)25)
+#define REG_RA   31
 
 u32 ra_wreg(u32 treg, RegAlloc ra)
 {
@@ -277,7 +161,12 @@ void ASM_toMIPS(ASM* a, Context* c)
 		}
 		e--;
 		
-		RegAlloc* ra = ASM_RegAlloc(a, s, e, c, k);
+		Flow* f = Flow_Build(a, s, e, c);
+		Flow_Vivacity(f);
+		IntGraph* g = IntGraph_FromFlow(f);
+		RegAlloc* ra = IntGraph_RegAlloc(g, k, a->spilled);
+		IntGraph_Delete(g);
+		Flow_Delete(f);
 		
 		for (u32 ip = s; ip <= e; ip++)
 		{
@@ -311,6 +200,10 @@ void ASM_toMIPS(ASM* a, Context* c)
 			case INSN_MOV:  printf("\tmove $%.2lu, $%.2lu\n", WREG(r0), RREG1(r1)); SREG(r0); break;
 			case INSN_MRD:  printf("\tlw   $%.2lu, 0($%.2lu)\n", RREG1(r0), RREG2(r1)); break;
 			case INSN_MWR:  printf("\tsw   $%.2lu, 0($%.2lu)\n", RREG1(r1), RREG2(r0)); break;
+			case INSN_RGA:
+				assert(ra[i.v.r.r1].spilled);
+				printf("\taddiu $%.2lu, $sp, %lu\n", WREG(r0), 4*ra[i.v.r.r1].color);
+				break;
 			case INSN_NOT:  printf("\tnot  $%.2lu, $%.2lu\n", WREG(r0), RREG1(r1)); SREG(r0); break;
 			case INSN_AND:  MIPS_BINOP("and"); break;
 			case INSN_OR:   MIPS_BINOP("or "); break;

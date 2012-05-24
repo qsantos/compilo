@@ -19,8 +19,11 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
+#ifndef MIPS_H
+#define MIPS_H
+
 #include "asm.h"
-#include "u32stack.h"
 
-#include <stdio.h>
+void ASM_toMIPS  (ASM*, Context*);
 
+#endif

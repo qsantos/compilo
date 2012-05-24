@@ -110,7 +110,6 @@ Type* Check_Expr(Expr* e, Context* c)
 		}
 		return t1;
 	case EXPR_VAR:
-	case EXPR_ADDR:
 		symb = Context_Get(c, e->v.var.name);
 		if (symb)
 		{
@@ -145,6 +144,15 @@ Type* Check_Expr(Expr* e, Context* c)
 		Check_Types(t1, t2, &e->pos, c);
 		Check_Types(t1, t3, &e->pos, c);
 		return t1;
+	case EXPR_ADDR:
+		symb = Context_Get(c, e->v.var.name);
+		if (symb)
+		{
+			e->v.var.id = symb->id;
+			return Type_Ptr(symb->v.t); // TODO : memory leak
+		}
+		else
+			Static_Error(c, &e->pos, "variable %s is undeclared", e->v.var.name);
 	case EXPR_DEREF:
 		t1 = Check_Expr(e->v.uni_op, c);
 		if (t1->type == TYPE_PTR)
@@ -349,5 +357,4 @@ void Check_Program(Program* l, Context* c)
 		Check_FunDecl(l->head, c);
 		l = l->tail;
 	}
-	//Context_EndScope(c); // TODO
 }

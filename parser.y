@@ -91,7 +91,7 @@ start: program                                             { current_prog = $1; 
 
 program:
                                                            { $$ = NULL;                                         }
-     | fun_declaration program                             { $$ = Program_Fun($1, $2);                          }
+     | fun_declaration program                             { $$ = Program_New($1, $2);                          }
 ;
 
 fun_declaration: type SYMBOL '(' params ')' statement      { $$ = FunDecl_New($1, $2, $4, $6, (position*) &@$); }
@@ -140,7 +140,7 @@ params:
 
 lvalue:
        SYMBOL                                              { $$ = LValue_Var($1, (position*) &@$);              }
-     | '$' expression                                      { $$ = LValue_Ref($2, (position*) &@$);              }
+     | '$' SYMBOL                                          { $$ = LValue_Ref(Expr_Var($2, (position*) &@$), (position*) &@$);              }
      | SYMBOL '[' expression ']'                           { $$ = LValue_Ref(Expr_Add(Expr_Var($1, (position*) &@$), Expr_Mul($3, Expr_Integer(4, (position*) &@$), (position*) &@$), (position*) &@$), (position*) &@$); }
 ;
 

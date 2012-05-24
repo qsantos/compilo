@@ -30,7 +30,7 @@
 typedef enum
 {
 	INSN_STOP,
-	INSN_SET,  INSN_MOV,  INSN_MRD,  INSN_MWR,
+	INSN_SET,  INSN_MOV,  INSN_MRD, INSN_MWR,  INSN_RGA,
 	INSN_NOT,  INSN_AND,  INSN_OR,  INSN_XOR,
 	INSN_LNOT, INSN_LAND, INSN_LOR,
 	INSN_EQ,   INSN_NEQ,  INSN_LE,  INSN_LT,   INSN_GE,  INSN_GT,
@@ -62,6 +62,7 @@ typedef struct
 	u32         a_labels;
 	
 	u32stack**  funCalls; // for each function, list of calls
+	u32stack*   spilled;
 } ASM;
 
 ASM* ASM_New       (Context*);

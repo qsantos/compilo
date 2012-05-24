@@ -1,5 +1,5 @@
 CFLAGS := -Wall -Wextra -ansi -pedantic -std=c99 -g #-O3
-CFILES := asm.c ast.c context.c error.c exec.c flow.c hash.c intgraph.c latex.c main.c printer.c regalloc.c set.c static.c u32stack.c
+CFILES := asm.c ast.c context.c error.c flow.c hash.c intgraph.c latex.c main.c mips.c printer.c regalloc.c set.c static.c u32stack.c
 OFILES := $(CFILES:.c=.o)
 TARGET := compilo
 

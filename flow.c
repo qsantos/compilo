@@ -105,6 +105,17 @@ Flow* Flow_Build(ASM* a, u32 s, u32 e, Context* c)
 			u32stack_Push(&f->s[k].use, ins.v.r.r1);
 			f->s[k].mov = ins.v.r.r1;
 			break;
+		case INSN_MRD:
+			u32stack_Push(&f->s[k].def, ins.v.r.r0);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
+			break;
+		case INSN_MWR:
+			u32stack_Push(&f->s[k].use, ins.v.r.r0);
+			u32stack_Push(&f->s[k].use, ins.v.r.r1);
+			break;
+		case INSN_RGA:
+			u32stack_Push(&f->s[k].def, ins.v.r.r0);
+			break;
 		case INSN_JMP:  case INSN_JZ:  case INSN_JNZ:
 			f->s[k].jmp = a->labels[ins.v.r.r0];
 			assert((s32)s <= f->s[k].jmp);
@@ -120,14 +131,6 @@ Flow* Flow_Build(ASM* a, u32 s, u32 e, Context* c)
 				f->s[k].def = u32stack_RCopy(c->st[ins.v.r.r2].params);
 			break;
 		case INSN_RET:
-			u32stack_Push(&f->s[k].use, ins.v.r.r1);
-			break;
-		case INSN_MWR:
-			u32stack_Push(&f->s[k].use, ins.v.r.r0);
-			u32stack_Push(&f->s[k].use, ins.v.r.r1);
-			break;
-		case INSN_MRD:
-			u32stack_Push(&f->s[k].def, ins.v.r.r0);
 			u32stack_Push(&f->s[k].use, ins.v.r.r1);
 			break;
 		case INSN_STOP:

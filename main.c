@@ -27,7 +27,7 @@
 #include "latex.h"
 #include "static.h"
 #include "flow.h"
-#include "exec.h"
+#include "mips.h"
 
 extern int yyparse(void);
 
@@ -69,11 +69,6 @@ int main(int argc, char** argv)
 		if (!strcmp(argv[1], "--asm"))
 		{
 			Print_ASM(a);
-			return 0;
-		}
-		if (!strcmp(argv[1], "--exec"))
-		{
-			ASM_Simulate(a, c);
 			return 0;
 		}
 	}
