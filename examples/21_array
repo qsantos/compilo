@@ -8,7 +8,7 @@ int main(void)
 		t[i] = i;
 
 	for (i = 0; i < 5; i++)
-		acc *= t[i];
+		acc = t[i] * acc;
 	
 	free(t);
 	

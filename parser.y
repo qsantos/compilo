@@ -136,12 +136,10 @@ params:
        VOID                                                { $$ = ParamList_Void();                             }
      | param_list                                          { $$ = $1;                                           }
 
-array_elem:
-;
-
 lvalue:
        SYMBOL                                              { $$ = LValue_Var($1, (position*) &@$);              }
      | '$' SYMBOL                                          { $$ = LValue_Ref(Expr_Var($2, (position*) &@$), (position*) &@$);    }
+     | SYMBOL '[' expression ']'                           { $$ = LValue_Ref(Expr_Add(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
 ;
 
 expression:
@@ -149,7 +147,7 @@ expression:
      | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3,   (position*) &@$);     }
      | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL, (position*) &@$);     }
      | lvalue '=' expression                               { $$ = Expr_Aff     ($1, $3,   (position*) &@$);     }
-| SYMBOL '[' expression ']'                           { $$ = ??? /* LA */     }
+     | SYMBOL '[' expression ']'                           { $$ = Expr_Deref(Expr_Add(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$);     }
      | SYMBOL                                              { $$ = Expr_Var     ($1,       (position*) &@$);     }
      | '!' expression                                      { $$ = Expr_Not     ($2,       (position*) &@$);     }
      | '~' expression                                      { $$ = Expr_Lnot    ($2,       (position*) &@$);     }
