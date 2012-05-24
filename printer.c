@@ -249,7 +249,7 @@ void Print_ParamList(ParamList* l)
 	printf(")");
 }
 
-void Print_FunDecl(FunDecl* f)
+void Print_FunDecl(Decl* f)
 {
 	if (!f)
 	{
@@ -257,11 +257,11 @@ void Print_FunDecl(FunDecl* f)
 		return;
 	}
 	printf("FunDecl(");
-	Print_Type(stdout, f->type);
-	printf(", %s, ", f->name);
-	Print_ParamList(f->params);
+	Print_Type(stdout, f->v.fun.type);
+	printf(", %s, ", f->v.fun.name);
+	Print_ParamList(f->v.fun.params);
 	printf(", ");
-	Print_Stmt(f->stmt);
+	Print_Stmt(f->v.fun.stmt);
 	printf(")");
 }
 

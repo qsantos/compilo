@@ -53,8 +53,8 @@ typedef struct
 	bool isDefined;  // if function, has it been defined ? if variable, has it been initialized ?
 	union
 	{
-		Type*    t;
-		FunDecl* f;
+		Type* t;
+		Decl* f;
 	} v;
 	position* pos;
 	u32       depth; // depth at which it has been declared
@@ -75,7 +75,7 @@ typedef struct
 	u32        n_symbs; // symbol counter
 	u32stack*  defined; // list of the symbols of the current scope
 	u32stack*  forget;  // number of symbols in the current scope
-	FunDecl*   cur_fun; // current function (if needed)
+	Decl*      cur_fun; // current function (if needed)
 	u32        depth;   // helps to know if one can redeclare a variable
 	u32        main;    // global identifier of main function
 } Context;

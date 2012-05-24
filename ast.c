@@ -296,18 +296,25 @@ void Type_Delete(Type* t)
 	(void) t;
 }
 
+Type* Type_Struct(string name)
+{
+	Type* t = (Type*) malloc(sizeof(Type));
+	assert(t);
+	t->type = TYPE_STRUCT;
+	t->v.stc = name;
+	return t;	
+}
+
 bool Type_Comp(Type* t1, Type* t2)
 {
-	switch (t1->type)
-	{
-	case TYPE_VOID:
-	case TYPE_CHAR:
-	case TYPE_INT:
-		return t2->type == t1->type;
-	case TYPE_PTR:
-		return t2->type == TYPE_PTR && Type_Comp(t1->v.ptr, t2->v.ptr);
-	}
-	return false;
+	if (t1->type != t2->type)
+		return false;
+	if (t1->type == TYPE_PTR)
+		return Type_Comp(t1->v.ptr, t2->v.ptr);
+	else if (t1->type == TYPE_STRUCT)
+		return !strcmp(t1->v.stc, t2->v.stc);
+	else
+		return true;
 }
 
 void Print_Type(FILE* f, Type* t)
@@ -326,6 +333,9 @@ void Print_Type(FILE* f, Type* t)
 	case TYPE_PTR:
 		Print_Type(f, t->v.ptr);
 		fprintf(f, "*");
+		break;
+	case TYPE_STRUCT:
+		fprintf(f, "struct %s", t->v.stc);
 		break;
 	}
 }
@@ -510,19 +520,42 @@ ParamList* ParamList_Void(void)
 	return ParamList_New(Param_New(Type_Void(), "", &pos_void), NULL);
 }
 
-FunDecl* FunDecl_New(Type* ret, string name, ParamList* params, Stmt* body, position* pos)
+Decl* FunDecl_New(Type* ret, string name, ParamList* params, Stmt* body, position* pos)
 {
-	FunDecl* f = (FunDecl*) malloc(sizeof(FunDecl));
+	Decl* f = (Decl*) malloc(sizeof(Decl));
 	assert(f);
-	f->type   = ret;
-	f->name   = name;
-	f->params = params;
-	f->stmt   = body;
+	f->kind         = FUN_DECL;
+	f->v.fun.type   = ret;
+	f->v.fun.name   = name;
+	f->v.fun.params = params;
+	f->v.fun.stmt   = body;
 	Pos_Copy(&f->pos, pos);
 	return f;
 }
 
-Program* Program_New(FunDecl* head, Program* tail)
+Decl* VarDecl_New(Type* t, string name, position* pos)
+{
+	Decl* f = (Decl*) malloc(sizeof(Decl));
+	assert(f);
+	f->kind       = VAR_DECL;
+	f->v.var.type = t;
+	f->v.var.name = name;
+	Pos_Copy(&f->pos, pos);
+	return f;
+}
+
+Decl* Struct_New(string name, ParamList* fields, position* pos)
+{
+	Decl* f = (Decl*) malloc(sizeof(Decl));
+	assert(f);
+	f->kind         = STRUCT_DECL;
+	f->v.stc.name   = name;
+	f->v.stc.fields = fields;
+	Pos_Copy(&f->pos, pos);
+	return f;
+}
+
+Program* Program_New(Decl* head, Program* tail)
 {
 	Program* p = (Program*) malloc(sizeof(Program));
 	assert(p);
@@ -551,15 +584,18 @@ void ParamList_Delete(ParamList* l)
 	}
 }
 
-void FunDecl_Delete(FunDecl* f)
+void Decl_Delete(Decl* f)
 {
 	if (f)
 	{
-		Type_Delete(f->type);
-		free(f->name);
-		ParamList_Delete(f->params);
-		Stmt_Delete(f->stmt);
-		free(f);
+		if (f->kind == FUN_DECL)
+		{
+			Type_Delete(f->v.fun.type);
+			free(f->v.fun.name);
+			ParamList_Delete(f->v.fun.params);
+			Stmt_Delete(f->v.fun.stmt);
+			free(f);
+		}
 	}
 }
 
@@ -567,7 +603,7 @@ void Program_Delete(Program* p)
 {
 	if (p)
 	{
-		FunDecl_Delete(p->head);
+		Decl_Delete(p->head);
 		Program_Delete(p->tail);
 		free(p);
 	}

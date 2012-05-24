@@ -57,7 +57,7 @@ static void printStmtList(StmtList* l);
 static void printStmt(Stmt* s);
 static void printParam(Param* p);
 static void printParams(ParamList* l);
-static void printFunDecl(FunDecl* f);
+static void printFunDecl(Decl* f);
 
 static void printName(const char* str)
 {
@@ -273,14 +273,14 @@ static void printParams(ParamList* l)
 	endNode();
 }
 
-static void printFunDecl(FunDecl* f)
+static void printFunDecl(Decl* f)
 {
 	if(!f){printName("NULL");return;}
 	beginNode("FunDecl");
-	printType(f->type);
-	printName(f->name);
-	printParams(f->params);
-	printStmt(f->stmt);
+	printType(f->v.fun.type);
+	printName(f->v.fun.name);
+	printParams(f->v.fun.params);
+	printStmt(f->v.fun.stmt);
 	endNode();
 }
 

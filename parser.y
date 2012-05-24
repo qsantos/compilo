@@ -40,7 +40,7 @@ extern int yyerror(const char*);
   StmtList*  stmtlist;
   Param*     param;
   ParamList* paramlist;
-  FunDecl*   fundecl;
+  Decl*      decl;
   Program*   program;
 };
 
@@ -49,6 +49,7 @@ extern int yyerror(const char*);
 %token WHILE DO FOR IF ELSE RETURN
 %token VOID CHAR INT
 %token LAND LOR
+%token STRUCT
 
 %nonassoc IF_ALONE
 %nonassoc ELSE
@@ -73,7 +74,10 @@ extern int yyerror(const char*);
 %type <expr> expression
 %type <exprlist> expr_list
 %type <type> type
-%type <fundecl> fun_declaration
+%type <decl> fun_declaration
+%type <decl> struct_declaration
+%type <decl> var_declaration
+%type <paramlist> field_list
 %type <program> program
 %type <param> parameter
 %type <paramlist> param_list
@@ -92,9 +96,26 @@ start: program                                             { current_prog = $1; 
 program:
                                                            { $$ = NULL;                                         }
      | fun_declaration program                             { $$ = Program_New($1, $2);                          }
+     | var_declaration program                             { $$ = Program_New($1, $2);                          }
+     | struct_declaration program                          { $$ = Program_New($1, $2);                          }
+;
+
+var_declaration: type SYMBOL ';'                           { $$ = VarDecl_New($1, $2, (position*) &@$);         }
 ;
 
 fun_declaration: type SYMBOL '(' params ')' statement      { $$ = FunDecl_New($1, $2, $4, $6, (position*) &@$); }
+;
+
+struct_declaration:
+     STRUCT SYMBOL
+     '{'
+        field_list
+     '}' ';'                                               { $$ = Struct_New($2, $4, (position*) &@$);          }
+;
+
+field_list:
+                                                           { $$ = NULL;                                         }
+| type SYMBOL ';' field_list                               { $$ = ParamList_New(Param_New($1, $2, (position*) &@$), $4);   }
 ;
 
 type:
@@ -102,6 +123,7 @@ type:
      | CHAR                                                { $$ = Type_Char();                                  }
      | INT                                                 { $$ = Type_Int();                                   }
      | type '*'                                            { $$ = Type_Ptr($1);                                 }
+     | STRUCT SYMBOL                                       { $$ = Type_Struct($2);                              }
 ;
 
 instr:

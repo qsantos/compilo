@@ -61,6 +61,7 @@ INTEGER         [0-9]+
 "if"                          { Char_Move(2); return IF;      }
 "else"                        { Char_Move(4); return ELSE;    }
 "return"                      { Char_Move(6); return RETURN;  }
+"struct"                      { Char_Move(6); return STRUCT;  }
 
 "void"                        { Char_Move(4); return VOID;    }
 "char"                        { Char_Move(4); return CHAR;    }

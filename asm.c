@@ -94,7 +94,7 @@ u32 ASM_NewReg(ASM* a, Context* c)
 	assert(c);
 	
 	if (c->cur_fun)
-		u32stack_Push(&c->st[c->cur_fun->id].usedRegs, a->n_regs);
+		u32stack_Push(&c->st[c->cur_fun->v.fun.id].usedRegs, a->n_regs);
 	return a->n_regs++;
 }
 
@@ -318,7 +318,7 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	case STMT_RETURN:
 		assert(c->cur_fun);
 		r0 = ASM_GenExpr(a, c, s->v.expr);
-		ASM_Push(a, INSN_RET, c->cur_fun->id, r0, 0);
+		ASM_Push(a, INSN_RET, c->cur_fun->v.fun.id, r0, 0);
 		break;
 	case STMT_BLOCK:
 		l = s->v.block;
@@ -331,33 +331,33 @@ void ASM_GenStmt(ASM* a, Context* c, Stmt* s)
 	}
 }
 
-void ASM_GenFun(ASM* a, Context* c, FunDecl* f)
+void ASM_GenFun(ASM* a, Context* c, Decl* f)
 {
 	assert(a);
 	assert(c);
 	assert(f);
 	
-	FunDecl* oldfun = c->cur_fun;
+	Decl* oldfun = c->cur_fun;
 	c->cur_fun = f;
 	u32 l = ASM_NewLabel(a);
-	c->st[f->id].label = l;
+	c->st[f->v.fun.id].label = l;
 	
-	ParamList* p = f->params;
+	ParamList* p = f->v.fun.params;
 	while (p)
 	{
 		if (p->head->type->type != TYPE_VOID)
 		{
 			u32 r0 = ASM_NewReg(a, c);
 			c->st[p->head->id].reg = r0;
-			u32stack_Push(&c->st[f->id].params, r0);
+			u32stack_Push(&c->st[f->v.fun.id].params, r0);
 		}
 		p = p->tail;
 	}
 	
 	ASM_LabelPos(a, l);
 	a->code[a->n_code-1].v.r.r1 = 1;
-	a->code[a->n_code-1].v.r.r2 = f->id;
-	ASM_GenStmt(a, c, f->stmt);
+	a->code[a->n_code-1].v.r.r2 = f->v.fun.id;
+	ASM_GenStmt(a, c, f->v.fun.stmt);
 	
 	c->cur_fun = oldfun;
 }
