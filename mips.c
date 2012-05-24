@@ -211,12 +211,37 @@ void ASM_toMIPS(ASM* a, Context* c)
 			case INSN_LNOT: printf("\tnot  $%.2lu, $%.2lu\n", WREG(r0), RREG1(r1)); SREG(r0); break;break;
 			case INSN_LAND: MIPS_BINOP("and");
 			case INSN_LOR:  MIPS_BINOP("or ");
-			case INSN_EQ:   break; // TODO
-			case INSN_NEQ:  break; // TODO
-			case INSN_LE:   break; // TODO
-			case INSN_LT:   MIPS_BINOP("slt"); break;
-			case INSN_GE:   break; // TODO
-			case INSN_GT:   printf("\tslt $%.2lu, $%.2lu, $%.2lu\n", WREG(r0), RREG1(r2), RREG2(r1)); SREG(r0); break;
+			case INSN_EQ:
+				v = WREG(r0);
+				printf("\tsub  $%.2lu, $%.2lu, $%.2lu\n", v, RREG1(r2), RREG2(r1));
+				printf("\tslti $%.2lu, $%.2lu, 1\n", v, v);
+				SREG(r0);
+				break;
+			case INSN_NEQ:
+				v = WREG(r0);
+				printf("\tsub  $%.2lu, $%.2lu, $%.2lu\n", v, RREG1(r2), RREG2(r1));
+				printf("\tslti $%.2lu, $%.2lu, 1\n", v, v);
+				printf("\tslti $%.2lu, $%.2lu, 1\n", v, v);
+				SREG(r0);
+				break;
+			case INSN_LE:
+				v = WREG(r0);
+				printf("\tslt  $%.2lu, $%.2lu, $%.2lu\n", v, RREG1(r2), RREG2(r1));
+				printf("\tslti $%.2lu, $%.2lu, 1\n", v, v);
+				SREG(r0);
+				break;
+			case INSN_LT:
+				MIPS_BINOP("slt");
+				break;
+			case INSN_GE:
+				v = WREG(r0);
+				printf("\tslt  $%.2lu, $%.2lu, $%.2lu\n", v, RREG1(r1), RREG2(r2));
+				printf("\tslti $%.2lu, $%.2lu, 1\n", v, RREG1(r0));
+				SREG(r0);
+				break;
+			case INSN_GT:
+				printf("\tslt $%.2lu, $%.2lu, $%.2lu\n", WREG(r0), RREG1(r2), RREG2(r1)); SREG(r0);
+				break;
 			case INSN_ADD:  MIPS_BINOP("add"); break;
 			case INSN_SUB:  MIPS_BINOP("sub"); break;
 			case INSN_MUL:  MIPS_BINOP("mul"); break;
