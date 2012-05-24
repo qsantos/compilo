@@ -208,9 +208,9 @@ void ASM_toMIPS(ASM* a, Context* c)
 			case INSN_AND:  MIPS_BINOP("and"); break;
 			case INSN_OR:   MIPS_BINOP("or "); break;
 			case INSN_XOR:  MIPS_BINOP("xor"); break;
-			case INSN_LNOT: break; // TODO
-			case INSN_LAND: break; // TODO
-			case INSN_LOR:  break; // TODO
+			case INSN_LNOT: printf("\tnot  $%.2lu, $%.2lu\n", WREG(r0), RREG1(r1)); SREG(r0); break;break;
+			case INSN_LAND: MIPS_BINOP("and");
+			case INSN_LOR:  MIPS_BINOP("or ");
 			case INSN_EQ:   break; // TODO
 			case INSN_NEQ:  break; // TODO
 			case INSN_LE:   break; // TODO

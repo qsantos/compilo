@@ -28,7 +28,7 @@
 /* Confer https://en.wikipedia.org/wiki/Register_allocation#Iterated_Register_Coalescing */ 
 
 #define EDGE(U, V) (g->e[(V) * g->n + (U)])
-#define MASK_COALESCE (0xF000000000000000)
+#define MASK_COALESCE (0x80000000)
 RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k, u32stack* spilled)
 {
 	RegAlloc* ra  = (RegAlloc*) calloc(g->n, sizeof(RegAlloc)); assert(ra);
@@ -45,24 +45,22 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k, u32stack* spilled)
 		}
 		spilled = spilled->tail;
 	}
-	
-	
+
 	/* Stack vertices which will be colored */
 	while (rem)
 	{
 		bool done = false;
 		/* 1. Tries to remove a vertex with degree lower than k */
-		for (u32 v = 0; !done && v < g->n; v++)
-			if (!g->dead[v] && g->d[v] < k && !g->move[v])
+		for (u32 i = 0; !done && i < g->n; i++)
+			if (!g->dead[i] && g->d[i] < k && !g->move[i])
 			{
-				IntGraph_Simplify(g, v);
-				u32stack_Push(&vertices, v);
+				IntGraph_Simplify(g, i);
+				u32stack_Push(&vertices, i);
 				rem--;
 				done = true;
 			}
 		
 		/* 2. Tries to contract an edge with combined degree lower than k */
-/*
 		for (u32 i = 0; !done && i < g->n; i++)
 			if (!g->dead[i])
 				for (u32 j = i+1; !done && j < g->n; j++)
@@ -82,15 +80,14 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k, u32stack* spilled)
 							done = true;
 						}
 					}
-*/
 		
 		/* 3. Tries to remove a preference edge */
-		for (u32 v = 0; !done && v < g->n; v++)
-			if (!g->dead[v] && g->move[v])
+		for (u32 i = 0; !done && i < g->n; i++)
+			if (!g->dead[i] && g->move[i])
 			{
-				for (u32 i = 0; i < g->n; i++)
-					if (!g->dead[i])
-						IntGraph_DelMove(g, v, i);
+				for (u32 j = 0; j < g->n; j++)
+					if (!g->dead[j])
+						IntGraph_DelMove(g, i, j);
 				done = true;
 			}
 		
@@ -113,7 +110,9 @@ RegAlloc* IntGraph_RegAlloc(IntGraph* g, u32 k, u32stack* spilled)
 		u32 v = u32stack_Pop(&vertices);
 		if (v & MASK_COALESCE)
 		{
-			ra[v ^ MASK_COALESCE].color = ra[u32stack_Pop(&vertices)].color;
+			v ^= MASK_COALESCE;
+			u32 w = u32stack_Pop(&vertices);
+			ra[v].color = ra[w].color;
 		}
 		else
 		{
