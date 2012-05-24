@@ -63,6 +63,8 @@ extern int yyerror(const char*);
 %nonassoc LSTAR
 %nonassoc RSTAR
 %nonassoc ESP_ALONE
+%left INC DEC
+%left EQADD EQSUB EQMUL EQDIV EQMOD EQAND EQOR EQXOR
 
 %type <stmt> instr
 %type <stmt> statement
@@ -88,8 +90,8 @@ start: program                                             { current_prog = $1; 
 ;
 
 program:
-       fun_declaration program                             { $$ = Program_New($1, $2);                          }
-     |                                                     { $$ = NULL;                                         }
+                                                           { $$ = NULL;                                         }
+     | fun_declaration program                             { $$ = Program_Fun($1, $2);                          }
 ;
 
 fun_declaration: type SYMBOL '(' params ')' statement      { $$ = FunDecl_New($1, $2, $4, $6, (position*) &@$); }
@@ -139,7 +141,7 @@ params:
 lvalue:
        SYMBOL                                              { $$ = LValue_Var($1, (position*) &@$);              }
      | '$' expression                                      { $$ = LValue_Ref($2, (position*) &@$);              }
-     | SYMBOL '[' expression ']'                           { $$ = LValue_Ref(Expr_Add(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL '[' expression ']'                           { $$ = LValue_Ref(Expr_Add(Expr_Var($1, (position*) &@$), Expr_Mul($3, Expr_Integer(4, (position*) &@$), (position*) &@$), (position*) &@$), (position*) &@$); }
 ;
 
 expression:
@@ -147,7 +149,7 @@ expression:
      | SYMBOL '(' expr_list ')'                            { $$ = Expr_Fun_Call($1, $3,   (position*) &@$);     }
      | SYMBOL '(' ')'                                      { $$ = Expr_Fun_Call($1, NULL, (position*) &@$);     }
      | lvalue '=' expression                               { $$ = Expr_Aff     ($1, $3,   (position*) &@$);     }
-     | SYMBOL '[' expression ']'                           { $$ = Expr_Deref(Expr_Add(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$);     }
+     | SYMBOL '[' expression ']'                           { $$ = Expr_Deref(Expr_Add(Expr_Var($1, (position*) &@$), Expr_Mul($3, Expr_Integer(4, (position*) &@$), (position*) &@$), (position*) &@$), (position*) &@$);     }
      | SYMBOL                                              { $$ = Expr_Var     ($1,       (position*) &@$);     }
      | '!' expression                                      { $$ = Expr_Not     ($2,       (position*) &@$);     }
      | '~' expression                                      { $$ = Expr_Lnot    ($2,       (position*) &@$);     }
@@ -172,6 +174,18 @@ expression:
      | '&' SYMBOL     %prec ESP_ALONE                      { $$ = Expr_Addr    ($2,       (position*) &@$);     }
      | expression '?' expression ':' expression            { $$ = Expr_Ifte    ($1,$3,$5, (position*) &@$);     }
      | '(' expression ')'                                  { $$ = $2;                                           }
+
+
+     | SYMBOL INC              { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Add(Expr_Var($1, (position*) &@$), Expr_Integer(1, (position*) &@$), (position*) &@$), (position*) &@$); }
+     | SYMBOL DEC              { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Sub(Expr_Var($1, (position*) &@$), Expr_Integer(1, (position*) &@$), (position*) &@$), (position*) &@$); }
+     | SYMBOL EQADD expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Add(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL EQSUB expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Sub(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL EQMUL expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Mul(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL EQDIV expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Div(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL EQMOD expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Mod(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL EQAND expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_And(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL EQOR  expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Or (Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
+     | SYMBOL EQXOR expression { $$ = Expr_Aff(LValue_Var($1, (position*) &@$), Expr_Xor(Expr_Var($1, (position*) &@$), $3, (position*) &@$), (position*) &@$); }
 ;
 
 expr_list:

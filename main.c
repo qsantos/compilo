@@ -41,36 +41,47 @@ int main(int argc, char** argv)
 	if (argc > 1)
 	{
 		if (!strcmp(argv[1], "--latex"))
+		{
 			Program_Latex(current_prog);
-		else
+			return 0;
+		}
+		if (!strcmp(argv[1], "--ast"))
+		{
 			Print_Program(current_prog);
+			return 0;
+		}
 	}
-	else
+	
+	Context* c = Context_New(32768);
+	Check_Program(current_prog, c);
+	if (c->err)
 	{
-		Context* c = Context_New(32768);
-		Check_Program(current_prog, c);
-		if (c->err)
-		{
-			Context_Delete(c);
-			Program_Delete(current_prog);
-			return 1;
-		}
-		else
-		{
-			ASM* a = ASM_New(c);
-			ASM_GenProgram(a, c, current_prog);
-			
-//			Print_ASM(a);
-//			ASM_Simulate(a, c);
-			
-			ASM_toMIPS(a, c);
-			
-			ASM_Delete(a);
-		}
 		Context_Delete(c);
+		Program_Delete(current_prog);
+		return 1;
+	}
+	ASM* a = ASM_New(c);
+	ASM_GenProgram(a, c, current_prog);
+	
+	
+	if (argc > 1)
+	{
+		if (!strcmp(argv[1], "--asm"))
+		{
+			Print_ASM(a);
+			return 0;
+		}
+		if (!strcmp(argv[1], "--exec"))
+		{
+			ASM_Simulate(a, c);
+			return 0;
+		}
 	}
 	
-	Program_Delete(current_prog);
+	ASM_toMIPS(a, c);
 	
+	ASM_Delete(a);
+	Context_Delete(c);
+	Program_Delete(current_prog);
 	return 0;
 }

@@ -73,6 +73,17 @@ INTEGER         [0-9]+
 "<="                          { Char_Move(2); return LE ;     }
 ">="                          { Char_Move(2); return GE ;     }
 
+"++"                          { Char_Move(2); return INC;     }
+"--"                          { Char_Move(2); return DEC;     }
+"+="                          { Char_Move(2); return EQADD;   }
+"-="                          { Char_Move(2); return EQSUB;   }
+"*="                          { Char_Move(2); return EQMUL;   }
+"/="                          { Char_Move(2); return EQDIV;   }
+"%="                          { Char_Move(2); return EQMOD;   }
+"&="                          { Char_Move(2); return EQAND;   }
+"|="                          { Char_Move(2); return EQOR;    }
+"^="                          { Char_Move(2); return EQXOR;   }
+
 [-(){},;+*=/%<>!?:~&|\^$\[\]] { Char_Move(1); return *yytext; }
 
 {INTEGER}                     { Char_Move(strlen(yytext)); yylval.integer = atol(yytext);       return INTEGER; }
