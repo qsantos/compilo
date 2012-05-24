@@ -91,7 +91,7 @@ Type* Check_Expr(Expr* e, Context* c)
 		{
 			e->v.call.id = symb->id;
 			Check_ExprList(e->v.call.params, symb->v.f, c);
-			return symb->v.f->v.fun.type;
+			return symb->v.f->type;
 		}
 		else
 			Static_Error(c, &e->pos, "function %s is undeclared", e->v.call.name);
@@ -163,11 +163,11 @@ Type* Check_Expr(Expr* e, Context* c)
 	return NULL;
 }
 
-void Check_ExprList(ExprList* l, Decl* fd, Context* c)
+void Check_ExprList(ExprList* l, FunDecl* fd, Context* c)
 {
 	assert(c);
 	
-	ParamList* p = fd->v.fun.params;
+	ParamList* p = fd->params;
 	while (l && p)
 	{
 		Type* t = Check_Expr(l->head, c);
@@ -176,9 +176,9 @@ void Check_ExprList(ExprList* l, Decl* fd, Context* c)
 		l = l->tail;
 	}
 	if (l)
-		Static_Error(c, &fd->pos, "too many arguments to function %s", fd->v.fun.name);
+		Static_Error(c, &fd->pos, "too many arguments to function %s", fd->name);
 	if (p && p->head->type->type != TYPE_VOID)
-		Static_Error(c, &fd->pos, "too few arguments to function %s", fd->v.fun.name);
+		Static_Error(c, &fd->pos, "too few arguments to function %s", fd->name);
 }
 
 void Check_Stmt(Stmt* s, bool needRet, Context* c)
@@ -217,7 +217,7 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 		break;
 	case STMT_RETURN:
 		t = Check_Expr(s->v.expr, c);
-		Check_Types(c->cur_fun->v.fun.type, t, &s->pos, c);
+		Check_Types(c->cur_fun->type, t, &s->pos, c);
 		break;
 	case STMT_WHILE:
 		Check_Expr(s->v.whilez.cond, c);
@@ -253,7 +253,7 @@ void Check_Stmt(Stmt* s, bool needRet, Context* c)
 	}
 
 	if (needRet && s->type != STMT_BLOCK && s->type != STMT_RETURN && s->type != STMT_IF)
-		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->v.fun.name);
+		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->name);
 }
 
 void Check_StmtList(StmtList* l, bool needRet, Context* c)
@@ -261,7 +261,7 @@ void Check_StmtList(StmtList* l, bool needRet, Context* c)
 	assert(c);
 	
 	if (!l && needRet)
-		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->v.fun.name);
+		Static_Error(c, &c->cur_fun->pos, "no return statement at end of non-void function '%s'", c->cur_fun->name);
 	while (l)
 	{
 		Check_Stmt(l->head, !l->tail && needRet, c);
@@ -304,12 +304,12 @@ void Check_ParamList(ParamList* l, Context* c)
 	}
 }
 
-void Check_FunDecl(Decl* fd, Context* c)
+void Check_FunDecl(FunDecl* fd, Context* c)
 {
 	assert(fd);
 	assert(c);
 	
-	string  name = fd->v.fun.name;
+	string  name = fd->name;
 	symbol* symb = Context_Get(c, name);
 	if (symb)
 	{
@@ -327,55 +327,11 @@ void Check_FunDecl(Decl* fd, Context* c)
 			c->main = symb->id;
 		
 		c->cur_fun = fd;
-		fd->v.fun.id = symb->id;
+		fd->id = symb->id;
 		Context_BeginScope(c);
-		Check_ParamList(fd->v.fun.params, c);
-		Check_Stmt(fd->v.fun.stmt, fd->v.fun.type->type != TYPE_VOID, c);
+		Check_ParamList(fd->params, c);
+		Check_Stmt(fd->stmt, fd->type->type != TYPE_VOID, c);
 		Context_EndScope(c);
-	}
-}
-
-void Check_VarDecl(Decl* d, Context* c)
-{
-	assert(d);
-	assert(c);
-	
-	string name = d->v.var.name;
-	symbol* symb = Context_Get(c, name);
-	if (symb)
-	{
-		Static_Error(c, &d->pos, "redeclaration of %s", name);
-		Static_Error(c, &d->pos, "previous declaration was here: Line %d, character %d", symb->pos->first_line, symb->pos->first_column);
-	}
-	else
-	{
-		symb = Context_Declare(c, name);
-		symb->isFun      = false;
-		symb->pos        = &d->pos;
-		symb->v.f        = d;
-	}
-}
-
-void Check_Struct(Decl* d, Context* c)
-{
-}
-
-void Check_Decl(Decl* d, Context* c)
-{
-	assert(d);
-	assert(c);
-	
-	switch (d->kind)
-	{
-	case FUN_DECL:
-		Check_FunDecl(d, c);
-		break;
-	case VAR_DECL:
-		Check_VarDecl(d, c);
-		break;
-	case STRUCT_DECL:
-		Check_Struct(d, c);
-		break;
 	}
 }
 

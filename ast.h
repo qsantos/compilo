@@ -129,24 +129,20 @@ typedef struct Type
 		TYPE_CHAR,
 		TYPE_INT,
 		TYPE_PTR,
-		TYPE_STRUCT
 	} type;
 	union
 	{
 		struct Type* ptr;
-		string       stc;
 	} v;
 } Type;
 extern Type TVoid;
 extern Type TChar;
 extern Type TInt;
-typedef struct ParamList ParamList;
 /* Contructors */
 Type* Type_Void  (void);
 Type* Type_Char  (void);
 Type* Type_Int   (void);
 Type* Type_Ptr   (Type*);
-Type* Type_Struct(string);
 /* Destructors */
 void  Type_Delete(Type*);
 /* Utils */
@@ -205,7 +201,7 @@ void  StmtList_Delete (StmtList*);
 
 
 
-/* Declarations */
+/* Function declarations */
 typedef struct
 {
 	Type*    type;
@@ -213,59 +209,35 @@ typedef struct
 	u32      id;
 	position pos;
 } Param;
-struct ParamList
+typedef struct ParamList
 {
-	Param*     head;
-	ParamList* tail;
-};
+	Param*            head;
+	struct ParamList* tail;
+} ParamList;
 typedef struct
 {
-	enum
-	{
-		FUN_DECL,
-		VAR_DECL,
-		STRUCT_DECL
-	} kind;
-	union
-	{
-		struct
-		{
-			Type*      type;
-			string     name;
-			u32        id;
-			ParamList* params;
-			Stmt*      stmt;
-		} fun;
-		struct
-		{
-			Type*      type;
-			string     name;
-		} var;
-		struct
-		{
-			string     name;
-			ParamList* fields;
-		} stc;
-	} v;
+	Type*      type;
+	string     name;
+	u32        id;
+	ParamList* params;
+	Stmt*      stmt;
 	position   pos;
-} Decl;
+} FunDecl;
 typedef struct Program
 {
-	Decl*           head;
+	FunDecl*        head;
 	struct Program* tail;
 } Program;
 /* Constructors */
 Param*     Param_New     (Type*,      string,     position*);
 ParamList* ParamList_New (Param*,     ParamList*);
 ParamList* ParamList_Void(void);
-Decl*      FunDecl_New   (Type*,      string,     ParamList*, Stmt*,    position*);
-Decl*      VarDecl_New   (Type*,      string,     position*);
-Decl*      Struct_New    (string,     ParamList*, position*);
-Program*   Program_New   (Decl*,      Program*);
+FunDecl*   FunDecl_New   (Type*,      string,     ParamList*, Stmt*, position*);
+Program*   Program_New   (FunDecl*,   Program*);
 /* Destructors */
 void     Param_Delete    (Param*);
 void     ParamList_Delete(ParamList*);
-void     Decl_Delete  (Decl*);
+void     FunDecl_Delete  (FunDecl*);
 void     Program_Delete  (Program*);
 
 #endif

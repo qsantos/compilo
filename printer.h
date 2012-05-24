@@ -32,7 +32,7 @@ void Print_StmtList (StmtList*);
 void Print_Stmt     (Stmt*);
 void Print_Param    (Param*);
 void Print_ParamList(ParamList*);
-void Print_FunDecl  (Decl*);
+void Print_FunDecl  (FunDecl*);
 void Print_Program  (Program*);
 
 void Print_ASM      (ASM*);

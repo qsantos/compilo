@@ -74,7 +74,7 @@ u32  ASM_NewLabel  (ASM*);
 void ASM_LabelPos  (ASM*, u32);
 u32  ASM_GenExpr   (ASM*, Context*, Expr*);
 void ASM_GenStmt   (ASM*, Context*, Stmt*);
-void ASM_GenFun    (ASM*, Context*, Decl*);
+void ASM_GenFun    (ASM*, Context*, FunDecl*);
 void ASM_GenProgram(ASM*, Context*, Program*);
 
 #endif

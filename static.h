@@ -24,16 +24,13 @@
 
 #include "context.h"
 
-Type* Check_Expr     (Expr*,             Context*);
-void  Check_ExprList (ExprList*,  Decl*, Context*);
-void  Check_Stmt     (Stmt*,      bool,  Context*);
-void  Check_StmtList (StmtList*,  bool,  Context*);
-void  Check_Param    (Param*,            Context*);
-void  Check_ParamList(ParamList*,        Context*);
-void  Check_FunDecl  (Decl*,             Context*);
-void  Check_VarDecl  (Decl*,             Context*);
-void  Check_Struct   (Decl*,             Context*);
-void  Check_Decl     (Decl*,             Context*);
-void  Check_Program  (Program*,          Context*);
+Type* Check_Expr     (Expr*,                Context*);
+void  Check_ExprList (ExprList*,  FunDecl*, Context*);
+void  Check_Stmt     (Stmt*,      bool,     Context*);
+void  Check_StmtList (StmtList*,  bool,     Context*);
+void  Check_Param    (Param*,               Context*);
+void  Check_ParamList(ParamList*,           Context*);
+void  Check_FunDecl  (FunDecl*,             Context*);
+void  Check_Program  (Program*,             Context*);
 
 #endif
