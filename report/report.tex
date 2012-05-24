@@ -1,0 +1,92 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[francais]{babel}
+
+\usepackage{amsmath}
+\usepackage{verbatim}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{Projet compilation}
+\chead{Rendu final}
+\rhead{Jeudi 24 mai 2012}
+\lfoot{Thomas Grégoire -- Quentin Santos}
+\cfoot{}
+\rfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+	\section{Généralités}
+		\par Fichiers: \verb#main.c, printer.c, latex.c, u32stack.c#
+		\par Pour compiler le projet, un appel à \verb#make# dans le répertoire principal suffit. Pour lancer quelques tests, \verb#make test# ou \verb#make ltest# (passage par \verb#less#).
+		\par L'exécutable attend le code à analyser sur son entrée standard. Lors de son appel, les options suivantes peuvent être passées en paramètres:
+		\begin{itemize}
+			\item \verb#--ast# pour afficher l'arbre de syntaxe abstraite;
+			\item \verb#--latex# pour une sortie LaTeX de l'arbre de syntaxe abstraite;
+			\item \verb#--asm# pour afficher le code intermédiaire.
+		\end{itemize}
+		\par La \verb#u32stack# est une structure qui peut être manipulée comme une pile ou une liste d'entiers. Elle est utilisées dans plusieurs sections du code.
+	\section{Syntaxe}
+		\par Fichiers: \verb#lexer.lex, parser.y, error.c, ast.c#
+		\par La syntaxe reconnu comprend:
+		\begin{itemize}
+			\item les types void, char et int, ainsi que les pointeurs;
+			\item la déclaration et l'appel de fonctions;
+			\item les opérateurs logiques unaire (\verb#!#), binaires (\verb#&,|,^,&&,||,==,!=,<=,>,>=,>#);
+			\item les opérateurs arithmétiques unaire (\verb#-#), binaires (\verb#+,-,*,/,%#) et trinaire (\verb#_ ? : _#);
+			\item les opérateurs sur les pointeurs (\verb#+,-#);
+			\item les structures conditionnelles (if, if \dots else);
+			\item les structures de boucle (while, do \dots while, for);
+			\item les abbréviations unaires (\verb#++,--#) et binaires (\verb#+=,-=,*=,/=,%=,&=,|=,^=#);
+			\item les tableaux ($t[i] \equiv *(t + 4*i)$).
+		\end{itemize}
+	\section{Analyse statique}
+		\par Fichiers: \verb#hash.c, context.c, static.c#
+	\section{Code intermédiaire}
+		\par Fichiers: \verb#asm.c#
+		\par Le code intermédiaire est formé d'instructions prenant trois registres comme paramètres (sauf exception), sauf \verb#CALL#. Les instructions sont:
+		\begin{itemize}
+			\item \verb#STOP#: fin du programme (affichage de la valeur de retour);
+			\item \verb#SET#: le deuxième registre est en fait une valeur immédiate (\verb#r0 <- imm1#);
+			\item \verb#MOV#: copie un registre (\verb#r0 <- r1#);
+			\item \verb#MRD#: lit un mot en mémoire (\verb#r0 <- *r1#);
+			\item \verb#MWR#: écrit un mot en mémoire (\verb#*r0 <- r1#);
+			\item \verb#RGA#: copie l'adresse mémoire d'un registre virtuel (forcément spillé) (\verb#r0 <- &r1#);
+			\item \verb#NOT#, \verb#AND#, \verb#OR#, \verb#XOR#, \verb#LNOT#, \verb#LAND#, \verb#LOR#, \verb#EQ#, \verb#NEQ#, \verb#LE#, \verb#LT#, \verb#GE#, \verb#GT#, \verb#ADD#, \verb#SUB#, \verb#MUL#, \verb#DIV#, \verb#MOD#: les opérateurs correspondants (\verb#r0 <- r1 OP r2#);
+			\item \verb#JMP, JZ, JNZ#: branchement (\verb#r0# est en fait un numéro de label, \verb#r1# est la condition éventuelle)
+			\item \verb#CALL#: liste de registres contenant le label de la fonction, le registre dans lequel mettre la valeur de retour et la liste des arguments (met les arguments dans les registres ou la pile, puis la valeur de retur dans le registre approprié);
+			\item \verb#RET#: restaure les registres;
+			\item \verb#LBL#: le premier registre est en fait le numéro de label, le deuxième indique s'il s'agit du début d'une fonction et le troisième, le cas échéant, est l'identifiant du symbole de cette fonction (sauvegarde les registres, prépare le spill, et met les arguments dans les registres des paramètres).
+		\end{itemize}
+	\section{Allocation de registres}
+		\par Fichiers: \verb#set.c, flow.c, intgraph.c, regalloc.c#
+		\par L'allocation de registres se fait par une heuristique de coloration de graphe.
+		\par Pour chaque fonction (code intermédiaire entre deux labels de fonction), on effectue une analyse de vivacité. On considères quatre familles d'ensembles: $\text{def}$ et $\text{use}$ en \verb#u32stack#, et $\text{in}$ et $\text{out}$ en \verb#set# (\verb#set.c#). On commence par remplir $\text{def}$ et $\text{use}$ avec les registres respectivement remplis et utilisés, pour chaque instruction. On cherche ensuite le point fixe des équations:
+		\[
+			\text{in}[n] = \text{use}[n] \cup (\text{out}[n] \backslash \text{def}[n])
+		\]
+		\par Et
+		\[
+			\text{out}[n] = \bigcup_{s \in \text{succ(n)}} \text{in}[s]
+		\]
+		\par On construit ensuite le graphe d'interférence composé d'autant de sommets que de registres virtuels. Pour $n$ donné, on place des arrêtes d'interférence entre les éléments de \verb#def[n]# et \verb#out[n]# (dans le cas du \verb#MOV# l'arrête entre l'unique élément de \verb#def[n]# et l'unique élément \verb#use[n]# est remplacée par une arrête de préférence).
+		\par L'allocation de registres consiste à colorer le graphe avec les $k$ registres réels. Par ordre de priorité, on:
+		\begin{itemize}
+			\item retire les sommets de degré inférieur à $k$ (le registre correspondant est ajouté à la liste de ceux qu'on pourra facilement colorer);
+			\item contracte une arrête de préférence dont le degré combiné est inférieur à $k$ (on ajoute un des registres dans la liste pour le colorer comme l'autre);
+			\item retire une arrête de préférence;
+			\item spill un sommet (on marque le registre virtuel comme devant être stocké en mémoire et on retire le sommet).
+		\end{itemize}
+	\section{Code MIPS}
+		\par Ficiers: \verb#mips.c#
+		\par Lors de la génération de code MIPS, la différence entre les registres spillés et non spillés et réduite autant que possible, par l'intermédiaire de fonctions qui chargent ou sauvegardent ces premiers depuis ou dans des registres temporaires.
+	\section{malloc et free}
+		\par Fichiers: \verb#malloc/*#
+		\par Les fonctions \verb#malloc# et \verb#free# sont enregistrées au début du programme dans le contexte et fonctionnent comme des fonctions classiques (elles ne font pas partie du langage lui-même). Leur code est ajouté au début de la sortie, depuis les sources MIPS du répertoire \verb#malloc#. Ces sources ont été obtenues par cross-compilation du fichier \verb#malloc/malloc.c#.
+		\par L'allocation dynamique de mémoire fonctionne en manipulant des blocs (une en-tête contient un pointeur vers le bloc suivant dans la liste de \verb#malloc#, ainsi que sa taille).
+		\par \verb#malloc# maintient une liste de blocs libres attribués par le système. Lors de la demande d'un bloc, elle cherche dans la liste un bloc de taille suffisante, le découpe si nécessaire, le retire de la liste et retourne l'espace mémoire de ce bloc (après l'en-tête) à l'utilisateur).
+		\par \verb#free# remonte dans l'en-tête et rajoute le bloc dans la liste (en le fusionnant éventuellement avec des blocs contigüs).
+\end{document}
